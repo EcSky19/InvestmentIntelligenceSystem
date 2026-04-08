@@ -213,3 +213,8 @@ function engine(parsed, prevClose) {
     return { ticker, date, O, H, L, Cl, vwap, poc, TV, R, cL, gap, dChg, prevClose: prevClose || null, phases, vwPct, topN, bT: bT.length, bV, lT: lTr.length, lV, bNH, bNL, bZones, adR, dpCross, dpVol, smShift, f30i: f30i.length, l30i: l30i.length, f30a, l30a, clusters: clusters.slice(0, 8), instPart, bars, dipBuys, rallySells, hTs: hT.ts, lTs: lT2.ts, hFH, lSH, distBars, lhSell, top10, tradeCount: trades.length, ut, dt, zt, uV, dV, zV, tR, vTR, pkV, avgVel, mxA, mxD, acT, deT, medITT, sameMs, sameMsPct, aUR, aDR, mUR, mDR, cumD, maxCD, minCD, dRange, dRecov, dRecovPct, dPh, cumDs: cdSamp, sweeps: sweeps.length, tSV, sNH, sNL, topSw, vpin, topVA: topVA5, iceCount, topIce: topIce.slice(0, 5), sBk, rndL, oddPct, algoS, avgImp, rv1m, rvAnn, rv5m, hurst, voV, gkV, sups, ress, scenarios, ndL, score, sigs, bias, biasC, dayType, headline };
   } catch (err) { console.error("Engine error:", err); return null; }
 }
+
+async function ldIdx() { try { const r = await window.storage.get("stae7:idx"); return r ? JSON.parse(r.value) : []; } catch (e) { return []; } }
+async function svIdx(t) { try { await window.storage.set("stae7:idx", JSON.stringify(t)); } catch (e) { } }
+async function ldTk(t) { try { const r = await window.storage.get("stae7:" + t); return r ? JSON.parse(r.value) : []; } catch (e) { return []; } }
+async function svTk(t, r) { try { await window.storage.set("stae7:" + t, JSON.stringify(r)); } catch (e) { } }
