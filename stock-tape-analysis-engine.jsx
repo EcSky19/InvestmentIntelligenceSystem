@@ -226,7 +226,7 @@ const Pill = ({ active, onClick, children }) => <button onClick={onClick} style=
 
 function Chrt({ bars, vwap, H, L, cumDs }) {
   if (!bars || !bars.length) return null;
-  const W = 680, Ht = 120, pd = { t: 6, b: 16, l: 42, r: 8 }, cW = W - pd.l - pd.r, cH = Ht - pd.t - pd.b;
+  const W = 680, Ht = 130, pd = { t: 6, b: 18, l: 44, r: 8 }, cW = W - pd.l - pd.r, cH = Ht - pd.t - pd.b;
   const minS = bars[0].sec, maxS = bars[bars.length - 1].sec, sR = maxS - minS || 1;
   const x = s => pd.l + ((s - minS) / sR) * cW; const y = p => pd.t + (1 - (p - L) / ((H - L) || 1)) * cH;
   const line = bars.map((b, i) => (i === 0 ? "M" : "L") + x(b.sec).toFixed(1) + "," + y(b.c).toFixed(1)).join(" ");
@@ -234,12 +234,12 @@ function Chrt({ bars, vwap, H, L, cumDs }) {
   let dL = ""; if (cumDs && cumDs.length > 1) { const mD = safeMax(cumDs.map(Math.abs)) || 1; dL = cumDs.map((d, i) => (i === 0 ? "M" : "L") + (pd.l + (i / (cumDs.length - 1)) * cW).toFixed(1) + "," + (pd.t + cH / 2 - (d / mD) * (cH / 2) * 0.7).toFixed(1)).join(" "); }
   const bw = Math.max(1, cW / bars.length * 0.7);
   return <svg viewBox={"0 0 " + W + " " + Ht} style={{ width: "100%", height: "auto", display: "block" }}>
-    {[.25, .5, .75].map(p => { const py = pd.t + p * cH; return <g key={p}><line x1={pd.l} y1={py} x2={W - pd.r} y2={py} stroke={P.bd} strokeWidth={.5} /><text x={pd.l - 4} y={py + 3} fill={P.t3} fontSize={7} fontFamily={FN} textAnchor="end">{n2(H - p * (H - L))}</text></g>; })}
+    {[.25, .5, .75].map(p => { const py = pd.t + p * cH; return <g key={p}><line x1={pd.l} y1={py} x2={W - pd.r} y2={py} stroke={P.bd} strokeWidth={.5} /><text x={pd.l - 4} y={py + 3} fill={P.t3} fontSize={9} fontFamily={FN} textAnchor="end">{n2(H - p * (H - L))}</text></g>; })}
     <line x1={pd.l} y1={y(vwap)} x2={W - pd.r} y2={y(vwap)} stroke={P.am} strokeWidth={.5} strokeDasharray="4,3" opacity={.4} />
     {bars.map((b, i) => <rect key={i} x={x(b.sec) - bw / 2} y={Ht - pd.b - (b.v / maxV) * 14} width={bw} height={(b.v / maxV) * 14} fill={b.c >= b.o ? P.g : P.r} opacity={.15} />)}
     {dL && <path d={dL} fill="none" stroke={P.mg} strokeWidth={.8} opacity={.5} />}
     <path d={line} fill="none" stroke={bars[bars.length - 1].c >= bars[0].o ? P.g : P.r} strokeWidth={1.5} />
-    {[9.5, 10, 11, 12, 13, 14, 15, 16].map(h => { const s = h * 3600; if (s < minS || s > maxS) return null; return <text key={h} x={x(s)} y={Ht - 4} fill={P.t3} fontSize={7} fontFamily={FN} textAnchor="middle">{h === 9.5 ? "9:30" : Math.floor(h) + ":00"}</text>; })}
+    {[9.5, 10, 11, 12, 13, 14, 15, 16].map(h => { const s = h * 3600; if (s < minS || s > maxS) return null; return <text key={h} x={x(s)} y={Ht - 4} fill={P.t3} fontSize={9} fontFamily={FN} textAnchor="middle">{h === 9.5 ? "9:30" : Math.floor(h) + ":00"}</text>; })}
   </svg>;
 }
 
