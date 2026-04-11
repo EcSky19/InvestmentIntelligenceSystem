@@ -32,3 +32,7 @@ const STYLES = ["Growth", "GARP", "Quality", "Value", "Blend"];
 const RISKS = ["Conservative", "Moderate", "Aggressive"];
 const HORIZONS = ["12 months", "24 months", "3 years"];
 const TRADE_HORIZONS = ["Swing", "1-3 months", "3-6 months", "6-12 months"];
+
+function T({ children, c = WHITE, s = 12, w = 400, mono = true, style: st = {} }) {
+  return <span style={{ color: c, fontSize: s, fontWeight: w, fontFamily: mono ? "'JetBrains Mono','Fira Code','SF Mono',monospace" : "'IBM Plex Sans',sans-serif", letterSpacing: mono ? "-0.02em" : "0.01em", lineHeight: 1.5, ...st }}>{children}</span>;
+}
