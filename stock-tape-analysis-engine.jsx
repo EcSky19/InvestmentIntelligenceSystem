@@ -245,6 +245,81 @@ function Chrt({ bars, vwap, H, L, cumDs }) {
 
 function PBar({ sc }) { if (!sc || !sc.length) return null; return <div style={{ display: "flex", height: 18, overflow: "hidden", gap: 1, marginBottom: 4 }}>{sc.map((s, i) => <div key={i} style={{ width: s.p + "%", background: s.c, display: "flex", alignItems: "center", justifyContent: "center", opacity: .85 }}>{s.p >= 14 && <span style={{ fontSize: 9, fontWeight: 700, color: P.bg, fontFamily: FN }}>{s.p}%</span>}</div>)}</div>; }
 
+function buildSummary(S) {
+  if (!S) return [];
+  const { ticker, date, O, H, L, Cl, vwap, poc, TV: totalVol, R, cL, gap, dChg, prevClose, phases, vwPct, bNH, bNL, adR, dpVol, smShift, cumD, dRecovPct, sweeps, sNH, sNL, vpin, hurst, voV, rvAnn, score, bias, biasC, dayType, scenarios, sigs, top10, vTR, iceCount, oddPct, sups, ress } = S;
+  const sections = [];
+
+  const bullSigs = sigs.filter(s => s.v > 0).length;
+  const bearSigs = sigs.filter(s => s.v < 0).length;
+  sections.push({
+    title: "VERDICT", color: biasC, bullets: [
+      { t: `Overall composite score is ${score >= 0 ? "+" : ""}${score} — classified as ${bias} with a ${dayType} structure.`, c: biasC },
+      { t: `${bullSigs} bullish signal${bullSigs !== 1 ? "s" : ""} vs ${bearSigs} bearish signal${bearSigs !== 1 ? "s" : ""} detected across all tape metrics.`, c: bullSigs > bearSigs ? P.g : bullSigs < bearSigs ? P.r : P.y },
+      { t: `Top next-day scenario: ${scenarios[0].l} at ${scenarios[0].p}% probability, followed by ${scenarios[1].l} at ${scenarios[1].p}%.`, c: scenarios[0].c },
+      { t: `Session: ${date}${prevClose ? " — previous close $" + n2(prevClose) + ", gap " + (gap >= 0 ? "+" : "") + n2(gap, 1) + "%" : ""}.`, c: P.t2 },
+    ]
+  });
+
+  const priceBullets = [
+    { t: `Opened at $${n2(O)}, traded between $${n2(L)} and $${n2(H)} — a range of $${n2(R, 2)} (${n2(R / O * 100, 1)}% of open).`, c: P.t2 },
+    { t: `Closed at $${n2(Cl)} (${dChg >= 0 ? "+" : ""}${n2(dChg, 1)}% from open) at the ${n2(cL * 100, 0)}th percentile of the range — ${cL >= 0.75 ? "near the high, sustained buying pressure" : cL <= 0.25 ? "near the low, persistent selling into the close" : cL >= 0.55 ? "upper half, mildly constructive" : "lower half, mildly bearish"}.`, c: cL >= 0.6 ? P.g : cL <= 0.4 ? P.r : P.y },
+    { t: `Closed ${Cl > vwap ? "above" : "below"} VWAP at $${n2(vwap, 2)} — ${Cl > vwap ? "buyers maintained volume-weighted control all session" : "sellers held the volume-weighted edge throughout"}.`, c: Cl > vwap ? P.g : P.r },
+    { t: `Point of Control at $${n2(poc)} — ${Math.abs(poc - Cl) < R * 0.05 ? "price closed at the highest-activity node, strong conviction level" : poc > Cl ? "above close, unfilled supply overhead" : "below close, strong demand base confirmed"}.`, c: P.t2 },
+    { t: `Phase breakdown — Open: ${n2(phases.od.chg, 1)}% | Mid-morning: ${n2(phases.mm.chg, 1)}% | Midday: ${n2(phases.md.chg, 1)}% | Power hour: ${n2(phases.ph.chg, 1)}%.`, c: phases.ph.chg >= 0 ? P.g : P.r },
+  ];
+  if (ress[0]) priceBullets.push({ t: `Key levels: resistance at $${n2(ress[0].price)} (${ress[0].src}), support at $${n2(sups[0] ? sups[0].price : L)} (${sups[0] ? sups[0].src : "session low"}).`, c: P.t2 });
+  sections.push({ title: "PRICE ACTION", color: P.cy, bullets: priceBullets });
+
+  sections.push({
+    title: "ORDER FLOW & DELTA", color: cumD >= 0 ? P.g : P.r, bullets: [
+      { t: `Cumulative delta closed at ${cumD >= 0 ? "+" : ""}${n2(cumD / 1e6)}M — ${cumD >= 0 ? "net buying pressure dominated the session" : "net selling pressure dominated the session"}.`, c: cumD >= 0 ? P.g : P.r },
+      { t: `Delta recovery from session trough: ${n2(dRecovPct, 0)}% — ${dRecovPct > 70 ? "strong recovery, buyers absorbed all selling" : "dRecovPct<30" ? "weak recovery, sellers maintained control" : "moderate recovery, inconclusive"}.`, c: dRecovPct > 60 ? P.g : dRecovPct < 35 ? P.r : P.y },
+      { t: `${n2(vwPct, 0)}% of volume traded above VWAP vs ${n2(100 - vwPct, 0)}% below — ${vwPct > 65 ? "bullish distribution" : vwPct < 35 ? "bearish distribution" : "balanced, no directional bias"}.`, c: vwPct > 60 ? P.g : vwPct < 40 ? P.r : P.y },
+      { t: `Tick volume ratio ${n2(vTR, 3)} — ${vTR > 1.15 ? "up-ticks carried significantly more size, bullish microstructure" : vTR < 0.85 ? "down-ticks heavier, bearish microstructure" : "volume balanced across upticks and downticks"}.`, c: vTR > 1.1 ? P.g : vTR < 0.9 ? P.r : P.y },
+      { t: `${sweeps} sweep${sweeps !== 1 ? "s" : ""} detected — ${sNH} at highs vs ${sNL} at lows. ${sNH > sNL * 1.5 ? "Concentrated at highs: aggressive supply present" : sNL > sNH * 1.5 ? "Concentrated at lows: aggressive absorption present" : "Balanced sweep distribution"}.`, c: sNL > sNH ? P.g : sNH > sNL ? P.r : P.y },
+    ]
+  });
+
+  sections.push({
+    title: "INSTITUTIONAL ACTIVITY", color: P.mg, bullets: [
+      { t: `Accumulation/Distribution ratio: ${n2(adR, 2)}x — ${adR > 1.5 ? "heavy distribution, blocks concentrated near highs" : adR > 1.2 ? "mild distribution bias" : adR < 0.7 ? "strong accumulation, institutions buying lows" : "roughly balanced institutional flow"}.`, c: adR > 1.3 ? P.r : P.g },
+      { t: `Block prints at session highs: ${bNH} vs lows: ${bNL} — ${bNH > bNL * 1.5 ? "institutional selling into strength is the dominant pattern" : bNL > bNH * 1.5 ? "institutional buying at weak prices, conviction accumulation" : "no dominant directional institutional bias"}.`, c: bNH > bNL ? P.r : P.g },
+      { t: `Smart money shift open-to-close: ${smShift >= 0 ? "+" : ""}$${n2(smShift, 2)} — ${smShift < 0 ? "sell-side dominated the close, open 30m was the stronger period" : "buy-side dominated the close, late session was more aggressive than the open"}.`, c: smShift >= 0 ? P.g : P.r },
+      { t: `Dark pool volume: ${n2(dpVol / 1e3, 0)}K shares — ${dpVol > totalVol * 0.1 ? "elevated off-exchange activity, institutional anonymity preference high" : dpVol > totalVol * 0.05 ? "moderate dark pool presence" : "minimal dark pool activity, flow predominantly on lit exchange"}.`, c: P.t2 },
+      { t: top10[0] ? "Largest print: " + top10[0].sz.toLocaleString() + " shares at $" + n2(top10[0].p) + " (" + top10[0].ts.substring(0, 8) + ") — " + top10[0].it + "." : "No large block prints recorded.", c: top10[0] && top10[0].it === "DIST" ? P.r : top10[0] && top10[0].it === "ACCUM" ? P.g : P.t2 },
+    ]
+  });
+
+  sections.push({
+    title: "VOLATILITY & MICROSTRUCTURE", color: P.y, bullets: [
+      { t: `Annualized realized volatility: ${n2(rvAnn * 100, 1)}% — ${rvAnn > 0.8 ? "extremely elevated, expect wide intraday swings" : rvAnn > 0.5 ? "above average, position sizing should reflect elevated risk" : rvAnn > 0.3 ? "moderate volatility" : "low volatility, directional moves may be more reliable"}.`, c: rvAnn > 0.6 ? P.r : P.y },
+      { t: `Hurst exponent: ${n2(hurst, 3)} — ${hurst > 0.55 ? "trending (persistent) behavior, momentum strategies had an edge" : hurst < 0.45 ? "mean-reverting behavior, fading extremes was the better approach" : "random walk, no reliable persistence or reversal pattern"}.`, c: hurst > 0.55 ? P.g : hurst < 0.45 ? P.y : P.t2 },
+      { t: `Volatility-of-volatility: ${n2(voV * 100, 3)}% — regime is ${voV > 0.015 ? "UNSTABLE, intraday vol was erratic — stop hunts and algo whipsaws likely" : "STABLE, consistent vol throughout the session, mean estimates reliable"}.`, c: voV > 0.015 ? P.r : P.g },
+      { t: `VPIN: ${n2(vpin * 100, 1)}% — ${vpin > 0.3 ? "elevated informed trading probability, adverse selection risk is high" : "low informed trading probability, flow appears uninformed or passive"}.`, c: vpin > 0.3 ? P.r : P.g },
+      { t: `Iceberg orders: ${iceCount} detected. Odd lot ratio: ${n2(oddPct, 1)}% — ${oddPct > 35 ? "high retail participation via odd lots" : oddPct > 20 ? "above-average retail involvement" : "predominantly institutional-sized order flow"}.`, c: oddPct > 30 ? P.y : P.t2 },
+    ]
+  });
+
+  const riskFlags = [
+    vpin > 0.3 && "Elevated VPIN — informed flow risk",
+    voV > 0.015 && "Unstable volatility regime",
+    adR > 1.5 && "Heavy distribution pattern",
+    bNH > bNL * 1.5 && "Institutional selling at highs",
+    cumD < -(totalVol * 0.03) && "Negative cumulative delta",
+  ].filter(Boolean);
+  const playBullets = [
+    { t: "Primary scenario for next session: " + scenarios[0].l + " (" + scenarios[0].p + "%). " + (scenarios[0].l === "BULL" ? "Watch for open above $" + n2(Cl) + " with VWAP hold as confirmation." : scenarios[0].l === "BEAR" ? "Watch for open below $" + n2(Cl) + " with VWAP rejection as confirmation." : scenarios[0].l === "REVERSAL" ? "Watch for S1 hold with delta turning positive as confirmation." : "Watch for S1-R1 range containment on reduced volume."), c: scenarios[0].c },
+    { t: "Key pivot: VWAP at $" + n2(vwap, 2) + ". Open and hold above = bullish. Open and reject = bearish institutional supply.", c: P.am },
+  ];
+  if (ress[0]) playBullets.push({ t: "Resistance $" + n2(ress[0].price) + " (" + ress[0].src + ") — break and hold opens toward $" + n2((ress[1] ? ress[1].price : ress[0].price * 1.02), 2) + ". Rejection confirms distribution.", c: P.r });
+  if (sups[0]) playBullets.push({ t: "Support $" + n2(sups[0].price) + " (" + sups[0].src + ") — hold signals absorption, long entry opportunity. Breakdown targets $" + n2((sups[1] ? sups[1].price : sups[0].price * 0.98), 2) + ".", c: P.g });
+  playBullets.push({ t: "Risk flags: " + (riskFlags.length ? riskFlags.join("; ") : "No major risk flags identified for next session.") + ".", c: P.r });
+  sections.push({ title: "NEXT-DAY PLAYBOOK", color: P.am, bullets: playBullets });
+
+  return sections;
+}
+
 export default function App() {
   const [tab, setTab] = useState("upload");
   const [tickers, setTickers] = useState([]);
