@@ -25,3 +25,10 @@ const SECTORS = [
   { label: "Communication Services", industries: ["Telecom", "Media & Entertainment", "Digital Advertising", "Gaming / Interactive"] },
   { label: "Real Estate", industries: ["Data Centers", "Industrial REITs", "Residential REITs", "Retail REITs", "Office REITs"] },
 ];
+
+const GEOS = ["All", "United States", "Europe", "Asia-Pacific", "Emerging Markets", "Global"];
+const MCAPS = ["All", "Mega Cap (>$200B)", "Large Cap ($10B–$200B)", "Mid Cap ($2B–$10B)", "Small Cap ($300M–$2B)", "Micro Cap (<$300M)"];
+const STYLES = ["Growth", "GARP", "Quality", "Value", "Blend"];
+const RISKS = ["Conservative", "Moderate", "Aggressive"];
+const HORIZONS = ["12 months", "24 months", "3 years"];
+const TRADE_HORIZONS = ["Swing", "1-3 months", "3-6 months", "6-12 months"];
