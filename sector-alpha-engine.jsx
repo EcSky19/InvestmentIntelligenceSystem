@@ -36,3 +36,7 @@ const TRADE_HORIZONS = ["Swing", "1-3 months", "3-6 months", "6-12 months"];
 function T({ children, c = WHITE, s = 12, w = 400, mono = true, style: st = {} }) {
   return <span style={{ color: c, fontSize: s, fontWeight: w, fontFamily: mono ? "'JetBrains Mono','Fira Code','SF Mono',monospace" : "'IBM Plex Sans',sans-serif", letterSpacing: mono ? "-0.02em" : "0.01em", lineHeight: 1.5, ...st }}>{children}</span>;
 }
+
+function Badge({ children, color = AMBER }) {
+  return <span style={{ background: color + "18", color, border: `1px solid ${color}40`, padding: "2px 8px", fontSize: 10, fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.05em", textTransform: "uppercase", whiteSpace: "nowrap", display: "inline-block" }}>{children}</span>;
+}
