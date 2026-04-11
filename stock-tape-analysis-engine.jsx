@@ -243,7 +243,7 @@ function Chrt({ bars, vwap, H, L, cumDs }) {
   </svg>;
 }
 
-function PBar({ sc }) { if (!sc || !sc.length) return null; return <div style={{ display: "flex", height: 16, overflow: "hidden", gap: 1, marginBottom: 4 }}>{sc.map((s, i) => <div key={i} style={{ width: s.p + "%", background: s.c, display: "flex", alignItems: "center", justifyContent: "center", opacity: .85 }}>{s.p >= 14 && <span style={{ fontSize: 7, fontWeight: 700, color: P.bg, fontFamily: FN }}>{s.p}%</span>}</div>)}</div>; }
+function PBar({ sc }) { if (!sc || !sc.length) return null; return <div style={{ display: "flex", height: 18, overflow: "hidden", gap: 1, marginBottom: 4 }}>{sc.map((s, i) => <div key={i} style={{ width: s.p + "%", background: s.c, display: "flex", alignItems: "center", justifyContent: "center", opacity: .85 }}>{s.p >= 14 && <span style={{ fontSize: 9, fontWeight: 700, color: P.bg, fontFamily: FN }}>{s.p}%</span>}</div>)}</div>; }
 
 export default function App() {
   const [tab, setTab] = useState("upload");
