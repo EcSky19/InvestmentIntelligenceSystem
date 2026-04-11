@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 const FN = `'JetBrains Mono','Fira Code','Consolas',monospace`;
-const P = { bg: "#0a0c14", pn: "#0f1119", cd: "#141822", hv: "#1a1f2e", bd: "#1c2236", bh: "#2a3350", t1: "#e8eaf0", t2: "#8892a8", t3: "#505a72", t4: "#2e3548", am: "#ff9800", g: "#26a69a", r: "#ef5350", cy: "#29b6f6", mg: "#ce93d8", y: "#ffd54f" };
+const P = { bg: "#060d19", pn: "#0a1224", cd: "#0a1628", hv: "#0d1b2e", bd: "#1e2d4a", bh: "#1e2d4a", t1: "#e6f1ff", t2: "#8892b0", t3: "#5a6785", t4: "#1e2d4a", am: "#ff9800", g: "#00e676", r: "#ff5252", cy: "#00e5ff", mg: "#e040fb", y: "#ffd600" };
 const n2 = (v, d = 2) => { const x = Number(v); return isNaN(x) ? "—" : x.toFixed(d); };
 const pct = (a, b) => b ? ((a / b) * 100) : 0;
 const safeMax = (arr) => arr.length ? Math.max(...arr) : 0;
