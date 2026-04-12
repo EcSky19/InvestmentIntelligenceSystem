@@ -246,3 +246,214 @@ CRITICAL: Respond ONLY in valid JSON (no markdown, no backticks, no preamble). U
 
 Provide exactly 5 competitors. Use real data. Keep ALL string values SHORT (under 20 words each). No filler. Weighted scores out of 100. This MUST be valid, complete JSON.`;
 }
+
+// ── PRIMARY RESULTS ──
+function PrimaryResults({ data, onRunSecondary }) {
+  const [tab, setTab] = useState("overview");
+  const [sel, setSel] = useState(null);
+  const top3 = data.competitors.filter(c => data.top3_tickers.includes(c.ticker));
+  const winner = data.competitors.find(c => c.ticker === data.winner_ticker);
+  const sorted = [...data.competitors].sort((a, b) => b.weighted_score - a.weighted_score);
+
+  const tabs = [{ id: "overview", label: "EXEC SUMMARY" }, { id: "landscape", label: "LANDSCAPE" }, { id: "moats", label: "MOAT MATRIX" }, { id: "mgmt", label: "MGMT & INNOVATION" }, { id: "rankings", label: "RANKINGS" }, { id: "winner", label: "TOP PICK" }];
+
+  const Modal = ({ comp, onClose }) => (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+      <div style={{ background: BG2, border: `1px solid ${BORDER}`, maxWidth: 700, width: "90%", maxHeight: "85vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+        <div style={{ background: BG3, borderBottom: `1px solid ${BORDER}`, padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}><T c={AMBER} s={14} w={700}>{comp.ticker}</T><T c={MUTED} s={11}>{comp.name}</T></div>
+          <span onClick={onClose} style={{ cursor: "pointer", color: MUTED, fontSize: 18 }}>×</span>
+        </div>
+        <div style={{ padding: 20, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div>
+            <T c={MUTED} s={9} style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>Financials</T>
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
+              {[["Mkt Cap", `$${comp.market_cap_b}B`], ["Revenue", `$${comp.revenue_b}B`], ["Rev Growth", `${comp.revenue_growth_pct}%`], ["EBITDA Margin", `${comp.ebitda_margin_pct}%`], ["Net Margin", `${comp.net_margin_pct}%`]].map(([l, v]) => (
+                <div key={l} style={{ display: "flex", justifyContent: "space-between" }}><T c={MUTED} s={10}>{l}</T><T c={WHITE} s={10} w={600}>{v}</T></div>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center" }}><MoatRadar scores={comp.moat_scores} /></div>
+          <div style={{ gridColumn: "1/-1" }}>
+            <T c={MUTED} s={9} style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>SWOT</T>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+              {[["Strengths", comp.strengths, GREEN], ["Weaknesses", comp.weaknesses, RED], ["Opportunities", comp.opportunities, CYAN], ["Threats", comp.threats, YELLOW]].map(([t, items, c]) => (
+                <div key={t} style={{ background: BG, border: `1px solid ${BORDER}`, padding: 10 }}>
+                  <T c={c} s={9} w={600}>{t}</T>
+                  {(items || []).map((item, i) => <div key={i} style={{ marginTop: 4 }}><T c={MUTED} s={10}>▸ {item}</T></div>)}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {sel && <Modal comp={sel} onClose={() => setSel(null)} />}
+      <div style={{ display: "flex", borderBottom: `1px solid ${BORDER}`, background: BG2, overflowX: "auto", flexShrink: 0 }}>
+        {tabs.map(t => (
+          <div key={t.id} onClick={() => setTab(t.id)} style={{ padding: "10px 16px", cursor: "pointer", borderBottom: tab === t.id ? `2px solid ${AMBER}` : "2px solid transparent", background: tab === t.id ? BG3 : "transparent", whiteSpace: "nowrap" }}>
+            <T c={tab === t.id ? AMBER : MUTED} s={10} w={tab === t.id ? 600 : 400}>{t.label}</T>
+          </div>
+        ))}
+        <div style={{ marginLeft: "auto", padding: "8px 16px" }}>
+          <div onClick={onRunSecondary} style={{ background: MAGENTA + "20", border: `1px solid ${MAGENTA}50`, padding: "4px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <T c={MAGENTA} s={10} w={600}>▸ RUN TRADE READINESS</T>
+          </div>
+        </div>
+      </div>
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+
+        {tab === "overview" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <Panel><T c={AMBER} s={11} w={600}>EXECUTIVE SUMMARY</T><div style={{ marginTop: 10 }}><T c={WHITE} s={12} mono={false}>{data.executive_summary}</T></div></Panel>
+            <Panel>
+              <T c={AMBER} s={11} w={600}>SECTOR STRUCTURE</T>
+              <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Badge color={CYAN}>{data.sector_structure?.phase}</Badge>
+                {(data.sector_structure?.key_drivers || []).map((d, i) => <Badge key={i} color={MUTED}>{d}</Badge>)}
+              </div>
+              <div style={{ marginTop: 10 }}><T c={MUTED} s={11} mono={false}>{data.sector_structure?.description}</T></div>
+            </Panel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+              {top3.map((c, i) => (
+                <div key={c.ticker} onClick={() => setSel(c)} style={{ background: BG2, border: `1px solid ${i === 0 ? AMBER + "60" : BORDER}`, padding: 16, cursor: "pointer", position: "relative" }}>
+                  {i === 0 && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: AMBER }} />}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <T c={AMBER} s={13} w={700}>#{i + 1}</T><Badge color={sColor(c.weighted_score)}>{c.weighted_score}/100</Badge>
+                  </div>
+                  <div style={{ marginTop: 8 }}><T c={WHITE} s={14} w={600}>{c.ticker}</T></div>
+                  <div><T c={MUTED} s={10}>{c.name}</T></div>
+                  <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <Badge color={tColor(c.market_share_trend)}>{c.market_share_trend}</Badge>
+                    <Badge>{c.classification}</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Panel><T c={AMBER} s={11} w={600}>SECTOR THREATS</T><div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8 }}>{(data.sector_threats || []).map((t, i) => <Badge key={i} color={RED}>{t}</Badge>)}</div></Panel>
+          </div>
+        )}
+
+        {tab === "landscape" && (
+          <div style={{ overflowX: "auto" }}>
+            <T c={AMBER} s={11} w={600}>COMPETITIVE LANDSCAPE</T>
+            <table style={{ width: "100%", marginTop: 12, borderCollapse: "collapse", fontSize: 11, fontFamily: "'JetBrains Mono',monospace" }}>
+              <thead><tr style={{ borderBottom: `2px solid ${BORDER}` }}>
+                {["Ticker", "Name", "Mkt Cap", "Rev", "Grw%", "EBITDA%", "Net%", "Share", "Signal", "Score"].map(h => (
+                  <th key={h} style={{ padding: "8px 6px", textAlign: "left", color: MUTED, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em" }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>{sorted.map(c => (
+                <tr key={c.ticker} onClick={() => setSel(c)} style={{ borderBottom: `1px solid ${BORDER}`, cursor: "pointer", background: data.top3_tickers.includes(c.ticker) ? AMBER + "08" : "transparent" }}>
+                  <td style={{ padding: "8px 6px", color: data.winner_ticker === c.ticker ? AMBER : WHITE, fontWeight: 600 }}>{c.ticker}</td>
+                  <td style={{ padding: "8px 6px", color: MUTED, fontSize: 10, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</td>
+                  <td style={{ padding: "8px 6px", color: WHITE }}>{c.market_cap_b}B</td>
+                  <td style={{ padding: "8px 6px", color: WHITE }}>{c.revenue_b}B</td>
+                  <td style={{ padding: "8px 6px", color: c.revenue_growth_pct >= 15 ? GREEN : c.revenue_growth_pct >= 5 ? YELLOW : RED }}>{c.revenue_growth_pct}%</td>
+                  <td style={{ padding: "8px 6px", color: c.ebitda_margin_pct >= 30 ? GREEN : c.ebitda_margin_pct >= 15 ? YELLOW : RED }}>{c.ebitda_margin_pct}%</td>
+                  <td style={{ padding: "8px 6px", color: c.net_margin_pct >= 20 ? GREEN : c.net_margin_pct >= 10 ? YELLOW : RED }}>{c.net_margin_pct}%</td>
+                  <td style={{ padding: "8px 6px" }}><Badge color={tColor(c.market_share_trend)}>{c.market_share_trend}</Badge></td>
+                  <td style={{ padding: "8px 6px" }}><Badge color={sigColor(c.inst_signal)}>{c.inst_signal}</Badge></td>
+                  <td style={{ padding: "8px 6px" }}><ScoreBar value={c.weighted_score} color={sColor(c.weighted_score)} width={50} /></td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === "moats" && (
+          <div>
+            <T c={AMBER} s={11} w={600}>MOAT DURABILITY MATRIX</T>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(230px,1fr))", gap: 16, marginTop: 16 }}>
+              {sorted.map(c => (
+                <div key={c.ticker} onClick={() => setSel(c)} style={{ background: BG2, border: `1px solid ${data.winner_ticker === c.ticker ? AMBER + "60" : BORDER}`, padding: 16, cursor: "pointer" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <T c={WHITE} s={13} w={700}>{c.ticker}</T><T c={CYAN} s={11} w={600}>{c.moat_avg?.toFixed(1)}/5</T>
+                  </div>
+                  <MoatRadar scores={c.moat_scores} />
+                  <div style={{ marginTop: 8 }}>
+                    {Object.entries(c.moat_scores).map(([k, v]) => (
+                      <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "2px 0" }}>
+                        <T c={MUTED} s={9}>{k.replace(/_/g, " ")}</T>
+                        <div style={{ display: "flex", gap: 2 }}>{[1, 2, 3, 4, 5].map(n => <div key={n} style={{ width: 8, height: 8, background: n <= v ? CYAN : BORDER, borderRadius: 1 }} />)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "mgmt" && (
+          <div>
+            <T c={AMBER} s={11} w={600}>MANAGEMENT & INNOVATION SCORECARD</T>
+            <table style={{ width: "100%", marginTop: 16, borderCollapse: "collapse", fontSize: 11, fontFamily: "'JetBrains Mono',monospace" }}>
+              <thead><tr style={{ borderBottom: `2px solid ${BORDER}` }}>
+                {["Ticker", "Mgmt", "Innov", "Management Assessment", "Innovation Assessment"].map(h => (
+                  <th key={h} style={{ padding: "8px 6px", textAlign: "left", color: MUTED, fontSize: 9, textTransform: "uppercase" }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>{sorted.map(c => (
+                <tr key={c.ticker} style={{ borderBottom: `1px solid ${BORDER}` }}>
+                  <td style={{ padding: "10px 6px", color: data.winner_ticker === c.ticker ? AMBER : WHITE, fontWeight: 600 }}>{c.ticker}</td>
+                  <td style={{ padding: "10px 6px" }}><ScoreBar value={c.mgmt_score} max={10} color={c.mgmt_score >= 7 ? GREEN : c.mgmt_score >= 5 ? YELLOW : RED} width={40} /></td>
+                  <td style={{ padding: "10px 6px" }}><ScoreBar value={c.innovation_score} max={10} color={c.innovation_score >= 7 ? GREEN : c.innovation_score >= 5 ? YELLOW : RED} width={40} /></td>
+                  <td style={{ padding: "10px 6px", color: MUTED, fontSize: 10, maxWidth: 200 }}>{c.mgmt_note}</td>
+                  <td style={{ padding: "10px 6px", color: MUTED, fontSize: 10, maxWidth: 200 }}>{c.innovation_note}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === "rankings" && (
+          <div>
+            <T c={AMBER} s={11} w={600}>WEIGHTED INVESTMENT SCORE RANKINGS</T>
+            <div style={{ marginTop: 16 }}>
+              {sorted.map((c, i) => (
+                <div key={c.ticker} onClick={() => setSel(c)} style={{ display: "flex", alignItems: "center", gap: 16, padding: "12px 16px", background: i < 3 ? AMBER + "08" : "transparent", borderBottom: `1px solid ${BORDER}`, cursor: "pointer" }}>
+                  <T c={i < 3 ? AMBER : MUTED} s={16} w={700} style={{ width: 30 }}>#{i + 1}</T>
+                  <div style={{ flex: "0 0 70px" }}><T c={WHITE} s={14} w={700}>{c.ticker}</T></div>
+                  <div style={{ flex: 1 }}><div style={{ height: 10, background: BORDER, borderRadius: 1 }}><div style={{ height: "100%", width: `${c.weighted_score}%`, background: `linear-gradient(90deg,${sColor(c.weighted_score)}80,${sColor(c.weighted_score)})`, borderRadius: 1 }} /></div></div>
+                  <T c={sColor(c.weighted_score)} s={16} w={700} style={{ width: 50, textAlign: "right" }}>{c.weighted_score}</T>
+                  <div style={{ width: 140 }}><Badge color={c.classification === "Avoid" ? RED : c.classification === "Core compounder" ? GREEN : CYAN}>{c.classification}</Badge></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "winner" && winner && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ background: `linear-gradient(135deg,${BG2} 0%,${AMBER}08 100%)`, border: `1px solid ${AMBER}40`, padding: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
+                <div>
+                  <T c={MUTED} s={10}>BEST OVERALL WINNER</T>
+                  <div style={{ marginTop: 4 }}><T c={AMBER} s={28} w={700}>{winner.ticker}</T></div>
+                  <div><T c={MUTED} s={13}>{winner.name}</T></div>
+                  <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <Badge color={AMBER}>{data.winner_type}</Badge>
+                    <Badge color={GREEN}>{winner.weighted_score}/100</Badge>
+                    <Badge color={tColor(winner.market_share_trend)}>Share: {winner.market_share_trend}</Badge>
+                  </div>
+                </div>
+                <MoatRadar scores={winner.moat_scores} />
+              </div>
+            </div>
+            <Panel><T c={AMBER} s={11} w={600}>INVESTMENT THESIS</T><div style={{ marginTop: 8 }}><T c={WHITE} s={12} mono={false}>{data.winner_case}</T></div></Panel>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {[[data.winner_catalysts, GREEN, "KEY CATALYSTS"], [data.winner_risks, RED, "KEY RISKS"], [data.winner_confirm_signals, CYAN, "CONFIRMATION SIGNALS"], [data.winner_invalidation_signals, YELLOW, "INVALIDATION SIGNALS"]].map(([items, c, title]) => (
+                <Panel key={title} border={c + "30"}><T c={c} s={10} w={600}>{title}</T>{(items || []).map((x, i) => <div key={i} style={{ marginTop: 6 }}><T c={WHITE} s={11} mono={false}>▸ {x}</T></div>)}</Panel>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
