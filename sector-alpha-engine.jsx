@@ -67,3 +67,7 @@ function SelectField({ label, value, onChange, options, disabled }) {
     </div>
   );
 }
+
+function ScanLine() {
+  return <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "100%", background: "repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.008) 2px,rgba(255,255,255,0.008) 4px)", pointerEvents: "none", zIndex: 1 }} />;
+}
