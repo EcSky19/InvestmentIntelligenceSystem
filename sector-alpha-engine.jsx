@@ -129,3 +129,22 @@ function HeaderBar({ title, subtitle, rightContent }) {
     </div>
   );
 }
+
+function LoadingTerminal({ progress, lines }) {
+  const vis = Math.min(lines.length, Math.floor(progress / 8) + 1);
+  return (
+    <div style={{ padding: 30, fontFamily: "'JetBrains Mono',monospace" }}>
+      <div style={{ marginBottom: 20 }}>
+        <T c={AMBER} s={13} w={600}>PROCESSING REQUEST</T>
+        <div style={{ marginTop: 10, height: 3, background: BORDER, borderRadius: 1 }}>
+          <div style={{ height: "100%", background: `linear-gradient(90deg,${AMBER},${GREEN})`, width: `${Math.min(progress, 100)}%`, transition: "width 0.5s ease", borderRadius: 1, boxShadow: `0 0 8px ${GREEN}40` }} />
+        </div>
+      </div>
+      {lines.slice(0, vis).map((l, i) => (
+        <div key={i} style={{ padding: "3px 0", opacity: i === vis - 1 ? 0.6 : 1 }}>
+          <T c={i === vis - 1 ? YELLOW : GREEN} s={11}>{i < vis - 1 ? "✓" : "▸"} {l}</T>
+        </div>
+      ))}
+    </div>
+  );
+}
