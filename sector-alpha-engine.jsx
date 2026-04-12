@@ -77,3 +77,18 @@ const tColor = t => t === "Gaining" ? GREEN : t === "Losing" ? RED : YELLOW;
 const sigColor = s => s === "Positive" ? GREEN : s === "Negative" ? RED : YELLOW;
 const stColor = st => ({ Triggered: GREEN, Ready: CYAN, Watch: YELLOW, Extended: AMBER, Broken: RED, Avoid: RED }[st] || MUTED);
 const eColor = e => ({ Proper: GREEN, Early: CYAN, Extended: AMBER, Broken: RED }[e] || MUTED);
+
+function MoatRadar({ scores, size = 170 }) {
+  const keys = ["brand", "cost_advantage", "network_effects", "switching_costs", "regulatory", "distribution", "scale"];
+  const labels = ["BRD", "CST", "NET", "SWT", "REG", "DST", "SCL"];
+  const cx = size / 2, cy = size / 2, r = size / 2 - 20;
+  const angles = keys.map((_, i) => (Math.PI * 2 * i) / keys.length - Math.PI / 2);
+  const pts = keys.map((k, i) => { const v = (scores[k] || 0) / 5; return `${cx + r * v * Math.cos(angles[i])},${cy + r * v * Math.sin(angles[i])}`; }).join(" ");
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {[1, 2, 3, 4, 5].map(ring => <polygon key={ring} points={angles.map(a => `${cx + r * (ring / 5) * Math.cos(a)},${cy + r * (ring / 5) * Math.sin(a)}`).join(" ")} fill="none" stroke={BORDER} strokeWidth={0.5} />)}
+      {angles.map((a, i) => <g key={i}><line x1={cx} y1={cy} x2={cx + r * Math.cos(a)} y2={cy + r * Math.sin(a)} stroke={BORDER} strokeWidth={0.5} /><text x={cx + (r + 14) * Math.cos(a)} y={cy + (r + 14) * Math.sin(a)} fill={MUTED} fontSize={7} textAnchor="middle" dominantBaseline="middle" fontFamily="'JetBrains Mono',monospace">{labels[i]}</text></g>)}
+      <polygon points={pts} fill={CYAN + "20"} stroke={CYAN} strokeWidth={1.5} />
+    </svg>
+  );
+}
