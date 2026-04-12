@@ -40,3 +40,7 @@ function T({ children, c = WHITE, s = 12, w = 400, mono = true, style: st = {} }
 function Badge({ children, color = AMBER }) {
   return <span style={{ background: color + "18", color, border: `1px solid ${color}40`, padding: "2px 8px", fontSize: 10, fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.05em", textTransform: "uppercase", whiteSpace: "nowrap", display: "inline-block" }}>{children}</span>;
 }
+
+function Panel({ children, border, style: s = {} }) {
+  return <div style={{ background: BG2, border: `1px solid ${border || BORDER}`, padding: 16, ...s }}>{children}</div>;
+}
