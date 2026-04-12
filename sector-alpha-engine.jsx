@@ -179,3 +179,70 @@ async function callClaude(prompt) {
   if (!text) throw new Error("Empty response from API");
   return repairJSON(text);
 }
+
+function buildPrimaryPrompt(p) {
+  return `You are acting as a senior partner at Bain & Company advising an investment fund.
+
+Analyze the following sector and provide a comprehensive equity analysis:
+
+Sector: ${p.sector}
+Industry: ${p.industry || "Full sector scan"}
+Geographic scope: ${p.geo}
+Stock universe: S&P 500, NASDAQ Composite, and Dow Jones Industrial Average constituents. Only select from publicly traded equities listed on these indices.
+Market cap preference: ${p.mcap}
+Investment style: ${p.style}
+Risk profile: ${p.risk}
+Time horizon: ${p.horizon}
+
+CRITICAL: Respond ONLY in valid JSON (no markdown, no backticks, no preamble). Use this exact schema:
+
+{
+  "executive_summary": "2-3 sentence overview of sector opportunity",
+  "sector_structure": {
+    "description": "How the industry makes money and what determines winners",
+    "phase": "consolidating|fragmenting|maturing|disrupting",
+    "key_drivers": ["driver1","driver2","driver3"]
+  },
+  "competitors": [
+    {
+      "ticker": "TICK",
+      "name": "Company Name",
+      "market_cap_b": 100,
+      "revenue_b": 50,
+      "revenue_growth_pct": 15,
+      "ebitda_margin_pct": 30,
+      "net_margin_pct": 20,
+      "moat_scores": { "brand": 4, "cost_advantage": 3, "network_effects": 5, "switching_costs": 4, "regulatory": 2, "distribution": 4, "scale": 5 },
+      "moat_avg": 3.9,
+      "mgmt_score": 8,
+      "mgmt_note": "Brief management assessment",
+      "innovation_score": 8,
+      "innovation_note": "Brief innovation assessment",
+      "market_share_trend": "Gaining|Stable|Losing",
+      "inst_signal": "Positive|Neutral|Negative",
+      "inst_note": "Brief institutional note",
+      "strengths": ["s1","s2"],
+      "weaknesses": ["w1","w2"],
+      "opportunities": ["o1","o2"],
+      "threats": ["t1","t2"],
+      "key_catalysts": ["c1","c2"],
+      "key_risks": ["r1","r2"],
+      "weighted_score": 78,
+      "classification": "Core compounder|Emerging share gainer|Cyclical|Turnaround|Avoid"
+    }
+  ],
+  "top3_tickers": ["TICK1","TICK2","TICK3"],
+  "winner_ticker": "TICK1",
+  "winner_case": "Why this is the best overall pick",
+  "winner_type": "Best business|Best stock|Best risk-reward",
+  "winner_catalysts": ["catalyst1","catalyst2"],
+  "winner_risks": ["risk1","risk2"],
+  "winner_confirm_signals": ["signal1","signal2"],
+  "winner_invalidation_signals": ["signal1","signal2"],
+  "sector_threats": ["threat1","threat2","threat3"],
+  "high_quality_expensive": ["TICK or empty"],
+  "cheap_but_weak": ["TICK or empty"]
+}
+
+Provide exactly 5 competitors. Use real data. Keep ALL string values SHORT (under 20 words each). No filler. Weighted scores out of 100. This MUST be valid, complete JSON.`;
+}
