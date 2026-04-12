@@ -109,3 +109,23 @@ function ActionGauge({ score, label, size = 90 }) {
     </div>
   );
 }
+
+function HeaderBar({ title, subtitle, rightContent }) {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => { const i = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(i); }, []);
+  return (
+    <div style={{ background: `linear-gradient(180deg,${BG3} 0%,${BG2} 100%)`, borderBottom: `1px solid ${BORDER}`, padding: "10px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ width: 8, height: 8, background: GREEN, borderRadius: "50%", boxShadow: `0 0 8px ${GREEN}60` }} />
+        <T c={AMBER} s={15} w={700}>{title}</T>
+        {subtitle && <T c={MUTED} s={11}>// {subtitle}</T>}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        {rightContent}
+        <T c={MUTED} s={10}>LIVE</T>
+        <T c={CYAN} s={11}>{time.toLocaleTimeString("en-US", { hour12: false })}</T>
+        <T c={MUTED} s={10}>{time.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit" })}</T>
+      </div>
+    </div>
+  );
+}
