@@ -148,3 +148,21 @@ function LoadingTerminal({ progress, lines }) {
     </div>
   );
 }
+
+function repairJSON(str) {
+  let s = str.replace(/```json|```/g, "").trim();
+  if (!s.startsWith("{") && !s.startsWith("[")) {
+    const i = s.indexOf("{");
+    if (i !== -1) s = s.slice(i); else throw new Error("No JSON found");
+  }
+  try { return JSON.parse(s); } catch (_) { }
+  let trimmed = s.replace(/,\s*$/, "");
+  let inS = false, esc = false;
+  for (let i = 0; i < trimmed.length; i++) { if (esc) { esc = false; continue; } if (trimmed[i] === "\\") { esc = true; continue; } if (trimmed[i] === '"') inS = !inS; }
+  if (inS) trimmed += '"';
+  trimmed = trimmed.replace(/,\s*$/, "");
+  const stack = []; let inS2 = false, esc2 = false;
+  for (let i = 0; i < trimmed.length; i++) { const c = trimmed[i]; if (esc2) { esc2 = false; continue; } if (c === "\\") { esc2 = true; continue; } if (c === '"') { inS2 = !inS2; continue; } if (inS2) continue; if (c === "{" || c === "[") stack.push(c === "{" ? "}" : "]"); else if (c === "}" || c === "]") stack.pop(); }
+  try { return JSON.parse(trimmed + stack.reverse().join("")); } catch (_2) { }
+  throw new Error("Could not parse API response. Model may have returned incomplete JSON.");
+}
