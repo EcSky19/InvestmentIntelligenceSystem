@@ -55,3 +55,15 @@ function ScoreBar({ value, max = 100, color = GREEN, width = 60 }) {
     </div>
   );
 }
+
+function SelectField({ label, value, onChange, options, disabled }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, opacity: disabled ? 0.35 : 1 }}>
+      <T c={MUTED} s={9} style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</T>
+      <select value={value} onChange={e => onChange(e.target.value)} disabled={disabled} style={{ background: BG, border: `1px solid ${BORDER}`, color: WHITE, fontFamily: "'JetBrains Mono',monospace", fontSize: 11, padding: "6px 8px", outline: "none", cursor: disabled ? "not-allowed" : "pointer" }}>
+        <option value="">{disabled ? "Select Sector First..." : "Select..."}</option>
+        {options.map(o => <option key={typeof o === "string" ? o : o.label} value={typeof o === "string" ? o : o.label}>{typeof o === "string" ? o : o.label}</option>)}
+      </select>
+    </div>
+  );
+}
