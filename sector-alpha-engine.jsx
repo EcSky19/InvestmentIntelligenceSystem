@@ -71,3 +71,9 @@ function SelectField({ label, value, onChange, options, disabled }) {
 function ScanLine() {
   return <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "100%", background: "repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.008) 2px,rgba(255,255,255,0.008) 4px)", pointerEvents: "none", zIndex: 1 }} />;
 }
+
+const sColor = s => s >= 75 ? GREEN : s >= 55 ? YELLOW : RED;
+const tColor = t => t === "Gaining" ? GREEN : t === "Losing" ? RED : YELLOW;
+const sigColor = s => s === "Positive" ? GREEN : s === "Negative" ? RED : YELLOW;
+const stColor = st => ({ Triggered: GREEN, Ready: CYAN, Watch: YELLOW, Extended: AMBER, Broken: RED, Avoid: RED }[st] || MUTED);
+const eColor = e => ({ Proper: GREEN, Early: CYAN, Extended: AMBER, Broken: RED }[e] || MUTED);
