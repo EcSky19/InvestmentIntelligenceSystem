@@ -92,3 +92,20 @@ function MoatRadar({ scores, size = 170 }) {
     </svg>
   );
 }
+
+function ActionGauge({ score, label, size = 90 }) {
+  const r = 32, cx = size / 2, cy = size / 2 + 4;
+  const circ = Math.PI * r;
+  const off = circ - (Math.max(0, Math.min(score, 100)) / 100) * circ;
+  const color = sColor(score);
+  return (
+    <div style={{ textAlign: "center" }}>
+      <svg width={size} height={size / 2 + 20} viewBox={`0 0 ${size} ${size / 2 + 20}`}>
+        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke={BORDER} strokeWidth={6} />
+        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke={color} strokeWidth={6} strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round" />
+        <text x={cx} y={cy - 8} fill={color} fontSize={16} fontWeight={700} textAnchor="middle" fontFamily="'JetBrains Mono',monospace">{score}</text>
+      </svg>
+      {label && <T c={MUTED} s={8} style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</T>}
+    </div>
+  );
+}
