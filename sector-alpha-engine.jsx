@@ -166,3 +166,16 @@ function repairJSON(str) {
   try { return JSON.parse(trimmed + stack.reverse().join("")); } catch (_2) { }
   throw new Error("Could not parse API response. Model may have returned incomplete JSON.");
 }
+
+async function callClaude(prompt) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 16000, messages: [{ role: "user", content: prompt }] }),
+  });
+  if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || "API error");
+  const text = data.content?.map(i => i.text || "").join("\n") || "";
+  if (!text) throw new Error("Empty response from API");
+  return repairJSON(text);
+}
