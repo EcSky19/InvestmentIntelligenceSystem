@@ -44,3 +44,14 @@ function Badge({ children, color = AMBER }) {
 function Panel({ children, border, style: s = {} }) {
   return <div style={{ background: BG2, border: `1px solid ${border || BORDER}`, padding: 16, ...s }}>{children}</div>;
 }
+
+function ScoreBar({ value, max = 100, color = GREEN, width = 60 }) {
+  return (
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      <div style={{ width, height: 6, background: BORDER, borderRadius: 1 }}>
+        <div style={{ height: "100%", width: `${(value / max) * 100}%`, background: color, borderRadius: 1 }} />
+      </div>
+      <T c={color} s={10} w={600}>{value}</T>
+    </div>
+  );
+}
