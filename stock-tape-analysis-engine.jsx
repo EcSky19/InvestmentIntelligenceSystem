@@ -349,38 +349,129 @@ function buildSummary(S) {
 export default function App() {
   const [tab, setTab] = useState("upload");
   const [tickers, setTickers] = useState([]);
+  const [tickerMeta, setTickerMeta] = useState({});
   const [aTk, setATk] = useState(null);
   const [recs, setRecs] = useState([]);
   const [selD, setSelD] = useState(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
+  const [batchLog, setBatchLog] = useState([]);
   const [pcI, setPcI] = useState("");
+  const [confirmDel, setConfirmDel] = useState(null);
   const fRef = useRef();
 
-  useEffect(() => { (async () => { try { const idx = await ldIdx(); setTickers(idx); if (idx.length) { setATk(idx[0]); setRecs(await ldTk(idx[0])); } } catch (e) { } setLoading(false); })(); }, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        const idx = await ldIdx();
+        const meta = await ldMeta();
+        setTickers(idx);
+        setTickerMeta(meta);
+        if (idx.length) { setATk(idx[0]); setRecs(await ldTk(idx[0])); }
+      } catch (e) { } setLoading(false);
+    })();
+  }, []);
   const swTk = useCallback(async t => { setATk(t); setSelD(null); const r = await ldTk(t); setRecs(r); setTab("dash"); if (r.length) setSelD(r[0].date); }, []);
 
+  const deleteTicker = useCallback(async (tk) => {
+    try { await window.storage.delete("stae7:" + tk); } catch (e) { }
+    setTickerMeta(prev => {
+      const next = { ...prev }; delete next[tk];
+      svMeta(next);
+      return next;
+    });
+    setTickers(prev => {
+      const next = prev.filter(t => t !== tk);
+      svIdx(next);
+      return next;
+    });
+    setBatchLog([]);
+    setConfirmDel(null);
+    if (aTk === tk) {
+      setATk(null); setRecs([]); setSelD(null); setTab("upload");
+    }
+  }, [aTk]);
+
+  const processOneFile = useCallback(async (file, tkMap, idxSet) => {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = async ev => {
+        try {
+          const fname = file.name.replace(/\.csv$/i, "");
+          const parsed = parseTapeCSV(ev.target.result, fname);
+          if (!parsed?.trades?.length) { resolve({ ok: false, file: file.name, msg: "Cannot parse — no valid trades found" }); return; }
+          const tk = parsed.ticker;
+          if (!tk) { resolve({ ok: false, file: file.name, msg: "Could not detect ticker from filename or header" }); return; }
+          if (!parsed.date) { resolve({ ok: false, file: file.name, msg: "Could not detect date — use format 'TICKER Time and Sales MMDDYY'" }); return; }
+          // Load existing records for this ticker (use map cache to avoid duplicate loads)
+          if (!tkMap[tk]) tkMap[tk] = await ldTk(tk);
+          let exR = tkMap[tk];
+          // Auto-detect prev close from chronologically prior session
+          let pc = parseFloat(pcI) || null;
+          if (!pc && exR.length) { const prev = [...exR].sort((a, b) => b.date.localeCompare(a.date)).find(r => r.date < parsed.date); if (prev) pc = prev.Cl; }
+          const a = engine(parsed, pc);
+          if (!a) { resolve({ ok: false, file: file.name, msg: "Engine analysis failed" }); return; }
+          const existIdx = exR.findIndex(r => r.date === a.date);
+          if (existIdx >= 0) exR[existIdx] = a; else exR.push(a);
+          // Sort newest first
+          exR.sort((x, y) => y.date.localeCompare(x.date));
+          // Recompute actDir/hit across all sessions in chronological order
+          const chrono = [...exR].reverse();
+          for (let i = 0; i < chrono.length - 1; i++) {
+            const c2 = chrono[i], nx = chrono[i + 1];
+            const chg = c2.Cl ? ((nx.Cl - c2.Cl) / c2.Cl) * 100 : 0;
+            c2.actChg = chg; c2.actDir = chg > 0.3 ? "BULL" : chg < -0.3 ? "BEAR" : "FLAT";
+            c2.hit = (c2.score >= 1 ? "BULL" : c2.score <= -1 ? "BEAR" : "FLAT") === c2.actDir;
+          }
+          tkMap[tk] = [...chrono].reverse();
+          idxSet.add(tk);
+          resolve({ ok: true, file: file.name, tk, date: a.date, score: a.score, bias: a.bias, trades: a.tradeCount });
+        } catch (err) { resolve({ ok: false, file: file.name, msg: err.message }); }
+      };
+      reader.readAsText(file);
+    });
+  }, [pcI]);
+
   const handleFile = useCallback(async e => {
-    const file = e.target.files?.[0]; if (!file) return; setMsg(null);
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      try {
-        const parsed = parseTapeCSV(ev.target.result); if (!parsed?.trades?.length) { setMsg({ e: 1, m: "Cannot parse." }); return; }
-        const tk = parsed.ticker; if (!tk) { setMsg({ e: 1, m: "No ticker." }); return; }
-        let exR = await ldTk(tk); let pc = parseFloat(pcI) || null;
-        if (!pc && exR.length) { const prev = [...exR].sort((a, b) => b.date.localeCompare(a.date)).find(r => r.date < parsed.date); if (prev) pc = prev.Cl; }
-        const a = engine(parsed, pc); if (!a) { setMsg({ e: 1, m: "Analysis failed." }); return; }
-        const idx = exR.findIndex(r => r.date === a.date); if (idx >= 0) exR[idx] = a; else exR.push(a);
-        exR.sort((x, y) => y.date.localeCompare(x.date));
-        const chrono = [...exR].reverse(); for (let i = 0; i < chrono.length - 1; i++) { const c2 = chrono[i], nx = chrono[i + 1]; const chg = c2.Cl ? ((nx.Cl - c2.Cl) / c2.Cl) * 100 : 0; c2.actChg = chg; c2.actDir = chg > 0.3 ? "BULL" : chg < -0.3 ? "BEAR" : "FLAT"; c2.hit = (c2.score >= 1 ? "BULL" : c2.score <= -1 ? "BEAR" : "FLAT") === c2.actDir; }
-        exR = [...chrono].reverse(); await svTk(tk, exR);
-        let idx2 = [...tickers]; if (!idx2.includes(tk)) { idx2.push(tk); idx2.sort(); setTickers(idx2); await svIdx(idx2); }
-        setATk(tk); setRecs(exR); setSelD(a.date); setMsg({ m: tk + " " + a.date + " | " + a.tradeCount + " trades | Score " + (a.score >= 0 ? "+" : "") + a.score + " " + a.bias }); setTab("dash");
-      } catch (err) { setMsg({ e: 1, m: "Error: " + err.message }); }
-    }; reader.readAsText(file); if (e.target) e.target.value = "";
-  }, [tickers, pcI]);
+    const files = Array.from(e.target.files || []); if (!files.length) return;
+    setMsg(null); setBatchLog([]);
+    const tkMap = {}; const idxSet = new Set();
+    const results = [];
+    for (const file of files) {
+      const r = await processOneFile(file, tkMap, idxSet);
+      results.push(r);
+      setBatchLog(prev => [...prev, r]);
+    }
+    // Persist all modified tickers and update meta
+    let idx2 = [...tickers];
+    const metaUp = { ...tickerMeta };
+    for (const tk of idxSet) {
+      await svTk(tk, tkMap[tk]);
+      if (!idx2.includes(tk)) idx2.push(tk);
+      // Store the most recent session date for this ticker
+      if (tkMap[tk].length) metaUp[tk] = tkMap[tk][0].date;
+    }
+    idx2.sort();
+    if (idxSet.size) { setTickers(idx2); setTickerMeta(metaUp); await svIdx(idx2); await svMeta(metaUp); }
+    // Navigate to the last successfully processed ticker
+    const last = results.filter(r => r.ok).pop();
+    if (last) {
+      setATk(last.tk); setRecs(tkMap[last.tk]);
+      setSelD(tkMap[last.tk][0]?.date || null);
+      setTab("dash");
+    }
+    const ok = results.filter(r => r.ok).length;
+    const fail = results.filter(r => !r.ok).length;
+    setMsg({ e: fail > 0 && ok === 0, m: `${ok} file${ok !== 1 ? "s" : ""} imported successfully${fail ? ", " + fail + " failed" : ""}.` });
+    if (e.target) e.target.value = "";
+  }, [tickers, pcI, processOneFile]);
 
   const S = useMemo(() => recs.find(r => r.date === selD) || null, [recs, selD]);
+  const recentTickers = useMemo(() =>
+    [...tickers]
+      .sort((a, b) => (tickerMeta[b] || "").localeCompare(tickerMeta[a] || ""))
+      .slice(0, 20),
+    [tickers, tickerMeta]);
 
   if (loading) return <div style={{ fontFamily: FN, background: P.bg, color: P.t3, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>LOADING...</div>;
 
@@ -391,7 +482,7 @@ export default function App() {
     <div style={{ fontFamily: FN, background: P.bg, color: P.t1, minHeight: "100vh", fontSize: 11 }}>
       <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <div style={{ background: "linear-gradient(180deg,#0a1224,#060d19)", borderBottom: "1px solid " + P.bd, padding: "0 16px", display: "flex", alignItems: "center", height: 36, gap: 12 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00e676", boxShadow: "0 0 8px #00e67688" }} /><span style={{ color: P.am, fontSize: 14, fontWeight: 700, letterSpacing: 2 }}>STAE</span><span style={{ color: P.t3, fontSize: 10, letterSpacing: 1 }}>STOCK TAPE ANALYSIS ENGINE  v6</span>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00e676", boxShadow: "0 0 8px #00e67688" }} /><span style={{ color: P.am, fontSize: 13, fontWeight: 700, letterSpacing: 1.5 }}>Stock Time & Sales</span><span style={{ color: "#e6f1ff", fontSize: 13, fontWeight: 700, letterSpacing: 1 }}> Tape Analysis Engine</span><span style={{ color: P.t3, fontSize: 10, letterSpacing: 1, marginLeft: 6 }}>v6</span>
         <div style={{ flex: 1 }} />
         {aTk && <span style={{ color: "#e6f1ff", fontSize: 13, fontWeight: 700, letterSpacing: 1 }}>{aTk}</span>}
         {S && <Tag c={S.biasC}>{S.bias}</Tag>}
@@ -399,7 +490,8 @@ export default function App() {
       </div>
 
       {tickers.length > 0 && <div style={{ display: "flex", background: P.cd, borderBottom: "1px solid " + P.bd, padding: "0 12px", overflowX: "auto", height: 28, alignItems: "center" }}>
-        {tickers.map(tk => <button key={tk} onClick={() => swTk(tk)} style={{ padding: "0 14px", height: 28, border: "none", borderBottom: aTk === tk ? "2px solid " + P.am : "2px solid transparent", cursor: "pointer", fontFamily: FN, fontSize: 10, fontWeight: 700, background: aTk === tk ? P.am + "10" : "transparent", color: aTk === tk ? P.am : P.t3 }}>{tk}</button>)}
+        {recentTickers.map(tk => <button key={tk} onClick={() => swTk(tk)} style={{ padding: "0 14px", height: 28, border: "none", borderBottom: aTk === tk ? "2px solid " + P.am : "2px solid transparent", cursor: "pointer", fontFamily: FN, fontSize: 10, fontWeight: 700, background: aTk === tk ? P.am + "10" : "transparent", color: aTk === tk ? P.am : P.t3, flexShrink: 0 }}>{tk}</button>)}
+        {tickers.length > 20 && <span style={{ color: P.t3, fontSize: 9, padding: "0 8px", flexShrink: 0 }}>+{tickers.length - 20} more</span>}
       </div>}
 
       <div style={{ display: "flex", background: P.pn, borderBottom: "1px solid " + P.bd, overflowX: "auto" }}>
@@ -412,12 +504,62 @@ export default function App() {
 
       <div style={{ padding: 8, maxWidth: 1440, margin: "0 auto", display: "flex", flexDirection: "column", gap: 8 }}>
 
-        {tab === "upload" && <div style={{ maxWidth: 520, margin: "0 auto", width: "100%" }}>
-          <Pnl title="DATA IMPORT"><div style={{ marginBottom: 8 }}><div style={{ fontSize: 10, color: P.t3, letterSpacing: 1.5, marginBottom: 4 }}>PREVIOUS CLOSE</div><input value={pcI} onChange={e => setPcI(e.target.value)} placeholder="0.00" style={{ background: P.bg, border: "1px solid " + P.bd, padding: "6px 10px", color: P.am, fontFamily: FN, fontSize: 12, fontWeight: 700, width: 140, outline: "none" }} /></div>
-            <div style={{ textAlign: "center", padding: "28px 16px", border: "1px solid " + P.bd, background: P.bg, cursor: "pointer" }} onClick={() => fRef.current?.click()} onDragOver={e => { e.preventDefault(); }} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) { const dt = new DataTransfer(); dt.items.add(f); fRef.current.files = dt.files; handleFile({ target: fRef.current }); } }}><input ref={fRef} type="file" accept=".csv" onChange={handleFile} style={{ display: "none" }} /><div style={{ color: P.am, fontSize: 14, fontWeight: 700, letterSpacing: 1 }}>DROP T&S CSV</div><div style={{ color: P.t3, fontSize: 10, marginTop: 4 }}>Auto-routed to ticker folder</div></div>
-            {msg && <div style={{ marginTop: 8, padding: "6px 10px", fontSize: 10, background: msg.e ? P.r + "15" : P.g + "15", color: msg.e ? P.r : P.g }}>{msg.m}</div>}
+        {tab === "upload" && <div style={{ maxWidth: 560, margin: "0 auto", width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
+          <Pnl title="DATA IMPORT">
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 10, color: P.t3, letterSpacing: 1.5, marginBottom: 4 }}>PREVIOUS CLOSE (optional — auto-detected if prior session exists)</div>
+              <input value={pcI} onChange={e => setPcI(e.target.value)} placeholder="0.00" style={{ background: P.bg, border: "1px solid " + P.bd, padding: "6px 10px", color: P.am, fontFamily: FN, fontSize: 12, fontWeight: 700, width: 140, outline: "none" }} />
+            </div>
+            <div style={{ textAlign: "center", padding: "28px 16px", border: "2px dashed " + P.bd, background: P.bg, cursor: "pointer", transition: "border-color 0.2s" }}
+              onClick={() => fRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = P.am; }}
+              onDragLeave={e => { e.currentTarget.style.borderColor = P.bd; }}
+              onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = P.bd; const files = e.dataTransfer.files; if (files.length) { const dt = new DataTransfer(); Array.from(files).forEach(f => dt.items.add(f)); fRef.current.files = dt.files; handleFile({ target: fRef.current }); } }}>
+              <input ref={fRef} type="file" accept=".csv" multiple onChange={handleFile} style={{ display: "none" }} />
+              <div style={{ color: P.am, fontSize: 14, fontWeight: 700, letterSpacing: 1 }}>DROP T&S CSV FILES</div>
+              <div style={{ color: P.t2, fontSize: 10, marginTop: 6 }}>Single or multiple files — drop all at once</div>
+            </div>
+            <div style={{ marginTop: 10, background: P.cd, border: "1px solid " + P.bd, padding: "8px 12px" }}>
+              <div style={{ fontSize: 10, color: P.t3, letterSpacing: 1, marginBottom: 6 }}>ACCEPTED FILENAME FORMATS</div>
+              {[
+                ["MSFT Time and Sales 040926", "MSFT · Apr 09 2026 (MMDDYY)"],
+                ["TSLA Time and Sales 04092026", "TSLA · Apr 09 2026 (MMDDYYYY)"],
+                ["AAPL Time and Sales 04/09/26", "AAPL · Apr 09 2026 (MM/DD/YY in header)"],
+              ].map(([ex, desc], i) => <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "3px 0", borderBottom: i < 2 ? "1px solid " + P.bd : "none" }}>
+                <span style={{ color: P.cy, fontSize: 10, fontFamily: FN }}>{ex}</span>
+                <span style={{ color: P.t3, fontSize: 10 }}>{desc}</span>
+              </div>)}
+            </div>
+            {msg && <div style={{ marginTop: 8, padding: "6px 10px", fontSize: 10, background: msg.e ? P.r + "15" : P.g + "15", color: msg.e ? P.r : P.g, fontWeight: 600 }}>{msg.m}</div>}
           </Pnl>
-          {tickers.length > 0 && <Pnl title="FOLDERS"><div style={{ marginTop: 0 }}>{tickers.map(tk => <div key={tk} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid " + P.bd }}><span onClick={() => swTk(tk)} style={{ cursor: "pointer", color: P.am, fontWeight: 700, fontSize: 12 }}>{tk}</span><button onClick={async () => { if (!confirm("Delete " + tk + "?")) return; try { await window.storage.delete("stae7:" + tk); } catch (e) { } const idx = tickers.filter(t => t !== tk); setTickers(idx); await svIdx(idx); if (aTk === tk) { if (idx.length) swTk(idx[0]); else { setATk(null); setRecs([]); setSelD(null); } } }} style={{ padding: "2px 8px", border: "1px solid " + P.r + "50", background: "transparent", color: P.r, fontFamily: FN, fontSize: 10, cursor: "pointer" }}>DEL</button></div>)}</div></Pnl>}
+
+          {batchLog.length > 0 && <Pnl title={"IMPORT LOG — " + batchLog.length + " FILE" + (batchLog.length !== 1 ? "S" : "")} color={P.cy}>
+            {batchLog.map((r, i) => <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: i < batchLog.length - 1 ? "1px solid " + P.bd : "none", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <span style={{ color: r.ok ? P.g : P.r, fontSize: 13, flexShrink: 0 }}>{r.ok ? "✓" : "✗"}</span>
+                <span style={{ color: P.t3, fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.file}</span>
+              </div>
+              {r.ok
+                ? <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+                  <Tag c={P.am}>{r.tk}</Tag>
+                  <Tag c={P.t3}>{r.date}</Tag>
+                  <Tag c={r.score >= 3 ? P.g : r.score <= -3 ? P.r : P.y}>{r.score >= 0 ? "+" : ""}{r.score} {r.bias}</Tag>
+                  <span style={{ color: P.t3, fontSize: 10 }}>{r.trades} trades</span>
+                </div>
+                : <span style={{ color: P.r, fontSize: 10, flexShrink: 0 }}>{r.msg}</span>
+              }
+            </div>)}
+          </Pnl>}
+
+          {tickers.length > 0 && <Pnl title={"TICKER FOLDERS — " + tickers.length + " (alphabetical)"}>
+            {tickers.map(tk => <div key={tk} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid " + P.bd }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => swTk(tk)}>
+                <span style={{ color: P.am, fontWeight: 700, fontSize: 12 }}>{tk}</span>
+                {tickerMeta[tk] && <Tag c={P.t3}>{tickerMeta[tk]}</Tag>}
+              </div>
+              <button onClick={() => setConfirmDel(tk)} style={{ padding: "3px 12px", border: "1px solid " + P.r + "60", background: "transparent", color: P.r, fontFamily: FN, fontSize: 10, cursor: "pointer", letterSpacing: .5 }}>DELETE</button>
+            </div>)}
+          </Pnl>}
         </div>}
 
         {tab === "dash" && S && <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -554,9 +696,22 @@ export default function App() {
       </div>
 
       <div style={{ borderTop: "1px solid " + P.bd, padding: "5px 16px", display: "flex", justifyContent: "space-between", fontSize: 10, color: P.t3, background: P.pn }}>
-        <span>STAE v6 | 16-METRIC | PER-TICKER</span>
+        <span>STOCK TIME & SALES TAPE ANALYSIS ENGINE — v6 | 16-METRIC | PER-TICKER</span>
         <span>NOT FINANCIAL ADVICE</span>
       </div>
+
+      {/* Confirmation modal */}
+      {confirmDel && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }} onClick={() => setConfirmDel(null)}>
+        <div style={{ background: P.pn, border: "1px solid " + P.r + "80", borderRadius: 4, padding: "28px 32px", minWidth: 320, maxWidth: 420, boxShadow: "0 8px 40px #00000088" }} onClick={e => e.stopPropagation()}>
+          <div style={{ fontSize: 11, color: P.r, fontWeight: 700, letterSpacing: 1.5, marginBottom: 12 }}>⚠ CONFIRM DELETE</div>
+          <div style={{ fontSize: 12, color: P.t1, marginBottom: 6 }}>Delete all data for <span style={{ color: P.am, fontWeight: 700 }}>{confirmDel}</span>?</div>
+          <div style={{ fontSize: 11, color: P.t3, marginBottom: 22, lineHeight: 1.6 }}>This will permanently remove all {recs.length && aTk === confirmDel ? recs.length + " session" + (recs.length !== 1 ? "s" : "") : "session"} stored for this ticker. This action cannot be undone.</div>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <button onClick={() => setConfirmDel(null)} style={{ padding: "7px 18px", border: "1px solid " + P.bd, background: "transparent", color: P.t2, fontFamily: FN, fontSize: 11, cursor: "pointer", letterSpacing: .5 }}>CANCEL</button>
+            <button onClick={() => deleteTicker(confirmDel)} style={{ padding: "7px 18px", border: "1px solid " + P.r, background: P.r + "18", color: P.r, fontFamily: FN, fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: .5 }}>DELETE</button>
+          </div>
+        </div>
+      </div>}
     </div>
   );
 }
