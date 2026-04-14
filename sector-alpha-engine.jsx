@@ -670,3 +670,156 @@ function SecondaryResults({ data }) {
     </div>
   );
 }
+
+// ── MAIN APP ──
+export default function SectorAlphaEngine() {
+  const [phase, setPhase] = useState("config");
+  const [sector, setSector] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [geo, setGeo] = useState("United States");
+  const [mcap, setMcap] = useState("All");
+  const [style, setStyle] = useState("Quality");
+  const [risk, setRisk] = useState("Moderate");
+  const [horizon, setHorizon] = useState("12 months");
+  const [tradeHorizon, setTradeHorizon] = useState("3-6 months");
+  const [progress, setProgress] = useState(0);
+  const [primaryData, setPrimaryData] = useState(null);
+  const [secondaryData, setSecondaryData] = useState(null);
+  const [error, setError] = useState(null);
+  const [activeModule, setActiveModule] = useState(1);
+
+  const industries = SECTORS.find(s => s.label === sector)?.industries || [];
+
+  function startProgress() {
+    let p = 0;
+    setProgress(0);
+    const iv = setInterval(() => {
+      p += Math.random() * 8;
+      if (p >= 90) { clearInterval(iv); setProgress(90); }
+      else setProgress(p);
+    }, 600);
+    return iv;
+  }
+
+  const runPrimary = async () => {
+    setPhase("loading1"); setError(null);
+    const iv = startProgress();
+    let lastErr;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const result = await callClaude(buildPrimaryPrompt({ sector, industry, geo, mcap, style, risk, horizon }));
+        clearInterval(iv); setProgress(100);
+        setPrimaryData(result);
+        setTimeout(() => { setPhase("primary"); setActiveModule(1); }, 500);
+        return;
+      } catch (err) { lastErr = err; }
+    }
+    clearInterval(iv); setError("Analysis failed after retries: " + lastErr.message); setPhase("config");
+  };
+
+  const runSecondary = async () => {
+    setPhase("loading2"); setError(null);
+    const iv = startProgress();
+    let lastErr;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const result = await callClaude(buildSecondaryPrompt(primaryData, { sector, industry, risk, tradeHorizon }));
+        clearInterval(iv); setProgress(100);
+        setSecondaryData(result);
+        setTimeout(() => { setPhase("secondary"); setActiveModule(2); }, 500);
+        return;
+      } catch (err) { lastErr = err; }
+    }
+    clearInterval(iv); setError("Trade readiness failed after retries: " + lastErr.message); setPhase("primary");
+  };
+
+  const ll1 = ["INITIALIZING SECTOR ALPHA ENGINE v4.2.1...", "CONNECTING TO MARKET DATA FEEDS...", "LOADING COMPETITIVE INTELLIGENCE MODULE...", "SCANNING INSTITUTIONAL 13F FILINGS...", "BUILDING MOAT DURABILITY MATRIX...", "RUNNING PORTER'S FIVE FORCES ANALYSIS...", "COMPUTING WEIGHTED INVESTMENT SCORES...", "CROSS-REFERENCING MANAGEMENT QUALITY DB...", "AGGREGATING SMART MONEY POSITIONING...", "GENERATING FINAL RANKINGS...", "COMPILING INVESTMENT COMMITTEE BRIEF..."];
+  const ll2 = ["LOADING TRADE READINESS MODULE v2.1.0...", "PULLING REAL-TIME PRICE ACTION DATA...", "ANALYZING VOLUME STRUCTURE & TAPE...", "SCANNING INSTITUTIONAL ACCUMULATION SIGNALS...", "MAPPING CATALYST PROXIMITY WINDOWS...", "EVALUATING BREAKOUT CONFIRMATION PATTERNS...", "COMPUTING RISK PENALTY MATRIX...", "RUNNING ALERT-STATE CLASSIFICATION...", "SCORING ACTIONABILITY VECTORS...", "GENERATING FINAL TRADE READINESS BRIEF..."];
+
+  const sub = phase === "config" ? "Bain-Style Competitive Strategy & Equity Selection" : `${sector}${industry ? ` — ${industry}` : ""}`;
+
+  return (
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: BG, color: WHITE, position: "relative", overflow: "hidden" }}>
+      <ScanLine />
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:${BG}}::-webkit-scrollbar-thumb{background:${BORDER};border-radius:3px}::-webkit-scrollbar-thumb:hover{background:${MUTED}}
+        select option{background:${BG};color:${WHITE}}
+      `}</style>
+
+      <HeaderBar title="SECTOR ALPHA ENGINE" subtitle={sub} rightContent={
+        (phase === "primary" || phase === "secondary") && (
+          <div style={{ display: "flex", gap: 2 }}>
+            <div onClick={() => { setPhase("primary"); setActiveModule(1); }} style={{ padding: "4px 12px", cursor: "pointer", background: activeModule === 1 ? AMBER + "20" : "transparent", border: `1px solid ${activeModule === 1 ? AMBER + "60" : BORDER}` }}>
+              <T c={activeModule === 1 ? AMBER : MUTED} s={9} w={600}>MODULE 1</T>
+            </div>
+            {secondaryData && (
+              <div onClick={() => { setPhase("secondary"); setActiveModule(2); }} style={{ padding: "4px 12px", cursor: "pointer", background: activeModule === 2 ? MAGENTA + "20" : "transparent", border: `1px solid ${activeModule === 2 ? MAGENTA + "60" : BORDER}` }}>
+                <T c={activeModule === 2 ? MAGENTA : MUTED} s={9} w={600}>MODULE 2</T>
+              </div>
+            )}
+          </div>
+        )
+      } />
+
+      {phase === "config" && (
+        <div style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30 }}>
+          <div style={{ maxWidth: 700, width: "100%" }}>
+            <div style={{ textAlign: "center", marginBottom: 30 }}>
+              <T c={AMBER} s={20} w={700}>CONFIGURE ANALYSIS</T>
+              <div style={{ marginTop: 4 }}><T c={MUTED} s={11}>Define sector parameters and investment preferences</T></div>
+              <div style={{ marginTop: 10, display: "flex", justifyContent: "center", gap: 8 }}>
+                <Badge color={CYAN}>S&P 500</Badge><Badge color={CYAN}>NASDAQ</Badge><Badge color={CYAN}>DOW JONES</Badge>
+              </div>
+            </div>
+            {error && <div style={{ background: RED + "15", border: `1px solid ${RED}40`, padding: 12, marginBottom: 16 }}><T c={RED} s={11}>{error}</T></div>}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, background: BG2, border: `1px solid ${BORDER}`, padding: 24 }}>
+              <SelectField label="Sector" value={sector} onChange={v => { setSector(v); setIndustry(""); }} options={SECTORS} />
+              <SelectField label="Industry (optional)" value={industry} onChange={setIndustry} options={["All", ...industries]} disabled={!sector} />
+              <SelectField label="Geography" value={geo} onChange={setGeo} options={GEOS} />
+              <SelectField label="Market Cap" value={mcap} onChange={setMcap} options={MCAPS} />
+              <SelectField label="Investment Style" value={style} onChange={setStyle} options={STYLES} />
+              <SelectField label="Risk Profile" value={risk} onChange={setRisk} options={RISKS} />
+              <SelectField label="Strategic Horizon" value={horizon} onChange={setHorizon} options={HORIZONS} />
+              <SelectField label="Trade Horizon" value={tradeHorizon} onChange={setTradeHorizon} options={TRADE_HORIZONS} />
+            </div>
+            <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
+              <div onClick={sector ? runPrimary : undefined} style={{ background: sector ? `linear-gradient(135deg,${AMBER},${AMBER}CC)` : BORDER, color: sector ? BG : MUTED, padding: "12px 40px", fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", cursor: sector ? "pointer" : "default", textTransform: "uppercase" }}>
+                ▸ EXECUTE ANALYSIS
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {phase === "loading1" && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ maxWidth: 500, width: "100%" }}><LoadingTerminal progress={progress} lines={ll1} /></div></div>}
+      {phase === "loading2" && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ maxWidth: 500, width: "100%" }}><LoadingTerminal progress={progress} lines={ll2} /></div></div>}
+
+      {phase === "primary" && primaryData && (
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <PrimaryResults data={primaryData} onRunSecondary={runSecondary} />
+        </div>
+      )}
+
+      {phase === "secondary" && secondaryData && (
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <SecondaryResults data={secondaryData} />
+        </div>
+      )}
+
+      <div style={{ borderTop: `1px solid ${BORDER}`, padding: "6px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", background: BG2, flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 16 }}>
+          {primaryData && <T c={MUTED} s={9}>WINNER: <span style={{ color: AMBER }}>{primaryData.winner_ticker}</span></T>}
+          {secondaryData && <T c={MUTED} s={9}>ACT NOW: <span style={{ color: GREEN }}>{secondaryData.best_act_now?.ticker}</span></T>}
+          {secondaryData && <T c={MUTED} s={9}>POSTURE: <span style={{ color: CYAN }}>{secondaryData.overall_posture}</span></T>}
+        </div>
+        {phase !== "config" && phase !== "loading1" && phase !== "loading2" && (
+          <div onClick={() => { setPhase("config"); setPrimaryData(null); setSecondaryData(null); setActiveModule(1); }} style={{ cursor: "pointer", padding: "4px 12px", border: `1px solid ${BORDER}` }}>
+            <T c={MUTED} s={9}>NEW ANALYSIS</T>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
