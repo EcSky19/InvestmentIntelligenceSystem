@@ -22,12 +22,21 @@ function parseTickerFromFilename(name) {
   return m ? m[1].toUpperCase() : null;
 }
 
-function parseTapeCSV(text) {
+function parseTapeCSV(text, filename = "") {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean); if (lines.length < 3) return null;
   const tl = lines[0].replace(/"/g, ""); let ticker = "", date = "";
-  const tm = tl.match(/^(\w+)\s+Time\s+and\s+Sales/i); if (tm) ticker = tm[1].toUpperCase();
-  const dm = tl.match(/(\d{2}\/\d{2}\/\d{2,4})/);
-  if (dm) { const p = dm[1].split("/"); const yr = p[2].length === 2 ? "20" + p[2] : p[2]; date = `${yr}-${p[0].padStart(2, "0")}-${p[1].padStart(2, "0")}`; }
+
+  // Try ticker from filename first, fallback to header
+  ticker = parseTickerFromFilename(filename) || "";
+  if (!ticker) { const tm = tl.match(/^(\w+)\s+Time\s+and\s+Sales/i); if (tm) ticker = tm[1].toUpperCase(); }
+
+  // Try date from filename first (handles "MSFT Time and Sales 040926" format)
+  date = parseDateFromFilename(filename) || "";
+  if (!date) {
+    const dm = tl.match(/(\d{2}\/\d{2}\/\d{2,4})/);
+    if (dm) { const p = dm[1].split("/"); const yr = p[2].length === 2 ? "20" + p[2] : p[2]; date = `${yr}-${p[0].padStart(2, "0")}-${p[1].padStart(2, "0")}`; }
+  }
+
   const trades = [];
   for (let i = 2; i < lines.length; i++) { const row = []; let q = false, c = ""; for (const ch of lines[i]) { if (ch === '"') q = !q; else if (ch === ',' && !q) { row.push(c.trim()); c = ""; } else c += ch; } row.push(c.trim()); if (row.length < 10) continue; const ts = row[0].trim(), pr = parseFloat(row[5]), sz = parseInt(row[9]); if (isNaN(pr) || isNaN(sz) || !ts) continue; const tp = ts.split(":"); if (tp.length < 3) continue; trades.push({ ts, sec: parseInt(tp[0]) * 3600 + parseInt(tp[1]) * 60 + parseFloat(tp[2]), p: pr, sz }); }
   trades.reverse(); return { ticker, date, trades };
