@@ -242,6 +242,8 @@ async function ldIdx() { try { const r = await window.storage.get("stae7:idx"); 
 async function svIdx(t) { try { await window.storage.set("stae7:idx", JSON.stringify(t)); } catch (e) { } }
 async function ldTk(t) { try { const r = await window.storage.get("stae7:" + t); return r ? JSON.parse(r.value) : []; } catch (e) { return []; } }
 async function svTk(t, r) { try { await window.storage.set("stae7:" + t, JSON.stringify(r)); } catch (e) { } }
+async function ldMeta() { try { const r = await window.storage.get("stae7:meta"); return r ? JSON.parse(r.value) : {}; } catch (e) { return {}; } }
+async function svMeta(m) { try { await window.storage.set("stae7:meta", JSON.stringify(m)); } catch (e) { } }
 
 const Tag = ({ children, c = P.cy }) => <span style={{ display: "inline-block", padding: "1px 6px", fontSize: 10, fontWeight: 700, fontFamily: FN, color: c, background: c + "18", border: "1px solid " + c + "33", whiteSpace: "nowrap" }}>{children}</span>;
 const Rw = ({ l, v, c, b }) => <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, padding: "3px 0", borderBottom: "1px solid " + P.bd, fontFamily: FN }}><span style={{ color: P.t2 }}>{l}</span><div style={{ display: "flex", alignItems: "center", gap: 4 }}>{b !== undefined && <div style={{ width: 36, height: 2, background: P.bd, overflow: "hidden" }}><div style={{ width: b + "%", height: "100%", background: c || P.cy }} /></div>}<span style={{ color: c || P.t1, fontWeight: 600 }}>{v}</span></div></div>;
