@@ -457,3 +457,216 @@ function PrimaryResults({ data, onRunSecondary }) {
     </div>
   );
 }
+
+// ── SECONDARY RESULTS (Trade Readiness) ──
+function SecondaryResults({ data }) {
+  const [tab, setTab] = useState("dashboard");
+  const [sel, setSel] = useState(null);
+  const sorted = [...data.stocks].sort((a, b) => b.final_actionability - a.final_actionability);
+
+  const tabs = [{ id: "dashboard", label: "ACTIONABILITY DASHBOARD" }, { id: "matrix", label: "SCORE MATRIX" }, { id: "alerts", label: "ACTIVE ALERTS" }, { id: "catalysts", label: "CATALYST MAP" }, { id: "verdict", label: "FINAL VERDICT" }];
+
+  const StockModal = ({ stock, onClose }) => (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.88)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+      <div style={{ background: BG2, border: `1px solid ${BORDER}`, maxWidth: 750, width: "92%", maxHeight: "88vh", overflow: "auto" }} onClick={e => e.stopPropagation()}>
+        <div style={{ background: BG3, borderBottom: `1px solid ${BORDER}`, padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <T c={AMBER} s={16} w={700}>{stock.ticker}</T>
+            <Badge color={stColor(stock.alert_state)}>{stock.alert_state}</Badge>
+            <Badge color={eColor(stock.entry_quality)}>{stock.entry_quality} Entry</Badge>
+          </div>
+          <span onClick={onClose} style={{ cursor: "pointer", color: MUTED, fontSize: 18 }}>×</span>
+        </div>
+        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+            {[["Foundation", stock.foundation_score], ["Confirmation", stock.confirmation_score], ["Catalyst", stock.catalyst_score], ["Sponsorship", stock.sponsorship_score]].map(([l, v]) => <ActionGauge key={l} score={v} label={l} />)}
+            <div style={{ textAlign: "center" }}><div style={{ width: 90, height: 60, display: "flex", alignItems: "center", justifyContent: "center" }}><T c={RED} s={28} w={700}>-{stock.risk_penalty}</T></div><T c={MUTED} s={8} style={{ textTransform: "uppercase", letterSpacing: "0.1em" }}>Risk Penalty</T></div>
+          </div>
+          <div style={{ textAlign: "center", padding: 12, background: BG, border: `1px solid ${sColor(stock.final_actionability)}30` }}>
+            <T c={MUTED} s={9} style={{ textTransform: "uppercase" }}>Final Actionability</T>
+            <div><T c={sColor(stock.final_actionability)} s={36} w={700}>{stock.final_actionability}</T></div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Panel border={GREEN + "30"}><T c={GREEN} s={9} w={600}>BEST BULLISH EVIDENCE</T><div style={{ marginTop: 6 }}><T c={WHITE} s={11} mono={false}>{stock.best_bullish}</T></div></Panel>
+            <Panel border={RED + "30"}><T c={RED} s={9} w={600}>BEST BEARISH EVIDENCE</T><div style={{ marginTop: 6 }}><T c={WHITE} s={11} mono={false}>{stock.best_bearish}</T></div></Panel>
+            <Panel><T c={MUTED} s={9} w={600}>WHAT CHANGED</T><div style={{ marginTop: 6 }}><T c={WHITE} s={11} mono={false}>{stock.what_changed}</T></div></Panel>
+            <Panel><T c={MUTED} s={9} w={600}>MARKET STRUCTURE</T><div style={{ marginTop: 6 }}><T c={WHITE} s={11} mono={false}>{stock.market_structure_notes}</T></div></Panel>
+            <Panel border={CYAN + "30"}><T c={CYAN} s={9} w={600}>UPGRADE TRIGGER</T><div style={{ marginTop: 6 }}><T c={WHITE} s={11} mono={false}>{stock.upgrade_trigger}</T></div></Panel>
+            <Panel border={YELLOW + "30"}><T c={YELLOW} s={9} w={600}>DOWNGRADE TRIGGER</T><div style={{ marginTop: 6 }}><T c={WHITE} s={11} mono={false}>{stock.downgrade_trigger}</T></div></Panel>
+          </div>
+          {stock.active_alerts?.length > 0 && (
+            <Panel><T c={AMBER} s={9} w={600}>ACTIVE ALERTS</T><div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+              {stock.active_alerts.map((a, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Badge color={a.tier === 1 ? GREEN : a.tier === 2 ? YELLOW : MUTED}>T{a.tier}</Badge>
+                  <Badge color={a.type === "bullish" ? GREEN : a.type === "bearish" ? RED : MUTED}>{a.type}</Badge>
+                  <T c={WHITE} s={10} mono={false}>{a.text}</T>
+                </div>
+              ))}
+            </div></Panel>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {sel && <StockModal stock={sel} onClose={() => setSel(null)} />}
+      <div style={{ display: "flex", borderBottom: `1px solid ${BORDER}`, background: BG2, overflowX: "auto", flexShrink: 0 }}>
+        {tabs.map(t => (
+          <div key={t.id} onClick={() => setTab(t.id)} style={{ padding: "10px 16px", cursor: "pointer", borderBottom: tab === t.id ? `2px solid ${MAGENTA}` : "2px solid transparent", background: tab === t.id ? BG3 : "transparent", whiteSpace: "nowrap" }}>
+            <T c={tab === t.id ? MAGENTA : MUTED} s={10} w={tab === t.id ? 600 : 400}>{t.label}</T>
+          </div>
+        ))}
+      </div>
+      <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+
+        {tab === "dashboard" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <T c={MAGENTA} s={11} w={600}>TRADE READINESS DASHBOARD</T>
+              <Badge color={data.overall_posture === "Risk-on" ? GREEN : data.overall_posture === "Defensive" ? RED : YELLOW}>{data.overall_posture}</Badge>
+            </div>
+            <Panel><T c={WHITE} s={12} mono={false}>{data.analysis_summary}</T></Panel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 12 }}>
+              {sorted.map(s => (
+                <div key={s.ticker} onClick={() => setSel(s)} style={{ background: BG2, border: `1px solid ${stColor(s.alert_state)}30`, padding: 16, cursor: "pointer", position: "relative" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: stColor(s.alert_state) }} />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <T c={WHITE} s={16} w={700}>{s.ticker}</T>
+                    <T c={sColor(s.final_actionability)} s={20} w={700}>{s.final_actionability}</T>
+                  </div>
+                  <div style={{ marginTop: 6 }}><T c={MUTED} s={10}>{s.name}</T></div>
+                  <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <Badge color={stColor(s.alert_state)}>{s.alert_state}</Badge>
+                    <Badge color={eColor(s.entry_quality)}>{s.entry_quality}</Badge>
+                    <Badge color={s.thesis_status === "Strengthening" ? GREEN : s.thesis_status === "Weakening" ? RED : CYAN}>{s.thesis_status}</Badge>
+                    {s.actionable_now && <Badge color={GREEN}>ACT NOW</Badge>}
+                  </div>
+                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+                    {[["FND", s.foundation_score], ["CNF", s.confirmation_score], ["CAT", s.catalyst_score], ["SPN", s.sponsorship_score]].map(([l, v]) => (
+                      <div key={l} style={{ display: "flex", justifyContent: "space-between" }}><T c={MUTED} s={9}>{l}</T><ScoreBar value={v} color={sColor(v)} width={40} /></div>
+                    ))}
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><T c={MUTED} s={9}>RSK</T><T c={RED} s={10} w={600}>-{s.risk_penalty}</T></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "matrix" && (
+          <div style={{ overflowX: "auto" }}>
+            <T c={MAGENTA} s={11} w={600}>ACTIONABILITY SCORE MATRIX</T>
+            <table style={{ width: "100%", marginTop: 16, borderCollapse: "collapse", fontSize: 11, fontFamily: "'JetBrains Mono',monospace" }}>
+              <thead><tr style={{ borderBottom: `2px solid ${BORDER}` }}>
+                {["Ticker", "Found", "Confirm", "Catal", "Spons", "Risk", "FINAL", "State", "Entry", "Act?"].map(h => (
+                  <th key={h} style={{ padding: "8px 6px", textAlign: "left", color: MUTED, fontSize: 9, textTransform: "uppercase" }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>{sorted.map(s => (
+                <tr key={s.ticker} onClick={() => setSel(s)} style={{ borderBottom: `1px solid ${BORDER}`, cursor: "pointer", background: s.actionable_now ? GREEN + "06" : "transparent" }}>
+                  <td style={{ padding: "8px 6px", color: data.best_act_now?.ticker === s.ticker ? AMBER : WHITE, fontWeight: 600 }}>{s.ticker}</td>
+                  <td style={{ padding: "8px 6px" }}><ScoreBar value={s.foundation_score} color={sColor(s.foundation_score)} width={40} /></td>
+                  <td style={{ padding: "8px 6px" }}><ScoreBar value={s.confirmation_score} color={sColor(s.confirmation_score)} width={40} /></td>
+                  <td style={{ padding: "8px 6px" }}><ScoreBar value={s.catalyst_score} color={sColor(s.catalyst_score)} width={40} /></td>
+                  <td style={{ padding: "8px 6px" }}><ScoreBar value={s.sponsorship_score} color={sColor(s.sponsorship_score)} width={40} /></td>
+                  <td style={{ padding: "8px 6px" }}><T c={RED} s={11} w={600}>-{s.risk_penalty}</T></td>
+                  <td style={{ padding: "8px 6px" }}><T c={sColor(s.final_actionability)} s={14} w={700}>{s.final_actionability}</T></td>
+                  <td style={{ padding: "8px 6px" }}><Badge color={stColor(s.alert_state)}>{s.alert_state}</Badge></td>
+                  <td style={{ padding: "8px 6px" }}><Badge color={eColor(s.entry_quality)}>{s.entry_quality}</Badge></td>
+                  <td style={{ padding: "8px 6px" }}><T c={s.actionable_now ? GREEN : RED} s={11} w={600}>{s.actionable_now ? "YES" : "NO"}</T></td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === "alerts" && (
+          <div>
+            <T c={MAGENTA} s={11} w={600}>ACTIVE ALERTS BY TIER</T>
+            {[1, 2, 3].map(tier => {
+              const alerts = sorted.flatMap(s => (s.active_alerts || []).filter(a => a.tier === tier).map(a => ({ ...a, ticker: s.ticker })));
+              if (!alerts.length) return null;
+              return (
+                <div key={tier} style={{ marginTop: 16 }}>
+                  <T c={tier === 1 ? GREEN : tier === 2 ? YELLOW : MUTED} s={10} w={600}>TIER {tier} — {tier === 1 ? "THESIS-CHANGING" : tier === 2 ? "READINESS-IMPROVING" : "CONTEXT-ONLY"}</T>
+                  <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+                    {alerts.map((a, i) => (
+                      <div key={i} style={{ background: BG2, border: `1px solid ${BORDER}`, padding: "8px 12px", display: "flex", alignItems: "center", gap: 10 }}>
+                        <T c={AMBER} s={11} w={700} style={{ width: 50 }}>{a.ticker}</T>
+                        <Badge color={a.type === "bullish" ? GREEN : a.type === "bearish" ? RED : MUTED}>{a.type}</Badge>
+                        <T c={WHITE} s={10} mono={false}>{a.text}</T>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {tab === "catalysts" && (
+          <div>
+            <T c={MAGENTA} s={11} w={600}>CATALYST PROXIMITY MAP</T>
+            <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+              {sorted.map(s => (
+                <Panel key={s.ticker}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <T c={WHITE} s={13} w={700}>{s.ticker}</T>
+                    <Badge color={stColor(s.alert_state)}>{s.alert_state}</Badge>
+                    <T c={MUTED} s={10}>Catalyst Score: </T><T c={sColor(s.catalyst_score)} s={11} w={600}>{s.catalyst_score}</T>
+                  </div>
+                  {(s.catalyst_events || []).length > 0 ? (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {s.catalyst_events.map((ce, i) => (
+                        <div key={i} style={{ background: BG, border: `1px solid ${ce.bias === "bullish" ? GREEN : ce.bias === "bearish" ? RED : YELLOW}30`, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+                          <Badge color={ce.bias === "bullish" ? GREEN : ce.bias === "bearish" ? RED : YELLOW}>{ce.bias}</Badge>
+                          <T c={WHITE} s={10}>{ce.event}</T>
+                          <T c={MUTED} s={9}>{ce.timing}</T>
+                        </div>
+                      ))}
+                    </div>
+                  ) : <T c={MUTED} s={10}>No near-term catalysts identified</T>}
+                </Panel>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab === "verdict" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <T c={MAGENTA} s={11} w={600}>INVESTMENT COMMITTEE FINAL VERDICT</T>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              {[
+                [data.best_act_now, GREEN, "BEST TO ACT ON NOW", "▸"],
+                [data.best_watchlist, CYAN, "BEST WATCHLIST CANDIDATE", "◉"],
+                [data.false_positive, RED, "MOST DANGEROUS FALSE POSITIVE", "⚠"],
+              ].map(([item, c, title, icon]) => item && (
+                <div key={title} style={{ background: BG2, border: `1px solid ${c}40`, padding: 20, position: "relative" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: c }} />
+                  <T c={c} s={9} w={600}>{title}</T>
+                  <div style={{ marginTop: 8 }}><T c={WHITE} s={22} w={700}>{icon} {item.ticker}</T></div>
+                  <div style={{ marginTop: 8 }}><T c={MUTED} s={11} mono={false}>{item.reason}</T></div>
+                </div>
+              ))}
+            </div>
+            <T c={MAGENTA} s={11} w={600}>FULL ACTIONABILITY RANKING</T>
+            {sorted.map((s, i) => (
+              <div key={s.ticker} onClick={() => setSel(s)} style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px", background: i === 0 ? GREEN + "08" : "transparent", borderBottom: `1px solid ${BORDER}`, cursor: "pointer" }}>
+                <T c={i === 0 ? GREEN : i === 1 ? CYAN : i === 2 ? YELLOW : MUTED} s={18} w={700} style={{ width: 36 }}>#{i + 1}</T>
+                <div style={{ flex: "0 0 65px" }}><T c={WHITE} s={15} w={700}>{s.ticker}</T></div>
+                <div style={{ flex: 1 }}><div style={{ height: 12, background: BORDER, borderRadius: 1 }}><div style={{ height: "100%", width: `${s.final_actionability}%`, background: `linear-gradient(90deg,${sColor(s.final_actionability)}60,${sColor(s.final_actionability)})`, borderRadius: 1 }} /></div></div>
+                <T c={sColor(s.final_actionability)} s={18} w={700} style={{ width: 50, textAlign: "right" }}>{s.final_actionability}</T>
+                <div style={{ width: 80 }}><Badge color={stColor(s.alert_state)}>{s.alert_state}</Badge></div>
+                <div style={{ width: 70 }}><Badge color={eColor(s.entry_quality)}>{s.entry_quality}</Badge></div>
+                <T c={s.actionable_now ? GREEN : MUTED} s={10} w={600} style={{ width: 30 }}>{s.actionable_now ? "YES" : "—"}</T>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
