@@ -16,6 +16,12 @@ function parseDateFromFilename(name) {
   return null;
 }
 
+function parseTickerFromFilename(name) {
+  // Match "TICKER Time and Sales ..." pattern
+  const m = name.match(/^([A-Z]{1,6})\s+Time\s+and\s+Sales/i);
+  return m ? m[1].toUpperCase() : null;
+}
+
 function parseTapeCSV(text) {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean); if (lines.length < 3) return null;
   const tl = lines[0].replace(/"/g, ""); let ticker = "", date = "";
