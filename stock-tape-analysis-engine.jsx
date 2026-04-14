@@ -7,6 +7,15 @@ const pct = (a, b) => b ? ((a / b) * 100) : 0;
 const safeMax = (arr) => arr.length ? Math.max(...arr) : 0;
 const safeMin = (arr) => arr.length ? Math.min(...arr) : 0;
 
+function parseDateFromFilename(name) {
+  // Match 6-digit MMDDYY or 8-digit MMDDYYYY at end of filename (before extension)
+  const m6 = name.match(/(\d{2})(\d{2})(\d{2})\s*(?:\.\w+)?$/);
+  const m8 = name.match(/(\d{2})(\d{2})(\d{4})\s*(?:\.\w+)?$/);
+  if (m8) { const [, mm, dd, yyyy] = m8; return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`; }
+  if (m6) { const [, mm, dd, yy] = m6; return `20${yy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`; }
+  return null;
+}
+
 function parseTapeCSV(text) {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean); if (lines.length < 3) return null;
   const tl = lines[0].replace(/"/g, ""); let ticker = "", date = "";
