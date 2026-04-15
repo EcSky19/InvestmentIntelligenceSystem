@@ -12,7 +12,7 @@ const BG2 = "#0F1319";
 const BG3 = "#141A22";
 const BORDER = "#1C2530";
 const WHITE = "#E8ECF0";
-;
+
 const SECTORS = [
   { label: "Technology", industries: ["Semiconductors", "Software (SaaS)", "Cloud Infrastructure", "Cybersecurity", "AI / Machine Learning", "Consumer Internet", "IT Services", "Hardware / Devices"] },
   { label: "Healthcare", industries: ["Pharmaceuticals", "Biotech", "Medical Devices", "Health Insurance", "Healthcare Services", "Diagnostics / Life Sciences Tools"] },
