@@ -742,8 +742,82 @@ export default function SectorAlphaEngine() {
   const [secondaryData, setSecondaryData] = useState(null);
   const [error, setError] = useState(null);
   const [activeModule, setActiveModule] = useState(1);
+  const [archive, setArchive] = useState([]);
+  const [archiveLoading, setArchiveLoading] = useState(true);
 
   const industries = SECTORS.find(s => s.label === sector)?.industries || [];
+
+  // ── Archive persistence ──
+  useEffect(() => { loadArchive(); }, []);
+
+  async function loadArchive() {
+    setArchiveLoading(true);
+    try {
+      const res = await window.storage.get("sector-alpha-archive");
+      if (res && res.value) setArchive(JSON.parse(res.value));
+    } catch (_) { }
+    setArchiveLoading(false);
+  }
+
+  async function saveToArchive(primary, secondary, params) {
+    const entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      timestamp: new Date().toISOString(),
+      params: { sector: params.sector, industry: params.industry, geo: params.geo, mcap: params.mcap, style: params.style, risk: params.risk, horizon: params.horizon, tradeHorizon: params.tradeHorizon },
+      primaryData: primary,
+      secondaryData: secondary || null,
+      winner: primary.winner_ticker,
+      score: primary.competitors?.find(c => c.ticker === primary.winner_ticker)?.weighted_score,
+    };
+    const updated = [entry, ...archive];
+    setArchive(updated);
+    try { await window.storage.set("sector-alpha-archive", JSON.stringify(updated)); } catch (_) { }
+    return entry.id;
+  }
+
+  async function updateArchiveSecondary(id, secData) {
+    const updated = archive.map(a => a.id === id ? { ...a, secondaryData: secData, actNow: secData?.best_act_now?.ticker } : a);
+    setArchive(updated);
+    try { await window.storage.set("sector-alpha-archive", JSON.stringify(updated)); } catch (_) { }
+  }
+
+  async function deleteArchiveEntry(id) {
+    const updated = archive.filter(a => a.id !== id);
+    setArchive(updated);
+    try { await window.storage.set("sector-alpha-archive", JSON.stringify(updated)); } catch (_) { }
+  }
+
+  async function clearArchive() {
+    setArchive([]);
+    try { await window.storage.set("sector-alpha-archive", JSON.stringify([])); } catch (_) { }
+  }
+
+  function loadFromArchive(entry) {
+    setPrimaryData(entry.primaryData);
+    setSecondaryData(entry.secondaryData || null);
+    setActiveModule(entry.secondaryData ? 2 : 1);
+    setSector(entry.params.sector);
+    setIndustry(entry.params.industry || "");
+    setGeo(entry.params.geo);
+    setMcap(entry.params.mcap);
+    setStyle(entry.params.style);
+    setRisk(entry.params.risk);
+    setHorizon(entry.params.horizon);
+    setTradeHorizon(entry.params.tradeHorizon);
+    setCurrentArchiveId(entry.id);
+    setPhase(entry.secondaryData ? "secondary" : "primary");
+  }
+
+  const [currentArchiveId, setCurrentArchiveId] = useState(null);
+
+  function goHome() {
+    setPhase("config");
+    setPrimaryData(null);
+    setSecondaryData(null);
+    setActiveModule(1);
+    setCurrentArchiveId(null);
+    setError(null);
+  }
 
   function startProgress() {
     let p = 0;
@@ -765,6 +839,9 @@ export default function SectorAlphaEngine() {
         const result = await callClaude(buildPrimaryPrompt({ sector, industry, geo, mcap, style, risk, horizon }));
         clearInterval(iv); setProgress(100);
         setPrimaryData(result);
+        setSecondaryData(null);
+        const id = await saveToArchive(result, null, { sector, industry, geo, mcap, style, risk, horizon, tradeHorizon });
+        setCurrentArchiveId(id);
         setTimeout(() => { setPhase("primary"); setActiveModule(1); }, 500);
         return;
       } catch (err) { lastErr = err; }
@@ -781,6 +858,7 @@ export default function SectorAlphaEngine() {
         const result = await callClaude(buildSecondaryPrompt(primaryData, { sector, industry, risk, tradeHorizon }));
         clearInterval(iv); setProgress(100);
         setSecondaryData(result);
+        if (currentArchiveId) await updateArchiveSecondary(currentArchiveId, result);
         setTimeout(() => { setPhase("secondary"); setActiveModule(2); }, 500);
         return;
       } catch (err) { lastErr = err; }
@@ -791,7 +869,18 @@ export default function SectorAlphaEngine() {
   const ll1 = ["INITIALIZING SECTOR ALPHA ENGINE v4.2.1...", "CONNECTING TO MARKET DATA FEEDS...", "LOADING COMPETITIVE INTELLIGENCE MODULE...", "SCANNING INSTITUTIONAL 13F FILINGS...", "BUILDING MOAT DURABILITY MATRIX...", "RUNNING PORTER'S FIVE FORCES ANALYSIS...", "COMPUTING WEIGHTED INVESTMENT SCORES...", "CROSS-REFERENCING MANAGEMENT QUALITY DB...", "AGGREGATING SMART MONEY POSITIONING...", "GENERATING FINAL RANKINGS...", "COMPILING INVESTMENT COMMITTEE BRIEF..."];
   const ll2 = ["LOADING TRADE READINESS MODULE v2.1.0...", "PULLING REAL-TIME PRICE ACTION DATA...", "ANALYZING VOLUME STRUCTURE & TAPE...", "SCANNING INSTITUTIONAL ACCUMULATION SIGNALS...", "MAPPING CATALYST PROXIMITY WINDOWS...", "EVALUATING BREAKOUT CONFIRMATION PATTERNS...", "COMPUTING RISK PENALTY MATRIX...", "RUNNING ALERT-STATE CLASSIFICATION...", "SCORING ACTIONABILITY VECTORS...", "GENERATING FINAL TRADE READINESS BRIEF..."];
 
-  const sub = phase === "config" ? "Bain-Style Competitive Strategy & Equity Selection" : `${sector}${industry ? ` — ${industry}` : ""}`;
+  const sub = phase === "config" ? "Bain-Style Competitive Strategy & Equity Selection" : `${sector}${industry && industry !== "All" ? ` — ${industry}` : ""}`;
+
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) + " " + d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  }
+
+  const BackButton = () => (
+    <div onClick={goHome} style={{ padding: "5px 14px", cursor: "pointer", border: `1px solid ${AMBER}50`, background: AMBER + "12", display: "flex", alignItems: "center", gap: 6 }}>
+      <T c={AMBER} s={10} w={600}>◂ MAIN MENU</T>
+    </div>
+  );
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: BG, color: WHITE, position: "relative", overflow: "hidden" }}>
@@ -804,23 +893,26 @@ export default function SectorAlphaEngine() {
       `}</style>
 
       <HeaderBar title="SECTOR ALPHA ENGINE" subtitle={sub} rightContent={
-        (phase === "primary" || phase === "secondary") && (
-          <div style={{ display: "flex", gap: 2 }}>
-            <div onClick={() => { setPhase("primary"); setActiveModule(1); }} style={{ padding: "4px 12px", cursor: "pointer", background: activeModule === 1 ? AMBER + "20" : "transparent", border: `1px solid ${activeModule === 1 ? AMBER + "60" : BORDER}` }}>
-              <T c={activeModule === 1 ? AMBER : MUTED} s={9} w={600}>MODULE 1</T>
-            </div>
-            {secondaryData && (
-              <div onClick={() => { setPhase("secondary"); setActiveModule(2); }} style={{ padding: "4px 12px", cursor: "pointer", background: activeModule === 2 ? MAGENTA + "20" : "transparent", border: `1px solid ${activeModule === 2 ? MAGENTA + "60" : BORDER}` }}>
-                <T c={activeModule === 2 ? MAGENTA : MUTED} s={9} w={600}>MODULE 2</T>
+        (phase === "primary" || phase === "secondary") ? (
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <BackButton />
+            <div style={{ display: "flex", gap: 2 }}>
+              <div onClick={() => { setPhase("primary"); setActiveModule(1); }} style={{ padding: "4px 12px", cursor: "pointer", background: activeModule === 1 ? AMBER + "20" : "transparent", border: `1px solid ${activeModule === 1 ? AMBER + "60" : BORDER}` }}>
+                <T c={activeModule === 1 ? AMBER : MUTED} s={9} w={600}>MODULE 1</T>
               </div>
-            )}
+              {secondaryData && (
+                <div onClick={() => { setPhase("secondary"); setActiveModule(2); }} style={{ padding: "4px 12px", cursor: "pointer", background: activeModule === 2 ? MAGENTA + "20" : "transparent", border: `1px solid ${activeModule === 2 ? MAGENTA + "60" : BORDER}` }}>
+                  <T c={activeModule === 2 ? MAGENTA : MUTED} s={9} w={600}>MODULE 2</T>
+                </div>
+              )}
+            </div>
           </div>
-        )
+        ) : null
       } />
 
       {phase === "config" && (
-        <div style={{ flex: 1, overflow: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30 }}>
-          <div style={{ maxWidth: 700, width: "100%" }}>
+        <div style={{ flex: 1, overflow: "auto", padding: 30 }}>
+          <div style={{ maxWidth: 780, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 30 }}>
               <T c={AMBER} s={20} w={700}>CONFIGURE ANALYSIS</T>
               <div style={{ marginTop: 4 }}><T c={MUTED} s={11}>Define sector parameters and investment preferences</T></div>
@@ -843,6 +935,61 @@ export default function SectorAlphaEngine() {
               <div onClick={sector ? runPrimary : undefined} style={{ background: sector ? `linear-gradient(135deg,${AMBER},${AMBER}CC)` : BORDER, color: sector ? BG : MUTED, padding: "12px 40px", fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", cursor: sector ? "pointer" : "default", textTransform: "uppercase" }}>
                 ▸ EXECUTE ANALYSIS
               </div>
+            </div>
+
+            {/* ── ARCHIVE SECTION ── */}
+            <div style={{ marginTop: 40, borderTop: `1px solid ${BORDER}`, paddingTop: 24 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <T c={AMBER} s={13} w={700}>REPORT ARCHIVE</T>
+                  <Badge color={MUTED}>{archive.length} {archive.length === 1 ? "REPORT" : "REPORTS"}</Badge>
+                </div>
+                {archive.length > 0 && (
+                  <div onClick={() => { if (confirm("Clear all archived reports?")) clearArchive(); }} style={{ cursor: "pointer", padding: "3px 10px", border: `1px solid ${RED}40` }}>
+                    <T c={RED} s={9} w={600}>CLEAR ALL</T>
+                  </div>
+                )}
+              </div>
+              {archiveLoading ? (
+                <div style={{ padding: 20, textAlign: "center" }}><T c={MUTED} s={11}>Loading archive...</T></div>
+              ) : archive.length === 0 ? (
+                <div style={{ padding: 30, textAlign: "center", background: BG2, border: `1px solid ${BORDER}` }}>
+                  <T c={MUTED} s={11}>No archived reports yet. Run an analysis to get started.</T>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {archive.map((entry, i) => (
+                    <div key={entry.id} style={{ background: BG2, border: `1px solid ${i === 0 ? AMBER + "40" : BORDER}`, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
+                      {i === 0 && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: AMBER }} />}
+                      <div style={{ flex: "0 0 22px", textAlign: "center" }}>
+                        <T c={i === 0 ? AMBER : MUTED} s={12} w={700}>{i + 1}</T>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <T c={WHITE} s={12} w={600}>{entry.params.sector}</T>
+                          {entry.params.industry && entry.params.industry !== "All" && <T c={MUTED} s={10}>/ {entry.params.industry}</T>}
+                          <Badge color={AMBER}>{entry.winner}</Badge>
+                          {entry.score && <Badge color={sColor(entry.score)}>{entry.score}/100</Badge>}
+                          {entry.secondaryData && <Badge color={MAGENTA}>M2</Badge>}
+                          {entry.actNow && <Badge color={GREEN}>ACT: {entry.actNow}</Badge>}
+                        </div>
+                        <div style={{ marginTop: 4, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                          <T c={MUTED} s={9}>{fmtDate(entry.timestamp)}</T>
+                          <T c={MUTED} s={9}>{entry.params.geo} · {entry.params.mcap} · {entry.params.style}</T>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                        <div onClick={() => loadFromArchive(entry)} style={{ cursor: "pointer", padding: "5px 12px", border: `1px solid ${CYAN}50`, background: CYAN + "12" }}>
+                          <T c={CYAN} s={9} w={600}>OPEN</T>
+                        </div>
+                        <div onClick={() => deleteArchiveEntry(entry.id)} style={{ cursor: "pointer", padding: "5px 8px", border: `1px solid ${RED}30` }}>
+                          <T c={RED} s={9}>✕</T>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -868,10 +1015,11 @@ export default function SectorAlphaEngine() {
           {primaryData && <T c={MUTED} s={9}>WINNER: <span style={{ color: AMBER }}>{primaryData.winner_ticker}</span></T>}
           {secondaryData && <T c={MUTED} s={9}>ACT NOW: <span style={{ color: GREEN }}>{secondaryData.best_act_now?.ticker}</span></T>}
           {secondaryData && <T c={MUTED} s={9}>POSTURE: <span style={{ color: CYAN }}>{secondaryData.overall_posture}</span></T>}
+          {phase === "config" && archive.length > 0 && <T c={MUTED} s={9}>ARCHIVED: <span style={{ color: AMBER }}>{archive.length}</span></T>}
         </div>
         {phase !== "config" && phase !== "loading1" && phase !== "loading2" && (
-          <div onClick={() => { setPhase("config"); setPrimaryData(null); setSecondaryData(null); setActiveModule(1); }} style={{ cursor: "pointer", padding: "4px 12px", border: `1px solid ${BORDER}` }}>
-            <T c={MUTED} s={9}>NEW ANALYSIS</T>
+          <div onClick={goHome} style={{ cursor: "pointer", padding: "4px 12px", border: `1px solid ${BORDER}` }}>
+            <T c={MUTED} s={9}>◂ MAIN MENU</T>
           </div>
         )}
       </div>
