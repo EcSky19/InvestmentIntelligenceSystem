@@ -247,6 +247,61 @@ CRITICAL: Respond ONLY in valid JSON (no markdown, no backticks, no preamble). U
 Provide exactly 5 competitors. Use real data. Keep ALL string values SHORT (under 20 words each). No filler. Weighted scores out of 100. This MUST be valid, complete JSON.`;
 }
 
+function buildSecondaryPrompt(pd, p) {
+  const tickers = pd.competitors.map(c => c.ticker);
+  const scores = Object.fromEntries(pd.competitors.map(c => [c.ticker, c.weighted_score]));
+  return `You are a senior market-structure strategist inside an institutional investment system.
+
+The primary engine identified the highest-quality names in ${p.sector} / ${p.industry || "full sector"}.
+
+Shortlisted tickers: ${tickers.join(", ")}
+Foundation scores: ${JSON.stringify(scores)}
+Time horizon: ${p.tradeHorizon}
+Risk tolerance: ${p.risk}
+
+For each ticker, evaluate: market structure confirmation, fundamental inflection triggers, sponsorship/smart-money validation, catalyst proximity, and risk alerts.
+
+CRITICAL: Respond ONLY in valid JSON (no markdown, no backticks). Use this exact schema:
+
+{
+  "analysis_summary": "2-3 sentence overview of current tactical landscape",
+  "stocks": [
+    {
+      "ticker": "TICK",
+      "name": "Company Name",
+      "thesis_status": "Intact|Strengthening|Weakening|Broken",
+      "what_changed": "Brief description of recent changes",
+      "best_bullish": "Single strongest bullish evidence",
+      "best_bearish": "Single strongest bearish evidence",
+      "foundation_score": 78,
+      "confirmation_score": 65,
+      "catalyst_score": 70,
+      "sponsorship_score": 60,
+      "risk_penalty": 10,
+      "final_actionability": 62,
+      "alert_state": "Watch|Ready|Triggered|Extended|Broken|Avoid",
+      "entry_quality": "Early|Proper|Extended|Broken",
+      "active_alerts": [
+        { "text": "alert description", "tier": 1, "type": "bullish|bearish|neutral" }
+      ],
+      "upgrade_trigger": "What would move this to a higher state",
+      "downgrade_trigger": "What would move this to a lower state",
+      "market_structure_notes": "Key technical/structure observations",
+      "catalyst_events": [
+        { "event": "Earnings Q2", "timing": "~30 days", "bias": "bullish|bearish|two-sided" }
+      ],
+      "actionable_now": true
+    }
+  ],
+  "best_act_now": { "ticker": "TICK", "reason": "Why act now" },
+  "best_watchlist": { "ticker": "TICK", "reason": "Why watch" },
+  "false_positive": { "ticker": "TICK", "reason": "Why dangerous" },
+  "overall_posture": "Risk-on|Selective|Cautious|Defensive"
+}
+
+Be precise. Keep ALL string values SHORT (under 20 words). Limit active_alerts to 3 per stock max, catalyst_events to 2 max. This MUST be valid, complete JSON.`;
+}
+
 // ── PRIMARY RESULTS ──
 function PrimaryResults({ data, onRunSecondary }) {
   const [tab, setTab] = useState("overview");
