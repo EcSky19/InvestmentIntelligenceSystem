@@ -178,44 +178,141 @@ function engine(parsed, prevClose) {
     topN.slice(0, 4).forEach(nd => { if (nd.price > Cl && !ress.find(r => Math.abs(r.price - nd.price) < 0.02)) ress.push({ price: nd.price, src: "VPRF", ev: `HVN ${n2(nd.vol / 1e6)}M` }); if (nd.price < Cl && !sups.find(s => Math.abs(s.price - nd.price) < 0.02)) sups.push({ price: nd.price, src: "VPRF", ev: `HVN ${n2(nd.vol / 1e6)}M` }); });
     ress.sort((a, b) => a.price - b.price); sups.sort((a, b) => b.price - a.price);
 
-    // SCORING
+    // SCORING — calibrated weights, fixed gap-down sign, interaction multipliers
     const sigs = []; let score = 0; const sig = (t, v, c) => { sigs.push({ t, v, c }); score += v; };
-    if (cL >= 0.75) sig("Close near high", 2, "g"); else if (cL <= 0.25) sig("Close near low", -2, "r"); else if (cL >= 0.6) sig("Close upper", 1, "g"); else if (cL <= 0.4) sig("Close lower", -1, "r"); else sig("Close mid", 0, "y");
-    if (Cl > vwap * 1.005) sig("Above VWAP", 1, "g"); else if (Cl < vwap * 0.995) sig("Below VWAP", -1, "r");
-    if (gap > 3) sig("Gap up +" + n2(gap, 1) + "%", 1, "g"); else if (gap < -3) sig("Gap down", 1, "r");
+
+    // --- Close location (highest predictive weight) ---
+    if (cL >= 0.75) sig("Close near high", 3, "g"); else if (cL <= 0.25) sig("Close near low", -3, "r"); else if (cL >= 0.6) sig("Close upper", 2, "g"); else if (cL <= 0.4) sig("Close lower", -2, "r"); else sig("Close mid", 0, "y");
+
+    // --- VWAP position (high weight) ---
+    if (Cl > vwap * 1.005) sig("Above VWAP", 2, "g"); else if (Cl < vwap * 0.995) sig("Below VWAP", -2, "r");
+
+    // --- Gap direction — FIX: gap-down was incorrectly +1, now -2 ---
+    if (gap > 3) sig("Gap up +" + n2(gap, 1) + "%", 1, "g"); else if (gap < -3) sig("Gap down " + n2(gap, 1) + "%", -2, "r");
+
+    // --- Session phase performance (high weight on power hour) ---
     if (phases.od.chg > 1) sig("Bull open", 1, "g"); else if (phases.od.chg < -1) sig("Bear open", -1, "r");
-    if (phases.ph.chg > 1.5) sig("Bull PH", 2, "g"); else if (phases.ph.chg < -1.5) sig("Bear PH", -2, "r");
-    if (vwPct > 65) sig("Strong abv VWAP", 2, "g"); else if (vwPct < 35) sig("Weak blw VWAP", -2, "r");
-    if (bNH > bNL * 1.5 && bNH > 10) sig("Inst sell hi(" + bNH + ")", -2, "r"); else if (bNL > bNH * 1.5 && bNL > 10) sig("Inst buy lo(" + bNL + ")", 2, "g");
+    if (phases.ph.chg > 1.5) sig("Bull PH", 3, "g"); else if (phases.ph.chg < -1.5) sig("Bear PH", -3, "r");
+
+    // --- VWAP volume split (high weight) ---
+    if (vwPct > 65) sig("Strong abv VWAP", 3, "g"); else if (vwPct < 35) sig("Weak blw VWAP", -3, "r");
+
+    // --- Institutional block location (high weight) ---
+    if (bNH > bNL * 1.5 && bNH > 10) sig("Inst sell hi(" + bNH + ")", -3, "r"); else if (bNL > bNH * 1.5 && bNL > 10) sig("Inst buy lo(" + bNL + ")", 3, "g");
+
+    // --- Distribution / late selling ---
     if (distBars > 5) sig("Distribution", -1, "r"); if (lhSell) sig("Late selling", -2, "r");
-    if (hFH && lSH) sig("Trend Down", -2, "r"); else if (!hFH && !lSH) sig("Trend Up", 2, "g");
+
+    // --- Trend structure (high weight) ---
+    if (hFH && lSH) sig("Trend Down", -3, "r"); else if (!hFH && !lSH) sig("Trend Up", 3, "g");
+
+    // --- Tick volume ratio (high weight) — deduplicated with cumDelta below ---
+    const vtrScore = vTR > 1.15 ? 2 : vTR < 0.85 ? -2 : 0;
     if (vTR > 1.15) sig("TickVR " + n2(vTR, 2), 2, "g"); else if (vTR < 0.85) sig("TickVR " + n2(vTR, 2), -2, "r");
-    if (cumD > TV * 0.03) sig("CumD +" + n2(cumD / 1e6) + "M", 2, "g"); else if (cumD < -TV * 0.03) sig("CumD " + n2(cumD / 1e6) + "M", -2, "r");
+
+    // --- Cumulative delta (highest weight; correlated with vTR — take the stronger, add small confirmation) ---
+    const cumDScore = cumD > TV * 0.03 ? 3 : cumD < -TV * 0.03 ? -3 : 0;
+    if (cumD > TV * 0.03) sig("CumD +" + n2(cumD / 1e6) + "M", 3, "g"); else if (cumD < -TV * 0.03) sig("CumD " + n2(cumD / 1e6) + "M", -3, "r");
+    // If vTR and cumDelta disagree, cancel the weaker one (correlation adjustment)
+    if (vtrScore !== 0 && cumDScore !== 0 && Math.sign(vtrScore) !== Math.sign(cumDScore)) {
+      sig("vTR/CumD conflict", -1, "y");
+    }
+
+    // --- Delta recovery ---
     if (dRecovPct > 70) sig("D Recov " + n2(dRecovPct, 0) + "%", 1, "g"); else if (dRecovPct < 30) sig("D Recov " + n2(dRecovPct, 0) + "%", -1, "r");
+
+    // --- Sweeps (reduced weight — lower standalone predictiveness) ---
     if (sNH > sNL * 2) sig("Sweeps@hi", -1, "r"); else if (sNL > sNH * 2) sig("Sweeps@lo", 1, "g");
+
+    // --- VPIN (medium weight) ---
     if (vpin > 0.3) sig("VPIN " + n2(vpin * 100, 0) + "%", -1, "r");
+
+    // --- Price run asymmetry ---
     if (mDR > mUR + 2) sig("Dn runs longer", -1, "r"); else if (mUR > mDR + 2) sig("Up runs longer", 1, "g");
+
+    // --- Day change / gap fill ---
     if (dChg < -2) sig("Weak close " + n2(dChg, 1) + "%", -1, "r"); else if (dChg > 2) sig("Strong close", 1, "g");
-    if (cL > 0.35 && lSH && phases.ph.chg > 2) sig("Late recovery", 1, "g");
-    if (prevClose && gap > 2 && L <= prevClose * 1.005) sig("Gap filled", -1, "r");
+    if (cL > 0.35 && lSH && phases.ph.chg > 2) sig("Late recovery", 2, "g");
+    if (prevClose && gap > 2 && L <= prevClose * 1.005) sig("Gap filled", -2, "r");
+    if (prevClose && gap < -2 && H >= prevClose * 0.995) sig("Gap dn filled", 2, "g");
 
-    const bias = score >= 7 ? "STRONG BULL" : score >= 3 ? "BULLISH" : score >= 1 ? "LEAN BULL" : score <= -7 ? "STRONG BEAR" : score <= -3 ? "BEARISH" : score <= -1 ? "LEAN BEAR" : "NEUTRAL";
-    const biasC = score >= 3 ? P.g : score >= 1 ? P.g : score <= -3 ? P.r : score <= -1 ? P.r : P.y;
+    // --- INTERACTION MULTIPLIERS — co-occurring confirming signals amplify conviction ---
+    // Bear confluence: negative delta + blocks at highs + close below VWAP
+    if (cumD < -TV * 0.03 && bNH > bNL * 1.5 && Cl < vwap) { sig("Bear confluence", -3, "r"); }
+    // Bull confluence: positive delta + blocks at lows + close above VWAP
+    if (cumD > TV * 0.03 && bNL > bNH * 1.5 && Cl > vwap) { sig("Bull confluence", 3, "g"); }
+    // Strong bear: high VPIN + distribution + negative delta
+    if (vpin > 0.3 && distBars > 5 && cumD < 0) { sig("Informed dist.", -2, "r"); }
+    // Strong bull: close near high + bull power hour + vTR >1.15
+    if (cL >= 0.7 && phases.ph.chg > 1.5 && vTR > 1.15) { sig("Bull momentum", 2, "g"); }
+    // Smart money reversal: heavy sell day but power hour flips strongly
+    if (dChg < -3 && phases.ph.chg > 2 && dRecovPct > 60) { sig("Exhaustion rev.", 2, "g"); }
 
+    const bias = score >= 9 ? "STRONG BULL" : score >= 4 ? "BULLISH" : score >= 2 ? "LEAN BULL" : score <= -9 ? "STRONG BEAR" : score <= -4 ? "BEARISH" : score <= -2 ? "LEAN BEAR" : "NEUTRAL";
+    const biasC = score >= 4 ? P.g : score >= 2 ? P.g : score <= -4 ? P.r : score <= -2 ? P.r : P.y;
+
+    // --- SCENARIO PROBABILITIES — recalibrated buckets ---
     let bSc = 0, beSc = 0, cSc = 0, rSc = 0;
-    if (cL >= 0.7) bSc += 12; else if (cL >= 0.5) { bSc += 4; cSc += 4; } else if (cL <= 0.3) beSc += 12; else { cSc += 6; beSc += 4; }
-    if (Cl > vwap * 1.01) bSc += 8; else if (Cl < vwap * 0.99) beSc += 8; else cSc += 4;
-    if (phases.ph.chg > 2) { bSc += 10; rSc += 7; } else if (phases.ph.chg < -2) beSc += 10; else cSc += 3;
-    if (hFH && lSH) beSc += 12; else if (!hFH && !lSH) bSc += 12; else { cSc += 6; rSc += 4; }
-    if (bNH > bNL * 1.5) beSc += 8; if (distBars > 5) beSc += 6; if (lhSell) beSc += 8;
-    if (dChg < -5 && phases.ph.chg > 3) { rSc += 18; bSc += 4; } else if (dChg < -5 && phases.ph.chg > 1) rSc += 10;
-    if (cL > 0.35 && cL < 0.55 && R / O > 0.1) { rSc += 6; cSc += 4; }
-    if (gap > 3 && Cl < O) beSc += 6; if (prevClose && gap > 5 && L <= prevClose * 1.005) { beSc += 4; rSc += 4; }
-    if (vTR < 0.85) beSc += 8; else if (vTR > 1.15) bSc += 8; else cSc += 3;
-    if (cumD < -TV * 0.05) beSc += 10; else if (cumD > TV * 0.05) bSc += 10; else cSc += 4;
-    if (dRecovPct < 30) beSc += 6; else if (dRecovPct > 70) { rSc += 10; bSc += 4; }
-    if (sNH > sNL * 2) beSc += 6; if (vpin > 0.3) beSc += 5; if (hurst < 0.45) { cSc += 5; rSc += 3; }
-    if (oddPct > 35 && dChg < -3) rSc += 5; if (mDR > mUR + 2) beSc += 4; if (voV > 0.015) cSc += 5;
+
+    // Close location (highest weight)
+    if (cL >= 0.7) bSc += 14; else if (cL >= 0.5) { bSc += 5; cSc += 5; } else if (cL <= 0.3) beSc += 14; else { cSc += 7; beSc += 5; }
+
+    // VWAP position
+    if (Cl > vwap * 1.01) bSc += 10; else if (Cl < vwap * 0.99) beSc += 10; else cSc += 5;
+
+    // Power hour (high weight)
+    if (phases.ph.chg > 2) { bSc += 12; rSc += 8; } else if (phases.ph.chg < -2) beSc += 12; else cSc += 4;
+
+    // Trend structure
+    if (hFH && lSH) beSc += 14; else if (!hFH && !lSH) bSc += 14; else { cSc += 7; rSc += 5; }
+
+    // Institutional activity
+    if (bNH > bNL * 1.5) beSc += 10; if (distBars > 5) beSc += 7; if (lhSell) beSc += 9;
+
+    // Reversal setup: exhaustion day with late recovery
+    if (dChg < -5 && phases.ph.chg > 3) { rSc += 22; bSc += 5; } else if (dChg < -5 && phases.ph.chg > 1) rSc += 12;
+    if (dChg < -3 && dRecovPct > 70 && cL > 0.4) { rSc += 10; }
+
+    // Wide range chop
+    if (cL > 0.35 && cL < 0.55 && R / O > 0.1) { rSc += 7; cSc += 5; }
+
+    // Gap fill / gap fade
+    if (gap > 3 && Cl < O) beSc += 7;
+    if (prevClose && gap > 5 && L <= prevClose * 1.005) { beSc += 5; rSc += 5; }
+    if (prevClose && gap < -3 && H >= prevClose * 0.995) { bSc += 5; rSc += 5; }
+
+    // Cumulative delta (high weight)
+    if (cumD < -TV * 0.05) beSc += 12; else if (cumD > TV * 0.05) bSc += 12; else cSc += 5;
+
+    // Delta recovery
+    if (dRecovPct < 30) beSc += 7; else if (dRecovPct > 70) { rSc += 12; bSc += 5; }
+
+    // Microstructure
+    if (sNH > sNL * 2) beSc += 5; if (vpin > 0.3) beSc += 6;
+    if (hurst < 0.45) { cSc += 6; rSc += 4; }
+    if (mDR > mUR + 2) beSc += 5; if (voV > 0.015) cSc += 6;
+
+    // Tick volume ratio
+    if (vTR < 0.85) beSc += 9; else if (vTR > 1.15) bSc += 9; else cSc += 4;
+
+    // Reversal signals: icebergs near lows, dark pool at lows, late delta flip
+    const iceNearLow = topIce.filter(ic => ic.p <= L + R * 0.15).length;
+    if (iceNearLow >= 2) { rSc += 8; bSc += 4; sig("Icebergs@lo (" + iceNearLow + ")", 2, "g"); }
+    const dpNearLow = dpCross.filter(t => t.p <= L + R * 0.2).length;
+    if (dpNearLow >= 2) { rSc += 7; bSc += 3; sig("Dark pool@lo (" + dpNearLow + ")", 2, "g"); }
+    // Late-session delta flip: check if last 30-min delta switched sign vs full-day delta
+    const lateDeltaFlip = cumD < 0 && phases.ph.chg > 1.5;
+    if (lateDeltaFlip) { rSc += 10; sig("Late delta flip", 2, "g"); }
+
+    // Bear confluence interaction
+    if (cumD < -TV * 0.03 && bNH > bNL * 1.5 && Cl < vwap) { beSc = Math.round(beSc * 1.4); }
+    // Bull confluence interaction
+    if (cumD > TV * 0.03 && bNL > bNH * 1.5 && Cl > vwap) { bSc = Math.round(bSc * 1.35); }
+    // Informed distribution
+    if (vpin > 0.3 && distBars > 5 && cumD < 0) { beSc = Math.round(beSc * 1.5); }
+    // Bull momentum
+    if (cL >= 0.7 && phases.ph.chg > 1.5 && vTR > 1.15) { bSc = Math.round(bSc * 1.35); }
+
     const rawT = bSc + beSc + cSc + rSc || 1;
     let scenarios = [{ l: "BEAR", p: Math.round(beSc / rawT * 100), c: P.r }, { l: "REVERSAL", p: Math.round(rSc / rawT * 100), c: P.mg }, { l: "BULL", p: Math.round(bSc / rawT * 100), c: P.g }, { l: "CHOP", p: Math.round(cSc / rawT * 100), c: P.y }];
     const tot = scenarios.reduce((a, s) => a + s.p, 0); if (tot !== 100) scenarios[0].p += (100 - tot);
