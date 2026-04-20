@@ -352,6 +352,7 @@ export default function App() {
   const [tab, setTab] = useState("upload");
   const [tickers, setTickers] = useState([]);
   const [tickerMeta, setTickerMeta] = useState({});
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [aTk, setATk] = useState(null);
   const [recs, setRecs] = useState([]);
   const [selD, setSelD] = useState(null);
@@ -367,31 +368,36 @@ export default function App() {
       try {
         const idx = await ldIdx();
         const meta = await ldMeta();
+        const recent = await ldRecent();
         setTickers(idx);
         setTickerMeta(meta);
-        if (idx.length) { setATk(idx[0]); setRecs(await ldTk(idx[0])); }
+        setRecentlyViewed(recent);
+        if (idx.length) {
+          const first = recent.length ? recent[0] : idx[0];
+          setATk(first); setRecs(await ldTk(first));
+        }
       } catch (e) { } setLoading(false);
     })();
   }, []);
-  const swTk = useCallback(async t => { setATk(t); setSelD(null); const r = await ldTk(t); setRecs(r); setTab("dash"); if (r.length) setSelD(r[0].date); }, []);
+  const swTk = useCallback(async t => {
+    setATk(t); setSelD(null);
+    const r = await ldTk(t); setRecs(r); setTab("dash");
+    if (r.length) setSelD(r[0].date);
+    // Push to front of recently viewed, deduplicate, cap at 20
+    setRecentlyViewed(prev => {
+      const next = [t, ...prev.filter(x => x !== t)].slice(0, 20);
+      svRecent(next);
+      return next;
+    });
+  }, []);
 
   const deleteTicker = useCallback(async (tk) => {
     try { await window.storage.delete("stae7:" + tk); } catch (e) { }
-    setTickerMeta(prev => {
-      const next = { ...prev }; delete next[tk];
-      svMeta(next);
-      return next;
-    });
-    setTickers(prev => {
-      const next = prev.filter(t => t !== tk);
-      svIdx(next);
-      return next;
-    });
-    setBatchLog([]);
-    setConfirmDel(null);
-    if (aTk === tk) {
-      setATk(null); setRecs([]); setSelD(null); setTab("upload");
-    }
+    setTickerMeta(prev => { const next = { ...prev }; delete next[tk]; svMeta(next); return next; });
+    setRecentlyViewed(prev => { const next = prev.filter(x => x !== tk); svRecent(next); return next; });
+    setTickers(prev => { const next = prev.filter(t => t !== tk); svIdx(next); return next; });
+    setBatchLog([]); setConfirmDel(null);
+    if (aTk === tk) { setATk(null); setRecs([]); setSelD(null); setTab("upload"); }
   }, [aTk]);
 
   const processOneFile = useCallback(async (file, tkMap, idxSet) => {
@@ -421,9 +427,18 @@ export default function App() {
           const chrono = [...exR].reverse();
           for (let i = 0; i < chrono.length - 1; i++) {
             const c2 = chrono[i], nx = chrono[i + 1];
-            const chg = c2.Cl ? ((nx.Cl - c2.Cl) / c2.Cl) * 100 : 0;
-            c2.actChg = chg; c2.actDir = chg > 0.3 ? "BULL" : chg < -0.3 ? "BEAR" : "FLAT";
-            c2.hit = (c2.score >= 1 ? "BULL" : c2.score <= -1 ? "BEAR" : "FLAT") === c2.actDir;
+            // FIX: use next-day open vs today's close (tradeable signal), not close-to-close
+            const openChg = c2.Cl && nx.O ? ((nx.O - c2.Cl) / c2.Cl) * 100 : 0;
+            const closeChg = c2.Cl && nx.Cl ? ((nx.Cl - c2.Cl) / c2.Cl) * 100 : 0;
+            // FIX: dynamic threshold scaled to each stock's realized volatility
+            const dynThresh = Math.max(0.3, (c2.rvAnn || 0) / 252 * 100 * 0.25);
+            c2.actChg = closeChg;
+            c2.actOpenChg = openChg;
+            c2.actDir = openChg > dynThresh ? "BULL" : openChg < -dynThresh ? "BEAR" : "FLAT";
+            const predDir = c2.score >= 2 ? "BULL" : c2.score <= -2 ? "BEAR" : "FLAT";
+            c2.hit = predDir === c2.actDir;
+            c2.predDir = predDir;
+            c2.dynThresh = dynThresh;
           }
           tkMap[tk] = [...chrono].reverse();
           idxSet.add(tk);
@@ -450,7 +465,6 @@ export default function App() {
     for (const tk of idxSet) {
       await svTk(tk, tkMap[tk]);
       if (!idx2.includes(tk)) idx2.push(tk);
-      // Store the most recent session date for this ticker
       if (tkMap[tk].length) metaUp[tk] = tkMap[tk][0].date;
     }
     idx2.sort();
@@ -461,30 +475,36 @@ export default function App() {
       setATk(last.tk); setRecs(tkMap[last.tk]);
       setSelD(tkMap[last.tk][0]?.date || null);
       setTab("dash");
+      // Push all newly imported tickers to front of recently viewed (last one first)
+      const okTks = results.filter(r => r.ok).map(r => r.tk);
+      setRecentlyViewed(prev => {
+        let next = [...prev];
+        [...okTks].reverse().forEach(tk => { next = [tk, ...next.filter(x => x !== tk)]; });
+        next = next.slice(0, 20);
+        svRecent(next);
+        return next;
+      });
     }
     const ok = results.filter(r => r.ok).length;
     const fail = results.filter(r => !r.ok).length;
     setMsg({ e: fail > 0 && ok === 0, m: `${ok} file${ok !== 1 ? "s" : ""} imported successfully${fail ? ", " + fail + " failed" : ""}.` });
     if (e.target) e.target.value = "";
-  }, [tickers, pcI, processOneFile]);
+  }, [tickers, tickerMeta, pcI, processOneFile]);
 
   const S = useMemo(() => recs.find(r => r.date === selD) || null, [recs, selD]);
-  const recentTickers = useMemo(() =>
-    [...tickers]
-      .sort((a, b) => (tickerMeta[b] || "").localeCompare(tickerMeta[a] || ""))
-      .slice(0, 20),
-    [tickers, tickerMeta]);
 
   if (loading) return <div style={{ fontFamily: FN, background: P.bg, color: P.t3, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>LOADING...</div>;
 
   const tabs = [["upload", "UPLOAD"], ["dash", "DASHBOARD"], ["summary", "SUMMARY"], ["price", "PRICE"], ["flow", "FLOW"], ["inst", "INST"], ["micro", "MICRO"], ["vol", "VOL"], ["levels", "LEVELS"], ["outlook", "OUTLOOK"], ["hist", "HISTORY"]];
   const zoneVol = (arr) => arr.reduce((a, t) => a + t.sz, 0);
+  // Top bar: last 20 tickers in order of most recent access (newest first)
+  const recentTickers = recentlyViewed.filter(tk => tickers.includes(tk)).slice(0, 20);
 
   return (
     <div style={{ fontFamily: FN, background: P.bg, color: P.t1, minHeight: "100vh", fontSize: 11 }}>
       <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <div style={{ background: "linear-gradient(180deg,#0a1224,#060d19)", borderBottom: "1px solid " + P.bd, padding: "0 16px", display: "flex", alignItems: "center", height: 36, gap: 12 }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00e676", boxShadow: "0 0 8px #00e67688" }} /><span style={{ color: P.am, fontSize: 13, fontWeight: 700, letterSpacing: 1.5 }}>Stock Time & Sales</span><span style={{ color: "#e6f1ff", fontSize: 13, fontWeight: 700, letterSpacing: 1 }}> Tape Analysis Engine</span><span style={{ color: P.t3, fontSize: 10, letterSpacing: 1, marginLeft: 6 }}>v6</span>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#00e676", boxShadow: "0 0 8px #00e67688" }} /><span style={{ color: P.am, fontSize: 13, fontWeight: 700, letterSpacing: 1.5 }}>STOCK TIME & SALES</span><span style={{ color: "#e6f1ff", fontSize: 13, fontWeight: 700, letterSpacing: 1 }}> TAPE ANALYSIS ENGINE</span><span style={{ color: P.t3, fontSize: 10, letterSpacing: 1, marginLeft: 6 }}>v6</span>
         <div style={{ flex: 1 }} />
         {aTk && <span style={{ color: "#e6f1ff", fontSize: 13, fontWeight: 700, letterSpacing: 1 }}>{aTk}</span>}
         {S && <Tag c={S.biasC}>{S.bias}</Tag>}
@@ -569,7 +589,7 @@ export default function App() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", flexWrap: "wrap", gap: 8 }}>
               <div><div style={{ fontSize: 10, color: P.t3, letterSpacing: 2 }}>COMPOSITE SCORE</div><div style={{ fontSize: 40, fontWeight: 700, color: S.biasC, lineHeight: 1 }}>{S.score >= 0 ? "+" : ""}{S.score}</div><div style={{ display: "flex", gap: 4, marginTop: 4 }}><Tag c={S.biasC}>{S.bias}</Tag><Tag c={P.t3}>{S.dayType}</Tag></div></div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>{[{ l: "CUM D", v: n2(S.cumD / 1e6) + "M", c: S.cumD >= 0 ? P.g : P.r }, { l: "TICK VR", v: n2(S.vTR, 3), c: S.vTR > 1 ? P.g : P.r }, { l: "VPIN", v: n2(S.vpin * 100, 1) + "%", c: S.vpin > 0.3 ? P.r : P.t2 }, { l: "HURST", v: n2(S.hurst, 3) }, { l: "A/D", v: n2(S.adR) + "x", c: S.adR > 1.3 ? P.r : P.g }, { l: "SM SHIFT", v: "$" + n2(S.smShift), c: S.smShift < 0 ? P.r : P.g }, { l: "RV ANN", v: n2(S.rvAnn * 100, 0) + "%" }, { l: "VOL/VOL", v: S.voV > 0.015 ? "UNSTBL" : "STABLE", c: S.voV > 0.015 ? P.r : P.g }].map((m, i) => <div key={i} style={{ textAlign: "center", minWidth: 60 }}><div style={{ fontSize: 9, color: P.t3, letterSpacing: 1.5 }}>{m.l}</div><div style={{ fontSize: 13, fontWeight: 700, color: m.c || P.t1 }}>{m.v}</div></div>)}</div>
-              {S.actDir && <div style={{ padding: "6px 10px", background: S.hit ? P.g + "15" : P.r + "15" }}><div style={{ fontSize: 9, color: P.t3 }}>ACTUAL</div><div style={{ fontSize: 12, fontWeight: 700, color: S.actDir === "BULL" ? P.g : S.actDir === "BEAR" ? P.r : P.y }}>{S.actDir} {S.actChg >= 0 ? "+" : ""}{n2(S.actChg)}% {S.hit ? "\u2713" : "\u2717"}</div></div>}
+              {S.actDir && <div style={{ padding: "6px 10px", background: S.hit ? P.g + "15" : P.r + "15" }}><div style={{ fontSize: 9, color: P.t3 }}>NEXT OPEN</div><div style={{ fontSize: 12, fontWeight: 700, color: S.actDir === "BULL" ? P.g : S.actDir === "BEAR" ? P.r : P.y }}>{S.actDir} {S.actOpenChg >= 0 ? "+" : ""}{n2(S.actOpenChg, 2)}% {S.hit ? "\u2713" : "\u2717"}</div><div style={{ fontSize: 9, color: P.t3 }}>pred: {S.predDir || "--"}</div></div>}
             </div>
             <div style={{ marginTop: 8, fontSize: 10, color: P.t2 }}>{S.headline}</div>
           </div>
@@ -689,10 +709,10 @@ export default function App() {
 
         {tab === "outlook" && S && <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <Pnl title={aTk + " SCENARIOS"} color={P.mg}><PBar sc={S.scenarios} />{S.scenarios.map((s, i) => <div key={i} style={{ background: s.c + "08", border: "1px solid " + s.c + "18", padding: 10, marginBottom: 4 }}><div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 12, fontWeight: 700, color: s.c }}>#{i + 1} {s.l}</span><span style={{ fontSize: 20, fontWeight: 700, color: s.c }}>{s.p}%</span></div><div style={{ fontSize: 10, color: P.t2, lineHeight: 1.7, marginTop: 4 }}>{s.l === "BEAR" && <span><b style={{ color: P.t1 }}>Watch:</b> Open {"<"} ${n2(S.Cl)}, reject VWAP. <b style={{ color: P.t1 }}>Act:</b> Short failed VWAP.</span>}{s.l === "REVERSAL" && <span><b style={{ color: P.t1 }}>Watch:</b> Hold S1, delta turns +. <b style={{ color: P.t1 }}>Act:</b> Buy VWAP reclaim.</span>}{s.l === "BULL" && <span><b style={{ color: P.t1 }}>Watch:</b> Open {">"} ${n2(S.Cl)}, hold VWAP. <b style={{ color: P.t1 }}>Act:</b> Buy dips.</span>}{s.l === "CHOP" && <span><b style={{ color: P.t1 }}>Watch:</b> S1-R1 range. <b style={{ color: P.t1 }}>Act:</b> 50% size, fade.</span>}</div></div>)}</Pnl>
-          {recs.length > 1 && <Pnl title={aTk + " CROSS-DAY"} color={P.cy}><div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10, fontFamily: FN }}><thead><tr style={{ borderBottom: "1px solid " + P.bh }}>{["DATE", "O", "H", "L", "C", "D%", "VOL", "CL%", "SCR", "CUMD", "TVR", "VPIN", "H", "SCEN", "NEXT"].map(h => <th key={h} style={{ padding: "4px 3px", textAlign: "left", color: P.t3, fontSize: 9, fontWeight: 700 }}>{h}</th>)}</tr></thead><tbody>{recs.map((a, i) => { const dc = a.prevClose ? ((a.Cl - a.prevClose) / a.prevClose * 100) : a.dChg; return <tr key={i} onClick={() => setSelD(a.date)} style={{ borderBottom: "1px solid " + P.bd, cursor: "pointer", background: selD === a.date ? P.hv : "transparent" }} onMouseEnter={e => { if (selD !== a.date) e.currentTarget.style.background = P.hv; }} onMouseLeave={e => { if (selD !== a.date) e.currentTarget.style.background = "transparent"; }}><td style={{ padding: "4px 3px", color: P.am }}>{a.date}</td><td style={{ padding: "4px 3px" }}>{n2(a.O)}</td><td style={{ padding: "4px 3px" }}>{n2(a.H)}</td><td style={{ padding: "4px 3px" }}>{n2(a.L)}</td><td style={{ padding: "4px 3px", fontWeight: 700 }}>{n2(a.Cl)}</td><td style={{ padding: "4px 3px", color: dc >= 0 ? P.g : P.r }}>{dc >= 0 ? "+" : ""}{n2(dc, 1)}%</td><td style={{ padding: "4px 3px" }}>{n2(a.TV / 1e6, 1)}M</td><td style={{ padding: "4px 3px" }}>{n2(a.cL * 100, 0)}%</td><td style={{ padding: "4px 3px", color: a.biasC, fontWeight: 700 }}>{a.score >= 0 ? "+" : ""}{a.score}</td><td style={{ padding: "4px 3px", color: a.cumD >= 0 ? P.g : P.r }}>{n2(a.cumD / 1e6, 1)}M</td><td style={{ padding: "4px 3px", color: a.vTR > 1 ? P.g : P.r }}>{n2(a.vTR)}</td><td style={{ padding: "4px 3px" }}>{n2(a.vpin * 100, 1)}%</td><td style={{ padding: "4px 3px" }}>{n2(a.hurst)}</td><td style={{ padding: "4px 3px" }}>{a.scenarios ? <Tag c={a.scenarios[0].c}>{a.scenarios[0].p}%</Tag> : ""}</td><td style={{ padding: "4px 3px" }}>{a.actDir ? <span>{a.hit ? "\u2713" : "\u2717"} {a.actDir}</span> : "--"}</td></tr>; })}</tbody></table></div></Pnl>}
+          {recs.length > 1 && <Pnl title={aTk + " CROSS-DAY"} color={P.cy}><div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10, fontFamily: FN }}><thead><tr style={{ borderBottom: "1px solid " + P.bh }}>{["DATE", "O", "H", "L", "C", "D%", "VOL", "CL%", "SCR", "CUMD", "TVR", "VPIN", "H", "SCEN", "NEXT OPEN", "HIT"].map(h => <th key={h} style={{ padding: "4px 3px", textAlign: "left", color: P.t3, fontSize: 9, fontWeight: 700 }}>{h}</th>)}</tr></thead><tbody>{recs.map((a, i) => { const dc = a.prevClose ? ((a.Cl - a.prevClose) / a.prevClose * 100) : a.dChg; return <tr key={i} onClick={() => setSelD(a.date)} style={{ borderBottom: "1px solid " + P.bd, cursor: "pointer", background: selD === a.date ? P.hv : "transparent" }} onMouseEnter={e => { if (selD !== a.date) e.currentTarget.style.background = P.hv; }} onMouseLeave={e => { if (selD !== a.date) e.currentTarget.style.background = "transparent"; }}><td style={{ padding: "4px 3px", color: P.am }}>{a.date}</td><td style={{ padding: "4px 3px" }}>{n2(a.O)}</td><td style={{ padding: "4px 3px" }}>{n2(a.H)}</td><td style={{ padding: "4px 3px" }}>{n2(a.L)}</td><td style={{ padding: "4px 3px", fontWeight: 700 }}>{n2(a.Cl)}</td><td style={{ padding: "4px 3px", color: dc >= 0 ? P.g : P.r }}>{dc >= 0 ? "+" : ""}{n2(dc, 1)}%</td><td style={{ padding: "4px 3px" }}>{n2(a.TV / 1e6, 1)}M</td><td style={{ padding: "4px 3px" }}>{n2(a.cL * 100, 0)}%</td><td style={{ padding: "4px 3px", color: a.biasC, fontWeight: 700 }}>{a.score >= 0 ? "+" : ""}{a.score}</td><td style={{ padding: "4px 3px", color: a.cumD >= 0 ? P.g : P.r }}>{n2(a.cumD / 1e6, 1)}M</td><td style={{ padding: "4px 3px", color: a.vTR > 1 ? P.g : P.r }}>{n2(a.vTR)}</td><td style={{ padding: "4px 3px" }}>{n2(a.vpin * 100, 1)}%</td><td style={{ padding: "4px 3px" }}>{n2(a.hurst)}</td><td style={{ padding: "4px 3px" }}>{a.scenarios ? <Tag c={a.scenarios[0].c}>{a.scenarios[0].p}%</Tag> : ""}</td><td style={{ padding: "4px 3px", color: a.actDir === "BULL" ? P.g : a.actDir === "BEAR" ? P.r : P.y }}>{a.actDir ? ((a.actOpenChg >= 0 ? "+" : "") + n2(a.actOpenChg, 2) + "% " + a.actDir) : "--"}</td><td style={{ padding: "4px 3px" }}>{a.hit === undefined ? "--" : a.hit ? "\u2713" : "\u2717"}</td></tr>; })}</tbody></table></div></Pnl>}
         </div>}
 
-        {tab === "hist" && (recs.length === 0 ? <div style={{ textAlign: "center", padding: 40, color: P.t3 }}>NO DATA</div> : <Pnl title={aTk + " | " + recs.length + " SESSIONS"} color={P.am}><div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10, fontFamily: FN }}><thead><tr style={{ borderBottom: "1px solid " + P.bh }}>{["DATE", "O", "H", "L", "C", "D%", "VOL", "CL%", "SCR", "CUMD", "TVR", "VPIN", "H", "A/D", "#1 PRINT", "SCEN", "NEXT", "HIT"].map(h => <th key={h} style={{ padding: "4px 3px", textAlign: "left", color: P.t3, fontSize: 9, fontWeight: 700 }}>{h}</th>)}</tr></thead><tbody>{recs.map((a, i) => { const dc = a.prevClose ? ((a.Cl - a.prevClose) / a.prevClose * 100) : a.dChg; return <tr key={i} onClick={() => { setSelD(a.date); setTab("dash"); }} style={{ borderBottom: "1px solid " + P.bd, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.background = P.hv} onMouseLeave={e => e.currentTarget.style.background = "transparent"}><td style={{ padding: "4px 3px", color: P.am }}>{a.date}</td><td style={{ padding: "4px 3px" }}>{n2(a.O)}</td><td style={{ padding: "4px 3px" }}>{n2(a.H)}</td><td style={{ padding: "4px 3px" }}>{n2(a.L)}</td><td style={{ padding: "4px 3px", fontWeight: 700 }}>{n2(a.Cl)}</td><td style={{ padding: "4px 3px", color: dc >= 0 ? P.g : P.r }}>{dc >= 0 ? "+" : ""}{n2(dc, 1)}%</td><td style={{ padding: "4px 3px" }}>{n2(a.TV / 1e6, 1)}M</td><td style={{ padding: "4px 3px" }}>{n2(a.cL * 100, 0)}%</td><td style={{ padding: "4px 3px", color: a.biasC, fontWeight: 700 }}>{a.score >= 0 ? "+" : ""}{a.score}</td><td style={{ padding: "4px 3px", color: a.cumD >= 0 ? P.g : P.r }}>{n2(a.cumD / 1e6, 1)}M</td><td style={{ padding: "4px 3px", color: a.vTR > 1 ? P.g : P.r }}>{n2(a.vTR)}</td><td style={{ padding: "4px 3px" }}>{n2(a.vpin * 100, 1)}%</td><td style={{ padding: "4px 3px" }}>{n2(a.hurst)}</td><td style={{ padding: "4px 3px", color: a.adR > 1.3 ? P.r : P.g }}>{n2(a.adR, 1)}x</td><td style={{ padding: "4px 3px", fontSize: 10 }}>{a.top10 && a.top10[0] ? Math.round(a.top10[0].sz / 1000) + "K@" + n2(a.top10[0].p) : ""}</td><td style={{ padding: "4px 3px" }}>{a.scenarios ? <Tag c={a.scenarios[0].c}>{a.scenarios[0].p}%</Tag> : ""}</td><td style={{ padding: "4px 3px" }}>{a.actDir ? <Tag c={a.actDir === "BULL" ? P.g : a.actDir === "BEAR" ? P.r : P.y}>{a.actDir}</Tag> : "--"}</td><td style={{ padding: "4px 3px" }}>{a.hit === undefined ? "--" : a.hit ? "\u2713" : "\u2717"}</td></tr>; })}</tbody></table></div></Pnl>)}
+        {tab === "hist" && (recs.length === 0 ? <div style={{ textAlign: "center", padding: 40, color: P.t3 }}>NO DATA</div> : <Pnl title={aTk + " | " + recs.length + " SESSIONS"} color={P.am}><div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10, fontFamily: FN }}><thead><tr style={{ borderBottom: "1px solid " + P.bh }}>{["DATE", "O", "H", "L", "C", "D%", "VOL", "CL%", "SCR", "CUMD", "TVR", "VPIN", "H", "A/D", "#1 PRINT", "SCEN", "PRED", "NXT OPEN", "HIT"].map(h => <th key={h} style={{ padding: "4px 3px", textAlign: "left", color: P.t3, fontSize: 9, fontWeight: 700 }}>{h}</th>)}</tr></thead><tbody>{recs.map((a, i) => { const dc = a.prevClose ? ((a.Cl - a.prevClose) / a.prevClose * 100) : a.dChg; return <tr key={i} onClick={() => { setSelD(a.date); setTab("dash"); }} style={{ borderBottom: "1px solid " + P.bd, cursor: "pointer" }} onMouseEnter={e => e.currentTarget.style.background = P.hv} onMouseLeave={e => e.currentTarget.style.background = "transparent"}><td style={{ padding: "4px 3px", color: P.am }}>{a.date}</td><td style={{ padding: "4px 3px" }}>{n2(a.O)}</td><td style={{ padding: "4px 3px" }}>{n2(a.H)}</td><td style={{ padding: "4px 3px" }}>{n2(a.L)}</td><td style={{ padding: "4px 3px", fontWeight: 700 }}>{n2(a.Cl)}</td><td style={{ padding: "4px 3px", color: dc >= 0 ? P.g : P.r }}>{dc >= 0 ? "+" : ""}{n2(dc, 1)}%</td><td style={{ padding: "4px 3px" }}>{n2(a.TV / 1e6, 1)}M</td><td style={{ padding: "4px 3px" }}>{n2(a.cL * 100, 0)}%</td><td style={{ padding: "4px 3px", color: a.biasC, fontWeight: 700 }}>{a.score >= 0 ? "+" : ""}{a.score}</td><td style={{ padding: "4px 3px", color: a.cumD >= 0 ? P.g : P.r }}>{n2(a.cumD / 1e6, 1)}M</td><td style={{ padding: "4px 3px", color: a.vTR > 1 ? P.g : P.r }}>{n2(a.vTR)}</td><td style={{ padding: "4px 3px" }}>{n2(a.vpin * 100, 1)}%</td><td style={{ padding: "4px 3px" }}>{n2(a.hurst)}</td><td style={{ padding: "4px 3px", color: a.adR > 1.3 ? P.r : P.g }}>{n2(a.adR, 1)}x</td><td style={{ padding: "4px 3px", fontSize: 10 }}>{a.top10 && a.top10[0] ? Math.round(a.top10[0].sz / 1000) + "K@" + n2(a.top10[0].p) : ""}</td><td style={{ padding: "4px 3px" }}>{a.scenarios ? <Tag c={a.scenarios[0].c}>{a.scenarios[0].p}%</Tag> : ""}</td><td style={{ padding: "4px 3px" }}>{a.predDir ? <Tag c={a.predDir === "BULL" ? P.g : a.predDir === "BEAR" ? P.r : P.y}>{a.predDir}</Tag> : "--"}</td><td style={{ padding: "4px 3px", color: a.actDir === "BULL" ? P.g : a.actDir === "BEAR" ? P.r : P.y }}>{a.actDir ? ((a.actOpenChg >= 0 ? "+" : "") + n2(a.actOpenChg, 2) + "%") : "--"}</td><td style={{ padding: "4px 3px", fontWeight: 700, color: a.hit ? P.g : a.hit === false ? P.r : P.t3 }}>{a.hit === undefined ? "--" : a.hit ? "\u2713" : "\u2717"}</td></tr>; })}</tbody></table></div></Pnl>)}
 
         {!S && tab !== "upload" && tab !== "hist" && <div style={{ textAlign: "center", padding: 50, color: P.t3, fontSize: 11, letterSpacing: 2 }}>UPLOAD T&S CSV TO BEGIN</div>}
       </div>
