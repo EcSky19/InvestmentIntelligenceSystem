@@ -322,3 +322,19 @@
       <span style="color:var(--muted);font-size:9px">QUANT TA ENGINE · DIRECT API · NO PROXY</span>
     </div>
   </div>
+  <script>
+    // ═══════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════
+    const MASSIVE = 'https://api.massive.com';
+    const STORAGE_PREFIX = 'ta_reports_';
+    let state = { page: 'dashboard', apiKey: localStorage.getItem('ta_apiKey') || '', analysis: null, loading: false, error: null, loadingMsg: '', historyTicker: null };
+
+    const fmt = (n, d = 2) => n != null ? Number(n).toFixed(d) : 'N/A';
+    const pct = n => n != null ? `${n >= 0 ? '+' : ''}${Number(n).toFixed(2)}%` : 'N/A';
+    const fmtDate = d => { try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) } catch { return d } };
+    const fmtDateTime = d => { try { const dt = new Date(d); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) } catch { return d } };
+    const dateStr = (ago = 0) => { const d = new Date(); d.setDate(d.getDate() - ago); return d.toISOString().split('T')[0] };
+    const RATINGS = { 'Strong Buy': { color: 'var(--green)', icon: '▲▲' }, Buy: { color: '#00CC33', icon: '▲' }, Hold: { color: 'var(--yellow)', icon: '■' }, Sell: { color: 'var(--red)', icon: '▼' }, 'Strong Sell': { color: '#FF1A1A', icon: '▼▼' } };
+    const getRating = r => RATINGS[r] || RATINGS.Hold;
+    const badge = (text, color) => `<span class="badge" style="color:${color};background:${color}18;border:1px solid ${color}40">${text}</span>`;
