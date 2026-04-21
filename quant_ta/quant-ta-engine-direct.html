@@ -231,3 +231,70 @@
           DASHBOARD</button>
       </div>
     </div>
+    <!-- SETTINGS -->
+    <div id="settingsPanel"
+      style="display:none;background:var(--bg3);border-bottom:1px solid rgba(0,212,255,0.2);padding:14px 20px">
+      <div style="max-width:1200px;margin:0 auto">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="color:var(--cyan);font-size:12px;font-weight:700">MASSIVE.COM API — DIRECT CONNECTION (NO
+            PROXY)</span>
+          <span id="connBadge" class="badge"></span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          <div style="flex:1;min-width:300px">
+            <div class="label" style="margin-bottom:4px">MASSIVE.COM API KEY</div>
+            <input id="apiKeyInput" type="password" placeholder="Paste your API key from massive.com/dashboard/keys"
+              style="width:100%;padding:8px 12px">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button class="btn btn-green" onclick="saveSettings()">▸ CONNECT</button>
+          <button class="btn btn-cyan" onclick="testConnection()">⚡ TEST CONNECTION</button>
+          <button class="btn btn-outline" onclick="clearSettings()"
+            style="color:var(--red);border-color:rgba(255,59,59,0.3)">DISCONNECT</button>
+        </div>
+        <div id="testResult" style="margin-bottom:10px;font-size:11px"></div>
+        <div style="padding:10px 14px;background:rgba(0,255,65,0.05);border-left:3px solid var(--green)">
+          <div style="color:var(--green);font-size:10px;font-weight:700;letter-spacing:0.1em">ARCHITECTURE</div>
+          <div style="margin-top:6px;color:var(--white);font-size:10px;font-family:var(--sans)">
+            ✓ YOUR BROWSER → api.massive.com (direct HTTPS, zero middleware)<br>
+            ✓ All analysis computed locally in your browser — zero external AI calls<br>
+            ✓ 100% real exchange data, 100% local computation<br>
+            ✓ API key stored only in your browser's localStorage<br>
+            ✓ No proxy, no Cloudflare, no Claude API, no third-party servers
+          </div>
+        </div>
+        <div style="margin-top:8px;padding:8px 14px;background:var(--bg);border:1px solid var(--border)">
+          <span style="color:var(--amber);font-size:9px;font-weight:700">NOTE: </span>
+          <span style="color:var(--muted);font-size:9px">Serve this file from localhost (not file://): </span>
+          <span style="color:var(--green);font-size:9px;font-family:var(--mono)">python3 -m http.server 8080</span>
+          <span style="color:var(--muted);font-size:9px"> then open </span>
+          <span style="color:var(--cyan);font-size:9px">http://localhost:8080/quant-ta-engine-direct.html</span>
+        </div>
+        <div style="margin-top:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span
+              style="color:var(--cyan);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">BACKUP
+              & RESTORE</span>
+            <span class="badge"
+              style="color:var(--muted);background:var(--muted)18;border:1px solid var(--muted)40;font-size:9px"
+              id="backupCount"></span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-cyan" onclick="exportData()" style="font-size:9px;padding:6px 14px">⬇ EXPORT ALL
+              REPORTS</button>
+            <label class="btn btn-outline" style="font-size:9px;padding:6px 14px;cursor:pointer">
+              ⬆ IMPORT REPORTS
+              <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+            </label>
+            <button class="btn btn-outline"
+              onclick="if(confirm('Delete ALL reports and settings? This cannot be undone.')){clearAllData()}"
+              style="font-size:9px;padding:6px 14px;color:var(--red);border-color:rgba(255,59,59,0.3)">🗑 CLEAR ALL
+              DATA</button>
+          </div>
+          <div id="backupStatus" style="margin-top:6px;font-size:9px"></div>
+          <div style="margin-top:6px;color:var(--muted);font-size:9px">Export saves all reports as a JSON file. Import
+            merges reports without overwriting existing ones. Back up before changing ports or filenames.</div>
+        </div>
+      </div>
+    </div>
