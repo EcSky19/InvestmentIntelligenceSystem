@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QUANT TA ENGINE — Direct Massive.com</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #0A0E14;
+      --bg2: #0F1319;
+      --bg3: #141A22;
+      --border: #1C2530;
+      --white: #E8ECF0;
+      --muted: #6B7B8D;
+      --amber: #FF8C00;
+      --green: #00FF41;
+      --red: #FF3B3B;
+      --cyan: #00D4FF;
+      --yellow: #FFD700;
+      --mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 12px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg)
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border)
+    }
+
+    input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 6px 10px;
+      outline: none
+    }
+
+    input::placeholder {
+      color: var(--muted)
+    }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      padding: 8px 20px;
+      text-transform: uppercase;
+      border: none
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--amber), #cc7000);
+      color: var(--bg)
+    }
+
+    .btn-cyan {
+      background: linear-gradient(135deg, var(--cyan), #00a0cc);
+      color: var(--bg)
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, var(--green), #00cc33);
+      color: var(--bg)
+    }
+
+    .btn-outline {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 5px 12px;
+      cursor: pointer
+    }
+
+    .btn-outline:hover {
+      border-color: var(--cyan);
+      color: var(--cyan)
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-family: var(--mono);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap
+    }
+
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 16px
+    }
+
+    .label {
+      font-size: 8px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700
+    }
+
+    .section-hdr {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 28px 0 14px
+    }
+
+    .section-hdr h3 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--amber)
+    }
+
+    .section-hdr .line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255, 140, 0, 0.3), transparent)
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px
+    }
+
+    .report-row {
+      padding: 12px 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s
+    }
+
+    .report-row:hover {
+      background: rgba(0, 212, 255, 0.04);
+      border-color: rgba(0, 212, 255, 0.2)
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 16px;
+      border: 3px solid var(--border);
+      border-top: 3px solid var(--amber);
+      border-radius: 50%;
+      animation: spin 1s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 0.4
+      }
+
+      50% {
+        opacity: 1
+      }
+    }
+
+    .content {
+      flex: 1;
+      overflow: auto;
+      padding: 0 20px 40px
+    }
+
+    .inner {
+      max-width: 1200px;
+      margin: 0 auto
+    }
+  </style>
+</head>
