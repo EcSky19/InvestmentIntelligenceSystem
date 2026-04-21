@@ -211,3 +211,23 @@
     }
   </style>
 </head>
+
+<body>
+  <div style="display:flex;flex-direction:column;min-height:100vh">
+    <!-- HEADER -->
+    <div
+      style="background:linear-gradient(180deg,var(--bg3),var(--bg2));border-bottom:1px solid var(--border);padding:10px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:14px;cursor:pointer" onclick="goHome()">
+        <div
+          style="width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 8px rgba(0,255,65,0.4)">
+        </div>
+        <span style="color:var(--amber);font-size:15px;font-weight:700">QUANT TA ENGINE</span>
+        <span style="color:var(--muted);font-size:11px">// direct massive.com · zero proxy</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="statusBadge" class="badge"></span>
+        <button class="btn btn-outline" onclick="toggleSettings()" style="font-size:9px">⚙ API KEY</button>
+        <button id="homeBtn" class="btn btn-outline" onclick="goHome()" style="font-size:9px;display:none">◂
+          DASHBOARD</button>
+      </div>
+    </div>
