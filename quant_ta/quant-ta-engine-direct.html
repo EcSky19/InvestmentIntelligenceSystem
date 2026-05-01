@@ -352,6 +352,23 @@
     // STORAGE
     // ═══════════════════════════════════════
     function getReports(t) { try { return JSON.parse(localStorage.getItem(STORAGE_PREFIX + t) || '[]') } catch { return [] } }
+
+    function trimReport(r) {
+      // Strip verbose text to reduce storage size — keep all numbers intact
+      const t = JSON.parse(JSON.stringify(r));
+      // Shorten interpretation strings (keep first 150 chars)
+      const trim = (s, max = 150) => typeof s === 'string' && s.length > max ? s.slice(0, max) + '…' : s;
+      if (t.trend_analysis) { ['daily', 'weekly', 'monthly'].forEach(k => { if (t.trend_analysis[k]) t.trend_analysis[k].description = trim(t.trend_analysis[k].description); }); }
+      if (t.moving_averages) { ['ma_50', 'ma_100', 'ma_200'].forEach(k => { if (t.moving_averages[k]) t.moving_averages[k].interpretation = trim(t.moving_averages[k].interpretation); }); }
+      if (t.indicators) { ['rsi', 'macd', 'bollinger_bands'].forEach(k => { if (t.indicators[k]) t.indicators[k].interpretation = trim(t.indicators[k].interpretation); }); }
+      if (t.volume_analysis) t.volume_analysis.interpretation = trim(t.volume_analysis.interpretation);
+      if (t.chart_patterns) t.chart_patterns.summary = trim(t.chart_patterns.summary, 100);
+      t.executive_summary = trim(t.executive_summary, 200);
+      t.confidence_factors = trim(t.confidence_factors, 200);
+      if (t.trade_plan) t.trade_plan.position_sizing_note = trim(t.trade_plan.position_sizing_note, 150);
+      return t;
+    }
+    function getReports(t) { try { return JSON.parse(localStorage.getItem(STORAGE_PREFIX + t) || '[]') } catch { return [] } }
     function saveReport(t, r) { let h = getReports(t); h.unshift({ ...r, saved_at: new Date().toISOString() }); h = h.slice(0, 50); localStorage.setItem(STORAGE_PREFIX + t, JSON.stringify(h)) }
     function getAllTickers() { const t = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith(STORAGE_PREFIX)) t.push(k.replace(STORAGE_PREFIX, '')) } return t.sort() }
     function deleteTicker(t) { localStorage.removeItem(STORAGE_PREFIX + t); render() }
