@@ -441,14 +441,43 @@
           if (el) el.innerHTML = `<span style="color:var(--red)">✗ Import failed: ${err.message}</span>`;
         }
       };
-      reader.readAsText(file);
-      event.target.value = ''; // reset file input
-    }
+      function importData(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (!data.reports) throw new Error('Invalid backup file — no reports found');
+            let imported = 0, merged = 0;
+            Object.entries(data.reports).forEach(([ticker, reports]) => {
+              if (!Array.isArray(reports)) return;
+              const existing = getReports(ticker);
+              const existingTimes = new Set(existing.map(r => r.saved_at));
+              const newReports = reports.filter(r => !existingTimes.has(r.saved_at));
+              if (newReports.length > 0) {
+                const combined = [...newReports, ...existing].sort((a, b) => new Date(b.saved_at) - new Date(a.saved_at)).slice(0, 50);
+                localStorage.setItem(STORAGE_PREFIX + ticker, JSON.stringify(combined));
+                imported += newReports.length; merged++;
+              }
+            });
+            // Restore API key if present and not already set
+            if (data.apiKey && !state.apiKey) { state.apiKey = data.apiKey; localStorage.setItem('ta_apiKey', data.apiKey) }
+            const el = document.getElementById('backupStatus');
+            if (el) el.innerHTML = `<span style="color:var(--green)">✓ Imported ${imported} new reports across ${merged} tickers (duplicates skipped)</span>`;
+            render();
+          } catch (err) {
+            const el = document.getElementById('backupStatus');
+            if (el) el.innerHTML = `<span style="color:var(--red)">✗ Import failed: ${err.message}</span>`;
+          }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // reset file input
+      }
 
-    function clearAllData() {
-      const tickers = getAllTickers();
-      tickers.forEach(t => localStorage.removeItem(STORAGE_PREFIX + t));
-      localStorage.removeItem('ta_apiKey');
-      state.apiKey = ''; state.analysis = null; state.page = 'dashboard';
-      render();
-    }
+      function clearAllData() {
+        const tickers = getAllTickers();
+        tickers.forEach(t => localStorage.removeItem(STORAGE_PREFIX + t));
+        localStorage.removeItem('ta_apiKey');
+        state.apiKey = ''; state.analysis = null; state.page = 'dashboard';
+        render();
+      }
