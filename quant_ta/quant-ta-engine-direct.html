@@ -399,6 +399,19 @@
         render();
       }
     }
+
+    function exportData() {
+      const data = { version: 2, exported: new Date().toISOString(), apiKey: state.apiKey, reports: {} };
+      getAllTickers().forEach(t => { data.reports[t] = getReports(t) });
+      const count = Object.values(data.reports).reduce((s, r) => s + r.length, 0);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `quant-ta-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click(); URL.revokeObjectURL(url);
+      const el = document.getElementById('backupStatus');
+      if (el) el.innerHTML = `<span style="color:var(--green)">✓ Exported ${getAllTickers().length} tickers, ${count} reports</span>`;
+    }
     function importData(event) {
       const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader();
