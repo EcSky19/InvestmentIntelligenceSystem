@@ -239,6 +239,7 @@
           DASHBOARD</button>
       </div>
     </div>
+
     <!-- SETTINGS -->
     <div id="settingsPanel"
       style="display:none;background:var(--bg3);border-bottom:1px solid rgba(0,212,255,0.2);padding:14px 20px">
@@ -368,24 +369,71 @@
       if (t.trade_plan) t.trade_plan.position_sizing_note = trim(t.trade_plan.position_sizing_note, 150);
       return t;
     }
-    function getReports(t) { try { return JSON.parse(localStorage.getItem(STORAGE_PREFIX + t) || '[]') } catch { return [] } }
-    function saveReport(t, r) { let h = getReports(t); h.unshift({ ...r, saved_at: new Date().toISOString() }); h = h.slice(0, 50); localStorage.setItem(STORAGE_PREFIX + t, JSON.stringify(h)) }
+
+    function getStorageUsage() {
+      let total = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        total += (k.length + (localStorage.getItem(k) || '').length) * 2; // UTF-16 = 2 bytes per char
+      }
+      return total;
+    }
+
+    function getStorageLimit() { return 5 * 1024 * 1024; } // Conservative 5MB estimate
+
+    function saveReport(t, r) {
+      let h = getReports(t);
+      h.unshift({ ...r, saved_at: new Date().toISOString() });
+      h = h.slice(0, 20); // Keep last 20 per ticker (was 50)
+
+      // Try saving; if quota exceeded, trim progressively
+      const key = STORAGE_PREFIX + t;
+      for (let maxKeep = 20; maxKeep >= 1; maxKeep -= 5) {
+        try {
+          const toSave = h.slice(0, maxKeep).map(trimReport);
+          localStorage.setItem(key, JSON.stringify(toSave));
+          return; // Success
+        } catch (e) {
+          if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+            // Try with fewer reports
+            if (maxKeep <= 1) {
+              // Last resort: purge oldest reports from ALL tickers
+              purgeOldestReports();
+              try {
+                localStorage.setItem(key, JSON.stringify([trimReport(h[0])]));
+                return;
+              } catch (_) {
+                alert('Storage is completely full. Export your reports and clear old data in Settings.');
+                return;
+              }
+            }
+          } else { throw e; }
+        }
+      }
+    }
+
+    function purgeOldestReports() {
+      // Remove the oldest 5 reports across all tickers to free space
+      const all = [];
+      getAllTickers().forEach(t => {
+        const reports = getReports(t);
+        reports.forEach((r, i) => all.push({ ticker: t, index: i, date: r.saved_at || '' }));
+      });
+      all.sort((a, b) => a.date.localeCompare(b.date)); // Oldest first
+      const toRemove = all.slice(0, 5);
+      const byTicker = {};
+      toRemove.forEach(r => { if (!byTicker[r.ticker]) byTicker[r.ticker] = []; byTicker[r.ticker].push(r.index); });
+      Object.entries(byTicker).forEach(([ticker, indices]) => {
+        let reports = getReports(ticker);
+        // Remove from highest index first to avoid shifting
+        indices.sort((a, b) => b - a).forEach(i => reports.splice(i, 1));
+        if (reports.length === 0) localStorage.removeItem(STORAGE_PREFIX + ticker);
+        else localStorage.setItem(STORAGE_PREFIX + ticker, JSON.stringify(reports));
+      });
+    }
     function getAllTickers() { const t = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith(STORAGE_PREFIX)) t.push(k.replace(STORAGE_PREFIX, '')) } return t.sort() }
     function deleteTicker(t) { localStorage.removeItem(STORAGE_PREFIX + t); render() }
 
-    // ── Export / Import / Clear ──
-    function exportData() {
-      const data = { version: 2, exported: new Date().toISOString(), apiKey: state.apiKey, reports: {} };
-      getAllTickers().forEach(t => { data.reports[t] = getReports(t) });
-      const count = Object.values(data.reports).reduce((s, r) => s + r.length, 0);
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `quant-ta-backup-${new Date().toISOString().split('T')[0]}.json`;
-      a.click(); URL.revokeObjectURL(url);
-      const el = document.getElementById('backupStatus');
-      if (el) el.innerHTML = `<span style="color:var(--green)">✓ Exported ${getAllTickers().length} tickers, ${count} reports</span>`;
-    }
     function deleteReport(ticker, index) {
       const reports = getReports(ticker);
       if (index < 0 || index >= reports.length) return;
@@ -400,6 +448,7 @@
       }
     }
 
+    // ── Export / Import / Clear ──
     function exportData() {
       const data = { version: 2, exported: new Date().toISOString(), apiKey: state.apiKey, reports: {} };
       getAllTickers().forEach(t => { data.reports[t] = getReports(t) });
@@ -412,6 +461,7 @@
       const el = document.getElementById('backupStatus');
       if (el) el.innerHTML = `<span style="color:var(--green)">✓ Exported ${getAllTickers().length} tickers, ${count} reports</span>`;
     }
+
     function importData(event) {
       const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader();
@@ -441,43 +491,1061 @@
           if (el) el.innerHTML = `<span style="color:var(--red)">✗ Import failed: ${err.message}</span>`;
         }
       };
-      function importData(event) {
-        const file = event.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          try {
-            const data = JSON.parse(e.target.result);
-            if (!data.reports) throw new Error('Invalid backup file — no reports found');
-            let imported = 0, merged = 0;
-            Object.entries(data.reports).forEach(([ticker, reports]) => {
-              if (!Array.isArray(reports)) return;
-              const existing = getReports(ticker);
-              const existingTimes = new Set(existing.map(r => r.saved_at));
-              const newReports = reports.filter(r => !existingTimes.has(r.saved_at));
-              if (newReports.length > 0) {
-                const combined = [...newReports, ...existing].sort((a, b) => new Date(b.saved_at) - new Date(a.saved_at)).slice(0, 50);
-                localStorage.setItem(STORAGE_PREFIX + ticker, JSON.stringify(combined));
-                imported += newReports.length; merged++;
-              }
-            });
-            // Restore API key if present and not already set
-            if (data.apiKey && !state.apiKey) { state.apiKey = data.apiKey; localStorage.setItem('ta_apiKey', data.apiKey) }
-            const el = document.getElementById('backupStatus');
-            if (el) el.innerHTML = `<span style="color:var(--green)">✓ Imported ${imported} new reports across ${merged} tickers (duplicates skipped)</span>`;
-            render();
-          } catch (err) {
-            const el = document.getElementById('backupStatus');
-            if (el) el.innerHTML = `<span style="color:var(--red)">✗ Import failed: ${err.message}</span>`;
+      reader.readAsText(file);
+      event.target.value = ''; // reset file input
+    }
+
+    function clearAllData() {
+      const tickers = getAllTickers();
+      tickers.forEach(t => localStorage.removeItem(STORAGE_PREFIX + t));
+      localStorage.removeItem('ta_apiKey');
+      state.apiKey = ''; state.analysis = null; state.page = 'dashboard';
+      render();
+    }
+
+    function updateBackupCount() {
+      const el = document.getElementById('backupCount');
+      if (el) {
+        const t = getAllTickers(); const r = t.reduce((s, tk) => s + getReports(tk).length, 0);
+        const used = getStorageUsage(); const limit = getStorageLimit();
+        const pct = ((used / limit) * 100).toFixed(1);
+        const color = pct > 80 ? 'var(--red)' : pct > 50 ? 'var(--yellow)' : 'var(--green)';
+        el.textContent = `${t.length} TICKERS · ${r} REPORTS · STORAGE: ${(used / 1024).toFixed(0)}KB / ${(limit / 1024).toFixed(0)}KB (${pct}%)`;
+        el.style.color = color; el.style.borderColor = color + '40'; el.style.background = color + '18';
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // MASSIVE API — DIRECT (NO PROXY)
+    // ═══════════════════════════════════════
+    async function massiveFetch(path) {
+      const sep = path.includes('?') ? '&' : '?';
+      const url = `${MASSIVE}${path}${sep}apiKey=${state.apiKey}`;
+      let res;
+      try { res = await fetch(url, { method: 'GET' }); }
+      catch (e) {
+        // If CORS blocks it, try with no-cors (will be opaque but tells us it's CORS)
+        throw new Error(`Network error: ${e.message}. Make sure you're serving from localhost (python3 -m http.server 8080), not opening from file://.`);
+      }
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        if (res.status === 401 || res.status === 403) throw new Error('Invalid API key — check massive.com/dashboard/keys');
+        if (res.status === 402) throw new Error('API quota exceeded or plan expired (HTTP 402).\n\nCheck your usage and billing at massive.com/dashboard.\nEach analysis uses 8 API calls. Starter plan has a monthly limit.');
+        if (res.status === 404) throw new Error('Endpoint not found (404). Check your plan includes this endpoint.');
+        if (res.status === 429) throw new Error('Rate limit hit (429). Starter plan = 300 calls/min. Wait 60 seconds and retry.');
+        throw new Error(`API ${res.status}: ${txt.slice(0, 200)}`);
+      }
+      return res.json();
+    }
+
+    async function testConnection() {
+      const el = document.getElementById('testResult');
+      if (!state.apiKey) { el.innerHTML = '<span style="color:var(--red)">Enter your API key first</span>'; return; }
+      el.innerHTML = '<span style="color:var(--yellow)">Testing direct connection to api.massive.com...</span>';
+      try {
+        const url = `${MASSIVE}/v2/aggs/ticker/AAPL/range/1/day/${dateStr(5)}/${dateStr(0)}?adjusted=true&limit=1&apiKey=${state.apiKey}`;
+        const res = await fetch(url, { method: 'GET' });
+        if (res.status === 401 || res.status === 403) {
+          el.innerHTML = '<span style="color:var(--red)">✗ API key invalid or expired. Check massive.com/dashboard/keys</span>';
+        } else if (res.status === 402) {
+          el.innerHTML = '<span style="color:var(--red)">✗ API quota exceeded or plan expired (HTTP 402). Check your usage and billing at massive.com/dashboard. Each analysis uses 8 API calls.</span>';
+        } else if (res.status === 429) {
+          el.innerHTML = '<span style="color:var(--yellow)">△ Rate limit hit. Starter = 300 calls/min. Wait 60 seconds and retry.</span>';
+        } else if (res.ok) {
+          const data = await res.json();
+          if (data.results?.length > 0) {
+            const bar = data.results[0];
+            el.innerHTML = `<span style="color:var(--green)">✓ SUCCESS — Direct connection working! AAPL last close: $${bar.c?.toFixed(2)} (${new Date(bar.t).toISOString().split('T')[0]})</span>`;
+          } else {
+            el.innerHTML = `<span style="color:var(--green)">✓ Connected to Massive API. Response: ${data.status || JSON.stringify(data).slice(0, 100)}</span>`;
           }
-        };
-        reader.readAsText(file);
-        event.target.value = ''; // reset file input
+        } else {
+          const txt = await res.text().catch(() => '');
+          el.innerHTML = `<span style="color:var(--yellow)">△ API responded ${res.status}: ${txt.slice(0, 150)}</span>`;
+        }
+      } catch (e) {
+        if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('CORS')) {
+          el.innerHTML = `<span style="color:var(--red)">✗ CORS blocked. Make sure you're serving from localhost (python3 -m http.server 8080), not opening from file://.</span>`;
+        } else {
+          el.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+        }
+      }
+    }
+
+    async function fetchMassiveData(ticker, setMsg) {
+      const d = {};
+      setMsg('Fetching live snapshot...'); try { d.snapshot = await massiveFetch(`/v2/snapshot/locale/us/markets/stocks/tickers/${ticker}`) } catch (e) { d.snapshotErr = e.message }
+      setMsg('Loading 250-day OHLC...'); try { d.aggs = await massiveFetch(`/v2/aggs/ticker/${ticker}/range/1/day/${dateStr(370)}/${dateStr(0)}?adjusted=true&limit=250`) } catch (e) { d.aggsErr = e.message }
+      setMsg('Computing SMA-50...'); try { d.sma50 = await massiveFetch(`/v1/indicators/sma/${ticker}?timespan=day&window=50&series_type=close&order=desc&limit=1`) } catch { }
+      setMsg('Computing SMA-100...'); try { d.sma100 = await massiveFetch(`/v1/indicators/sma/${ticker}?timespan=day&window=100&series_type=close&order=desc&limit=1`) } catch { }
+      setMsg('Computing SMA-200...'); try { d.sma200 = await massiveFetch(`/v1/indicators/sma/${ticker}?timespan=day&window=200&series_type=close&order=desc&limit=1`) } catch { }
+      setMsg('Computing EMA-9...'); try { d.ema9 = await massiveFetch(`/v1/indicators/ema/${ticker}?timespan=day&window=9&series_type=close&order=desc&limit=1`) } catch { }
+      setMsg('Computing EMA-21...'); try { d.ema21 = await massiveFetch(`/v1/indicators/ema/${ticker}?timespan=day&window=21&series_type=close&order=desc&limit=1`) } catch { }
+      setMsg('Calculating RSI(14) history...'); try { d.rsi = await massiveFetch(`/v1/indicators/rsi/${ticker}?timespan=day&window=14&series_type=close&order=desc&limit=20`) } catch { }
+      setMsg('Running MACD(12/26/9)...'); try { d.macd = await massiveFetch(`/v1/indicators/macd/${ticker}?timespan=day&short_window=12&long_window=26&signal_window=9&series_type=close&order=desc&limit=1`) } catch { }
+      setMsg('Loading weekly aggs...'); try { d.weeklyAggs = await massiveFetch(`/v2/aggs/ticker/${ticker}/range/1/week/${dateStr(370)}/${dateStr(0)}?adjusted=true&limit=52`) } catch { }
+      return d;
+    }
+
+    function extractVal(r) { const v = r?.results; if (!v) return null; if (v.values?.length > 0) return v.values[0]; if (Array.isArray(v) && v.length > 0) return v[0]; return v }
+    function extractVals(r) { const v = r?.results; if (!v) return []; if (v.values?.length > 0) return v.values; if (Array.isArray(v)) return v; return [v] }
+
+    // ═══════════════════════════════════════
+    // LOCAL INDICATOR COMPUTATION FROM OHLC
+    // ═══════════════════════════════════════
+
+    // ATR (Average True Range) — volatility measure
+    function computeATR(aggs, period = 14) {
+      if (aggs.length < period + 1) return null;
+      const trs = [];
+      for (let i = 1; i < aggs.length; i++) {
+        const h = aggs[i].h, l = aggs[i].l, pc = aggs[i - 1].c;
+        trs.push(Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc)));
+      }
+      // Use Wilder's smoothing (exponential)
+      let atr = trs.slice(0, period).reduce((s, v) => s + v, 0) / period;
+      for (let i = period; i < trs.length; i++) {
+        atr = (atr * (period - 1) + trs[i]) / period;
+      }
+      return atr;
+    }
+
+    // ADX (Average Directional Index) — trend strength
+    function computeADX(aggs, period = 14) {
+      if (aggs.length < period * 2 + 1) return null;
+      const plusDM = [], minusDM = [], trs = [];
+      for (let i = 1; i < aggs.length; i++) {
+        const h = aggs[i].h, l = aggs[i].l, ph = aggs[i - 1].h, pl = aggs[i - 1].l, pc = aggs[i - 1].c;
+        const upMove = h - ph, downMove = pl - l;
+        plusDM.push(upMove > downMove && upMove > 0 ? upMove : 0);
+        minusDM.push(downMove > upMove && downMove > 0 ? downMove : 0);
+        trs.push(Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc)));
+      }
+      // Wilder's smoothing
+      let sPlusDM = plusDM.slice(0, period).reduce((s, v) => s + v, 0);
+      let sMinusDM = minusDM.slice(0, period).reduce((s, v) => s + v, 0);
+      let sTR = trs.slice(0, period).reduce((s, v) => s + v, 0);
+      const dxVals = [];
+      for (let i = period; i < plusDM.length; i++) {
+        if (i > period) {
+          sPlusDM = sPlusDM - sPlusDM / period + plusDM[i];
+          sMinusDM = sMinusDM - sMinusDM / period + minusDM[i];
+          sTR = sTR - sTR / period + trs[i];
+        }
+        const plusDI = sTR > 0 ? (sPlusDM / sTR) * 100 : 0;
+        const minusDI = sTR > 0 ? (sMinusDM / sTR) * 100 : 0;
+        const diSum = plusDI + minusDI;
+        dxVals.push(diSum > 0 ? Math.abs(plusDI - minusDI) / diSum * 100 : 0);
+      }
+      if (dxVals.length < period) return null;
+      let adx = dxVals.slice(0, period).reduce((s, v) => s + v, 0) / period;
+      for (let i = period; i < dxVals.length; i++) {
+        adx = (adx * (period - 1) + dxVals[i]) / period;
+      }
+      return adx;
+    }
+
+    // Stochastic Oscillator (14,3,3)
+    function computeStochastic(aggs, kPeriod = 14, dPeriod = 3) {
+      if (aggs.length < kPeriod + dPeriod) return null;
+      const kVals = [];
+      for (let i = kPeriod - 1; i < aggs.length; i++) {
+        const slice = aggs.slice(i - kPeriod + 1, i + 1);
+        const high = Math.max(...slice.map(a => a.h));
+        const low = Math.min(...slice.map(a => a.l));
+        const k = high !== low ? ((aggs[i].c - low) / (high - low)) * 100 : 50;
+        kVals.push(k);
+      }
+      // %D = 3-period SMA of %K
+      const dVals = [];
+      for (let i = dPeriod - 1; i < kVals.length; i++) {
+        dVals.push(kVals.slice(i - dPeriod + 1, i + 1).reduce((s, v) => s + v, 0) / dPeriod);
+      }
+      return { k: kVals[kVals.length - 1], d: dVals[dVals.length - 1] };
+    }
+
+    // OBV (On Balance Volume) — cumulative volume flow
+    function computeOBV(aggs) {
+      if (aggs.length < 20) return null;
+      let obv = 0;
+      const obvSeries = [0];
+      for (let i = 1; i < aggs.length; i++) {
+        if (aggs[i].c > aggs[i - 1].c) obv += (aggs[i].v || 0);
+        else if (aggs[i].c < aggs[i - 1].c) obv -= (aggs[i].v || 0);
+        obvSeries.push(obv);
+      }
+      // OBV trend: compare last 5 OBV values
+      const recent = obvSeries.slice(-5);
+      const rising = recent.length >= 2 && recent[recent.length - 1] > recent[0];
+      // OBV divergence: price direction vs OBV direction
+      const priceUp = aggs[aggs.length - 1].c > aggs[aggs.length - 5]?.c;
+      const divergence = priceUp !== rising;
+      return { current: obv, rising, divergence, priceUp };
+    }
+
+    // Pivot Points (Standard) from previous day OHLC
+    function computePivotPoints(prevH, prevL, prevC) {
+      if (!prevH || !prevL || !prevC) return null;
+      const pivot = (prevH + prevL + prevC) / 3;
+      return {
+        r3: prevH + 2 * (pivot - prevL),
+        r2: pivot + (prevH - prevL),
+        r1: 2 * pivot - prevL,
+        pivot,
+        s1: 2 * pivot - prevH,
+        s2: pivot - (prevH - prevL),
+        s3: prevL - 2 * (prevH - pivot)
+      };
+    }
+
+    // Rate of Change
+    function computeROC(aggs, period = 14) {
+      if (aggs.length < period + 1) return null;
+      const curr = aggs[aggs.length - 1].c;
+      const past = aggs[aggs.length - 1 - period].c;
+      return past > 0 ? ((curr - past) / past) * 100 : 0;
+    }
+
+    // RSI Divergence Detection from RSI history + price history
+    function detectRSIDivergence(aggs, rsiHistory) {
+      if (!rsiHistory || rsiHistory.length < 10 || aggs.length < 10) return { detected: false, type: null };
+      // Compare last 2 swing points in price vs RSI
+      const recentAggs = aggs.slice(-10);
+      const recentRSI = rsiHistory.slice(-10);
+      const priceEnd = recentAggs[recentAggs.length - 1].c;
+      const priceStart = recentAggs[0].c;
+      const rsiEnd = recentRSI[recentRSI.length - 1]?.value || recentRSI[recentRSI.length - 1];
+      const rsiStart = recentRSI[0]?.value || recentRSI[0];
+      if (typeof rsiEnd !== 'number' || typeof rsiStart !== 'number') return { detected: false, type: null };
+      // Bearish divergence: price higher high, RSI lower high
+      if (priceEnd > priceStart && rsiEnd < rsiStart) return { detected: true, type: 'bearish', desc: `Price made a higher high ($${priceStart.toFixed(2)} → $${priceEnd.toFixed(2)}) but RSI made a lower high (${rsiStart.toFixed(1)} → ${rsiEnd.toFixed(1)}) — bearish divergence signals weakening momentum. Potential reversal ahead.` };
+      // Bullish divergence: price lower low, RSI higher low
+      if (priceEnd < priceStart && rsiEnd > rsiStart) return { detected: true, type: 'bullish', desc: `Price made a lower low ($${priceStart.toFixed(2)} → $${priceEnd.toFixed(2)}) but RSI made a higher low (${rsiStart.toFixed(1)} → ${rsiEnd.toFixed(1)}) — bullish divergence signals accumulation. Potential bounce ahead.` };
+      return { detected: false, type: null };
+    }
+
+    // Local EMA computation from closes (fallback if API fails)
+    function computeEMA(closes, period) {
+      if (closes.length < period) return null;
+      const k = 2 / (period + 1);
+      let ema = closes.slice(0, period).reduce((s, v) => s + v, 0) / period;
+      for (let i = period; i < closes.length; i++) {
+        ema = closes[i] * k + ema * (1 - k);
+      }
+      return ema;
+    }
+
+    function formatData(ticker, md) {
+      const snap = md.snapshot?.ticker || {}; const lt = snap.lastTrade || snap.last_trade || {}; const day = snap.day || {}; const prev = snap.prevDay || snap.prev_day || {};
+      const price = lt.p || lt.price || day.c || day.close || 0; const prevClose = prev.c || prev.close || 0;
+      const changePct = prevClose ? ((price - prevClose) / prevClose * 100) : 0; const vol = day.v || day.volume || 0;
+      const aggs = md.aggs?.results || []; const wAggs = md.weeklyAggs?.results || [];
+      let h52 = 0, l52 = Infinity, avgV = 0; aggs.forEach(a => { if (a.h > h52) h52 = a.h; if (a.l < l52) l52 = a.l; avgV += (a.v || 0) });
+      avgV = aggs.length ? avgV / aggs.length : 0; if (l52 === Infinity) l52 = 0;
+      const s50 = extractVal(md.sma50)?.value, s100 = extractVal(md.sma100)?.value, s200 = extractVal(md.sma200)?.value;
+      const rsiv = extractVal(md.rsi)?.value; const macdv = extractVal(md.macd);
+      const bb20 = aggs.slice(-20); let bbM = 0, bbS = 0;
+      if (bb20.length >= 20) { bbM = bb20.reduce((s, a) => s + a.c, 0) / 20; bbS = Math.sqrt(bb20.reduce((s, a) => s + (a.c - bbM) ** 2, 0) / 20) }
+      const last5 = aggs.slice(-5).reverse(), last20 = aggs.slice(-20), lastW4 = wAggs.slice(-4).reverse();
+      const fmtCandle = a => `${new Date(a.t).toISOString().split('T')[0]}: O=$${a.o?.toFixed(2)} H=$${a.h?.toFixed(2)} L=$${a.l?.toFixed(2)} C=$${a.c?.toFixed(2)} V=${(a.v || 0).toLocaleString()}`;
+      return `REAL MARKET DATA FROM MASSIVE.COM API — DIRECT EXCHANGE FEEDS:\n\nTICKER: ${ticker}\nCURRENT PRICE: $${price}\nPRICE CHANGE: ${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%\nPREVIOUS CLOSE: $${prevClose}\nDAY: O=$${day.o || day.open || '?'} H=$${day.h || day.high || '?'} L=$${day.l || day.low || '?'}\nVOLUME: ${vol.toLocaleString()} | AVG(250d): ${Math.round(avgV).toLocaleString()}\n52W HIGH: $${h52.toFixed(2)} | LOW: $${l52.toFixed(2)}\n\nSMA-50: ${s50 != null ? '$' + Number(s50).toFixed(2) : 'N/A'}\nSMA-100: ${s100 != null ? '$' + Number(s100).toFixed(2) : 'N/A'}\nSMA-200: ${s200 != null ? '$' + Number(s200).toFixed(2) : 'N/A'}\n\nRSI(14): ${rsiv != null ? Number(rsiv).toFixed(2) : 'N/A'}\n\nMACD: ${macdv?.value != null ? Number(macdv.value).toFixed(4) : 'N/A'} | Signal: ${macdv?.signal != null ? Number(macdv.signal).toFixed(4) : 'N/A'} | Hist: ${macdv?.histogram != null ? Number(macdv.histogram).toFixed(4) : 'N/A'}\n\nBB(20,2): Upper=${bbM && bbS ? '$' + (bbM + 2 * bbS).toFixed(2) : 'N/A'} Mid=$${bbM ? bbM.toFixed(2) : 'N/A'} Lower=${bbM && bbS ? '$' + (bbM - 2 * bbS).toFixed(2) : 'N/A'}\n\nDAILY(5):\n${last5.map(a => '  ' + fmtCandle(a)).join('\n')}\n\nWEEKLY(4):\n${lastW4.map(a => '  ' + fmtCandle(a)).join('\n')}\n\n20D RANGE:\n${last20.map(a => '  ' + new Date(a.t).toISOString().split('T')[0] + `: H=$${a.h?.toFixed(2)} L=$${a.l?.toFixed(2)} C=$${a.c?.toFixed(2)}`).join('\n')}`;
+    }
+
+    // ═══════════════════════════════════════
+    // LOCAL ANALYSIS ENGINE — zero Claude, 100% computed from Massive data
+    // ═══════════════════════════════════════
+    const TICKERS_DB = { AAPL: 'Apple Inc.', TSLA: 'Tesla Inc.', NVDA: 'NVIDIA Corp.', MSFT: 'Microsoft Corp.', AMZN: 'Amazon.com Inc.', META: 'Meta Platforms Inc.', GOOG: 'Alphabet Inc.', GOOGL: 'Alphabet Inc.', NFLX: 'Netflix Inc.', AMD: 'Advanced Micro Devices', INTC: 'Intel Corp.', CRM: 'Salesforce Inc.', ORCL: 'Oracle Corp.', AVGO: 'Broadcom Inc.', COST: 'Costco Wholesale', WMT: 'Walmart Inc.', JPM: 'JPMorgan Chase', BAC: 'Bank of America', V: 'Visa Inc.', MA: 'Mastercard Inc.', DIS: 'Walt Disney Co.', BA: 'Boeing Co.', NKE: 'Nike Inc.', KO: 'Coca-Cola Co.', PEP: 'PepsiCo Inc.', MCD: "McDonald's Corp.", UNH: 'UnitedHealth Group', JNJ: 'Johnson & Johnson', PFE: 'Pfizer Inc.', XOM: 'Exxon Mobil', CVX: 'Chevron Corp.', HD: 'Home Depot', LOW: "Lowe's Companies", TGT: 'Target Corp.', SBUX: 'Starbucks Corp.', PYPL: 'PayPal Holdings', SQ: 'Block Inc.', COIN: 'Coinbase Global', PLTR: 'Palantir Technologies', SOFI: 'SoFi Technologies', RIVN: 'Rivian Automotive', LCID: 'Lucid Group', F: 'Ford Motor Co.', GM: 'General Motors', T: 'AT&T Inc.', VZ: 'Verizon Communications', UBER: 'Uber Technologies', LYFT: 'Lyft Inc.', ABNB: 'Airbnb Inc.', SNOW: 'Snowflake Inc.', NET: 'Cloudflare Inc.', CRWD: 'CrowdStrike Holdings', ZS: 'Zscaler Inc.', PANW: 'Palo Alto Networks', SHOP: 'Shopify Inc.', SE: 'Sea Limited', MELI: 'MercadoLibre Inc.', BABA: 'Alibaba Group', TSM: 'Taiwan Semiconductor', ASML: 'ASML Holding', LLY: 'Eli Lilly', ABBV: 'AbbVie Inc.', MRK: 'Merck & Co.', TMO: 'Thermo Fisher Scientific', UPS: 'United Parcel Service', FDX: 'FedEx Corp.', CAT: 'Caterpillar Inc.', DE: 'Deere & Company', GE: 'GE Aerospace', RTX: 'RTX Corp.', LMT: 'Lockheed Martin', GS: 'Goldman Sachs', MS: 'Morgan Stanley', C: 'Citigroup Inc.', WFC: 'Wells Fargo', BRK: 'Berkshire Hathaway', SPY: 'SPDR S&P 500 ETF', QQQ: 'Invesco QQQ Trust', IWM: 'iShares Russell 2000', DIA: 'SPDR Dow Jones ETF' };
+
+    function computeAnalysis(ticker, md, position) {
+      const snap = md.snapshot?.ticker || {}; const lt = snap.lastTrade || snap.last_trade || {}; const day = snap.day || {}; const prev = snap.prevDay || snap.prev_day || {};
+      const aggs = md.aggs?.results || []; const wAggs = md.weeklyAggs?.results || [];
+      const lastAgg = aggs.length ? aggs[aggs.length - 1] : null;
+      const prevAgg = aggs.length > 1 ? aggs[aggs.length - 2] : null;
+
+      // ── Market status: if today's day bar has volume, market is open ──
+      const dayVol = day.v || day.volume || 0;
+      const marketOpen = dayVol > 0;
+
+      // ── Compute correct trading day from calendar ──
+      function getLastTradingDay(includeToday) {
+        const now = new Date();
+        // Convert to ET (approximate: UTC-4 EDT or UTC-5 EST)
+        const etOff = -4; const utcH = now.getUTCHours(); const etH = utcH + etOff;
+        let d = new Date(now);
+        // If not including today, or if it's before 4am ET (no data yet), go back one day
+        if (!includeToday || (etH < 4)) { d.setDate(d.getDate() - 1) }
+        // Skip weekends
+        while (d.getDay() === 0 || d.getDay() === 6) { d.setDate(d.getDate() - 1) }
+        return d.toISOString().split('T')[0];
       }
 
-      function clearAllData() {
-        const tickers = getAllTickers();
-        tickers.forEach(t => localStorage.removeItem(STORAGE_PREFIX + t));
-        localStorage.removeItem('ta_apiKey');
-        state.apiKey = ''; state.analysis = null; state.page = 'dashboard';
-        render();
+      const dataDate = marketOpen ? getLastTradingDay(true) : getLastTradingDay(false);
+
+      // ── Price fallback: live trade → today's bar → prev day → last aggregate ──
+      const price = lt.p || lt.price || day.c || day.close || prev.c || prev.close || lastAgg?.c || 0;
+      const prevClose = prev.c || prev.close || (lastAgg?.c !== price ? lastAgg?.c : null) || prevAgg?.c || 0;
+      const changePct = prevClose && price ? ((price - prevClose) / prevClose * 100) : snap.todaysChangePerc || 0;
+      // ── Volume: try every source to get a real number ──
+      const rawDayVol = day.v || day.volume || 0;
+      const rawPrevVol = prev.v || prev.volume || 0;
+      const rawLastAggVol = lastAgg?.v || 0;
+      // Current session volume (or last session if closed)
+      const vol = rawDayVol || rawPrevVol || rawLastAggVol || 0;
+      // 250-day average from aggregates
+      let h52 = 0, l52 = Infinity, avgV = 0, totalAggVol = 0;
+      aggs.forEach(a => { if (a.h > h52) h52 = a.h; if (a.l < l52) l52 = a.l; totalAggVol += (a.v || 0) });
+      avgV = aggs.length ? Math.round(totalAggVol / aggs.length) : 0; if (l52 === Infinity) l52 = 0;
+      // If no average from aggregates, use prevDay as rough average
+      if (avgV === 0) avgV = rawPrevVol || rawLastAggVol || 1;
+      // Relative volume
+      const relVol = avgV > 0 && vol > 0 ? vol / avgV : 0;
+
+      const s50 = extractVal(md.sma50)?.value, s100 = extractVal(md.sma100)?.value, s200 = extractVal(md.sma200)?.value;
+      const rsiv = extractVal(md.rsi)?.value; const macdv = extractVal(md.macd);
+      const macdLine = macdv?.value, macdSignal = macdv?.signal, macdHist = macdv?.histogram;
+
+      const bb20 = aggs.slice(-20); let bbM = 0, bbS = 0;
+      if (bb20.length >= 20) { bbM = bb20.reduce((s, a) => s + a.c, 0) / 20; bbS = Math.sqrt(bb20.reduce((s, a) => s + (a.c - bbM) ** 2, 0) / 20) }
+      const bbU = bbM + 2 * bbS, bbL = bbM - 2 * bbS;
+
+      // ── NEW: Extract EMA-9, EMA-21 from API or compute locally ──
+      const closes = aggs.map(a => a.c);
+      const ema9v = extractVal(md.ema9)?.value || computeEMA(closes, 9);
+      const ema21v = extractVal(md.ema21)?.value || computeEMA(closes, 21);
+
+      // ── NEW: Compute all local indicators from OHLC ──
+      const atrVal = computeATR(aggs, 14);
+      const adxVal = computeADX(aggs, 14);
+      const stochVal = computeStochastic(aggs, 14, 3);
+      const obvVal = computeOBV(aggs);
+      const rocVal = computeROC(aggs, 14);
+      const prevH = prev.h || prev.high || lastAgg?.h || 0;
+      const prevL = prev.l || prev.low || lastAgg?.l || 0;
+      const prevC = prevClose;
+      const pivotVals = computePivotPoints(prevH, prevL, prevC);
+
+      // ── NEW: RSI history for divergence detection ──
+      const rsiHistory = extractVals(md.rsi).map(v => typeof v === 'object' ? v.value : v).filter(v => typeof v === 'number');
+      const rsiDivergence = detectRSIDivergence(aggs, rsiHistory);
+
+      // ── Trend analysis (enhanced with EMA crossover + ADX) ──
+      const last5 = aggs.slice(-5), last10 = aggs.slice(-10), lastW4 = wAggs.slice(-4), lastW12 = wAggs.slice(-12);
+      const dailyUp = last5.length >= 2 && last5[last5.length - 1].c > last5[0].c;
+      const weeklyUp = lastW4.length >= 2 && lastW4[lastW4.length - 1].c > lastW4[0].c;
+      const monthlyUp = lastW12.length >= 2 && lastW12[lastW12.length - 1].c > lastW12[0].c;
+      const aboveMAs = [s50, s100, s200].filter(v => v != null && price > v).length;
+      const emasBullish = ema9v && ema21v && ema9v > ema21v;
+      const trendStrong = adxVal != null && adxVal > 25;
+      const dailyDir = dailyUp && (aboveMAs >= 2 || emasBullish) ? 'Bullish' : !dailyUp && aboveMAs <= 1 && !emasBullish ? 'Bearish' : 'Neutral';
+      const weeklyDir = weeklyUp && price > (s50 || 0) ? 'Bullish' : !weeklyUp && price < (s200 || Infinity) ? 'Bearish' : 'Neutral';
+      const monthlyDir = monthlyUp && price > (s200 || 0) ? 'Bullish' : !monthlyUp ? 'Bearish' : 'Neutral';
+
+      const adxStr = adxVal != null ? (adxVal > 40 ? ' ADX at ' + adxVal.toFixed(1) + ' confirms a very strong trend.' : adxVal > 25 ? ' ADX at ' + adxVal.toFixed(1) + ' indicates a trending market.' : ' ADX at ' + adxVal.toFixed(1) + ' suggests a ranging/choppy market — signals less reliable.') : '';
+      const emaStr = ema9v && ema21v ? ` EMA-9 ($${Number(ema9v).toFixed(2)}) is ${emasBullish ? 'above' : 'below'} EMA-21 ($${Number(ema21v).toFixed(2)}) — ${emasBullish ? 'short-term momentum is bullish' : 'short-term momentum is bearish'}.` : '';
+      const dDesc = `Price ${dailyUp ? 'gained' : 'declined'} over the last 5 sessions at $${price.toFixed(2)}.${emaStr}${adxStr}`;
+      const wDesc = `Weekly candles show ${weeklyUp ? 'higher lows — constructive' : 'lower highs — distributive'} action. ${s50 != null ? `Price is ${price > s50 ? 'above' : 'below'} the 50-day SMA ($${Number(s50).toFixed(2)}).` : ''}`;
+      const mDesc = `Long-term price is ${monthlyUp ? 'in an uptrend' : 'weakening'}. ${s200 != null ? `200-day SMA at $${Number(s200).toFixed(2)} is the ${price > s200 ? 'floor' : 'ceiling'}.` : ''}`;
+
+      // ── Support & Resistance (unchanged multi-source logic) ──
+      const srCandidates = [];
+      aggs.slice(-20).forEach(a => {
+        srCandidates.push({ price: a.h, note: 'Recent swing high' });
+        srCandidates.push({ price: a.l, note: 'Recent swing low' });
+      });
+      if (s50 != null) srCandidates.push({ price: Number(s50), note: '50-day SMA' });
+      if (s100 != null) srCandidates.push({ price: Number(s100), note: '100-day SMA' });
+      if (s200 != null) srCandidates.push({ price: Number(s200), note: '200-day SMA' });
+      if (bbU) srCandidates.push({ price: bbU, note: 'Upper Bollinger Band' });
+      if (bbL) srCandidates.push({ price: bbL, note: 'Lower Bollinger Band' });
+      if (bbM) srCandidates.push({ price: bbM, note: 'Bollinger midline' });
+      if (pivotVals) { srCandidates.push({ price: pivotVals.r1, note: 'Pivot R1' }, { price: pivotVals.r2, note: 'Pivot R2' }, { price: pivotVals.s1, note: 'Pivot S1' }, { price: pivotVals.s2, note: 'Pivot S2' }, { price: pivotVals.pivot, note: 'Daily Pivot' }); }
+      if (h52 && l52) {
+        const fr = h52 - l52;
+        [{ r: 0.236, l: '23.6%' }, { r: 0.382, l: '38.2%' }, { r: 0.5, l: '50%' }, { r: 0.618, l: '61.8%' }, { r: 0.786, l: '78.6%' }].forEach(f => {
+          srCandidates.push({ price: h52 - fr * f.r, note: `Fib ${f.l}` });
+        });
       }
+      if (h52) srCandidates.push({ price: h52, note: '52-week high' });
+      if (l52 && l52 < Infinity) srCandidates.push({ price: l52, note: '52-week low' });
+      const rb = price > 500 ? 25 : price > 100 ? 10 : price > 50 ? 5 : price > 10 ? 2 : 1;
+      const rAbove = Math.ceil(price / rb) * rb, rBelow = Math.floor(price / rb) * rb;
+      if (rAbove !== price) srCandidates.push({ price: rAbove, note: `Round $${rAbove}` });
+      if (rBelow !== price && rBelow > 0) srCandidates.push({ price: rBelow, note: `Round $${rBelow}` });
+      const margin = price * 0.002;
+      const resistanceLevels = srCandidates.filter(c => c.price > price + margin).sort((a, b) => a.price - b.price).filter((c, i, arr) => i === 0 || Math.abs(c.price - arr[i - 1].price) / price > 0.005).slice(0, 4).map((c, i) => ({ price: Number(c.price.toFixed(2)), strength: i === 0 ? 'Strong' : i <= 1 ? 'Moderate' : 'Weak', note: c.note }));
+      const supportLevels = srCandidates.filter(c => c.price < price - margin).sort((a, b) => b.price - a.price).filter((c, i, arr) => i === 0 || Math.abs(c.price - arr[i - 1].price) / price > 0.005).slice(0, 4).map((c, i) => ({ price: Number(c.price.toFixed(2)), strength: i === 0 ? 'Strong' : i <= 1 ? 'Moderate' : 'Weak', note: c.note }));
+      if (!resistanceLevels.length) { resistanceLevels.push({ price: Number((price * 1.03).toFixed(2)), strength: 'Moderate', note: '+3% zone' }, { price: Number((price * 1.07).toFixed(2)), strength: 'Weak', note: '+7% zone' }); }
+      if (!supportLevels.length) { supportLevels.push({ price: Number((price * 0.97).toFixed(2)), strength: 'Moderate', note: '-3% zone' }, { price: Number((price * 0.93).toFixed(2)), strength: 'Weak', note: '-7% zone' }); }
+      const sup1 = supportLevels[0]?.price || price * 0.97;
+      const res1 = resistanceLevels[0]?.price || price * 1.03;
+
+      // ── MA interpretation ──
+      const maSignal = (v, label) => { if (v == null) return { value: null, signal: 'N/A', interpretation: 'Data unavailable' }; const above = price > v; return { value: Number(v), signal: above ? 'Above price' : 'Below price', interpretation: `Price ($${price.toFixed(2)}) is ${above ? 'above' : 'below'} the ${label} MA ($${Number(v).toFixed(2)}) — ${above ? 'MA acts as support' : 'MA acts as resistance'}.` } };
+      let crossSig = '';
+      if (s50 != null && s200 != null) { crossSig += (s50 > s200 ? 'Golden Cross (50>200 SMA) — bullish long-term. ' : 'Death Cross (50<200 SMA) — bearish long-term. '); }
+      if (ema9v && ema21v) { crossSig += (ema9v > ema21v ? 'EMA-9 above EMA-21 — bullish short-term.' : 'EMA-9 below EMA-21 — bearish short-term.'); }
+      if (!crossSig) crossSig = 'No significant crossovers detected.';
+
+      // ── RSI ──
+      const rsiv1 = rsiHistory.length > 0 ? rsiHistory[rsiHistory.length - 1] : (rsiv != null ? Number(rsiv) : null);
+      const rsiZone = rsiv1 != null ? (rsiv1 > 70 ? 'Overbought' : rsiv1 < 30 ? 'Oversold' : 'Neutral') : 'N/A';
+      let rsiInterp = rsiv1 != null ? `RSI at ${rsiv1.toFixed(1)}: ${rsiv1 > 70 ? 'Overbought — pullback likely.' : rsiv1 > 60 ? 'Strong bullish momentum.' : rsiv1 > 40 ? 'Neutral — no directional bias.' : rsiv1 > 30 ? 'Weak — approaching oversold.' : 'Oversold — bounce likely.'}` : 'RSI unavailable.';
+      if (rsiDivergence.detected) rsiInterp += ' ⚠ ' + rsiDivergence.desc;
+
+      // ── MACD ──
+      const macdSig = macdHist != null ? (macdHist > 0 ? 'Bullish' : 'Bearish') : 'N/A';
+      const macdInterp = macdHist != null ? `Histogram ${Number(macdHist).toFixed(4)} is ${macdHist > 0 ? 'positive — bullish expanding' : 'negative — bearish'}. ${macdLine != null && macdSignal != null ? (macdLine > macdSignal ? 'MACD above signal — bullish.' : 'MACD below signal — bearish.') : ''}` : 'MACD unavailable.';
+
+      // ── Bollinger Bands ──
+      const bbPos = bbM ? (price > bbU ? 'Above upper band' : price < bbL ? 'Below lower band' : price > bbM ? 'Upper half' : 'Lower half') : 'N/A';
+      const bbWidth = bbM > 0 ? (bbU - bbL) / bbM : 0;
+      const bbInterp = bbM ? `Price at $${price.toFixed(2)} is ${price > bbU ? 'above upper band ($' + bbU.toFixed(2) + ') — overbought, mean reversion likely.' : price < bbL ? 'below lower band ($' + bbL.toFixed(2) + ') — oversold, snap-back likely.' : price > bbM ? 'in upper half — bullish bias. Mean at $' + bbM.toFixed(2) + '.' : 'in lower half — bearish pressure.'} Band width ${bbWidth > 0.08 ? 'elevated' : 'compressed'} (${(bbWidth * 100).toFixed(1)}%).` : 'BB unavailable.';
+
+      // ── Volume (enhanced with OBV) ──
+      const volAbove = vol > avgV;
+      const fmtVol = v => v >= 1e9 ? (v / 1e9).toFixed(1) + 'B' : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'K' : v.toString();
+      let volInterp = `Volume ${fmtVol(vol)} is ${volAbove ? 'above' : 'below'} the 250-day avg ${fmtVol(avgV)} (RVOL: ${relVol.toFixed(2)}x). ${volAbove ? (dailyUp ? 'High volume + up day = strong buyer conviction.' : 'High volume + down day = heavy selling pressure.') : (dailyUp ? 'Low volume advance — weak participation.' : 'Low volume decline — limited selling conviction.')}`;
+      if (obvVal) volInterp += ` OBV is ${obvVal.rising ? 'rising — cumulative flow is bullish (accumulation)' : 'falling — cumulative flow is bearish (distribution)'}.${obvVal.divergence ? ' ⚠ OBV diverges from price — trend reversal warning.' : ''}`;
+
+      // ── Chart Patterns ──
+      const patterns = [];
+      if (last10.length >= 10) {
+        const cls = last10.map(a => a.c), hgs = last10.map(a => a.h);
+        const rising = cls.every((c, i) => i === 0 || c >= cls[i - 1] * 0.99);
+        const falling = cls.every((c, i) => i === 0 || c <= cls[i - 1] * 1.01);
+        if (rising) patterns.push({ pattern: 'Ascending Channel', status: 'Confirmed', implication: 'Bullish continuation — higher closes.' });
+        else if (falling) patterns.push({ pattern: 'Descending Channel', status: 'Confirmed', implication: 'Bearish — lower closes. Watch for breakdown.' });
+        if ((Math.max(...hgs) - Math.min(...hgs)) / price < 0.03) patterns.push({ pattern: 'Consolidation', status: 'Forming', implication: 'Tight range — breakout imminent.' });
+      }
+      if (bbWidth > 0 && bbWidth < 0.04) patterns.push({ pattern: 'Bollinger Squeeze', status: 'Confirmed', implication: 'Volatility compression — big move coming.' });
+      if (stochVal && stochVal.k > 80 && rsiv1 > 70) patterns.push({ pattern: 'Double Overbought', status: 'Confirmed', implication: 'RSI + Stochastic both overbought — high reversal probability.' });
+      if (stochVal && stochVal.k < 20 && rsiv1 != null && rsiv1 < 30) patterns.push({ pattern: 'Double Oversold', status: 'Confirmed', implication: 'RSI + Stochastic both oversold — bounce likely.' });
+      if (rsiDivergence.detected) patterns.push({ pattern: `RSI ${rsiDivergence.type === 'bearish' ? 'Bearish' : 'Bullish'} Divergence`, status: 'Confirmed', implication: rsiDivergence.desc });
+      if (!patterns.length) patterns.push({ pattern: 'No Clear Pattern', status: 'Monitoring', implication: 'Continue monitoring.' });
+
+      // ── Fibonacci ──
+      const fibRange = h52 - l52;
+      const fib236 = h52 - fibRange * 0.236, fib382 = h52 - fibRange * 0.382, fib500 = h52 - fibRange * 0.5, fib618 = h52 - fibRange * 0.618, fib786 = h52 - fibRange * 0.786;
+      const nearestFib = [{ l: '23.6%', v: fib236 }, { l: '38.2%', v: fib382 }, { l: '50%', v: fib500 }, { l: '61.8%', v: fib618 }, { l: '78.6%', v: fib786 }].reduce((best, f) => Math.abs(price - f.v) < Math.abs(price - best.v) ? f : best);
+
+      // ── Trade Plan (ATR-based stops) ──
+      const entry = rsiv1 != null ? (rsiv1 > 65 ? price * 0.985 : rsiv1 > 50 ? price * 0.995 : rsiv1 < 35 ? price * 1.005 : price * 1.01) : price * 0.995;
+      // ATR-based stop-loss (2× ATR below entry) — industry standard
+      const atrStop = atrVal != null ? entry - (atrVal * 2) : null;
+      const maStop = [s50, s100, s200].filter(v => v != null && Number(v) < price).sort((a, b) => Number(b) - Number(a));
+      const stopLoss = Number((atrStop || (maStop.length > 0 ? Number(maStop[0]) * 0.995 : price * 0.95)).toFixed(2));
+      const riskPerShare = Math.max(entry - stopLoss, price * 0.01);
+      const masAbove = [s50, s100, s200].filter(v => v != null && Number(v) > price).sort((a, b) => Number(a) - Number(b));
+      const t1 = masAbove.length > 0 ? Math.max(Number(masAbove[0]), entry + riskPerShare * 1.5) : entry + riskPerShare * 2;
+      const t2 = entry + riskPerShare * 3;
+      const t3 = entry + riskPerShare * 4.5;
+      const rrRatio = riskPerShare > 0 ? `1:${((t2 - entry) / riskPerShare).toFixed(1)}` : 'N/A';
+      const atrSizeNote = atrVal != null ? ` ATR(14)=$${atrVal.toFixed(2)} — stop is 2×ATR below entry.` : '';
+      const tpNote = `Risk $${riskPerShare.toFixed(2)}/share.${atrSizeNote} Entry at $${entry.toFixed(2)}, stop at $${stopLoss.toFixed(2)}.`;
+
+      // ═══════════════════════════════════════
+      // ENHANCED 16-FACTOR RATING ALGORITHM
+      // ═══════════════════════════════════════
+      let score = 50;
+      // Existing factors (recalibrated)
+      if (dailyDir === 'Bullish') score += 6; if (dailyDir === 'Bearish') score -= 6;
+      if (weeklyDir === 'Bullish') score += 8; if (weeklyDir === 'Bearish') score -= 8;
+      if (monthlyDir === 'Bullish') score += 5; if (monthlyDir === 'Bearish') score -= 5;
+      if (s50 != null && price > s50) score += 4; if (s50 != null && price < s50) score -= 4;
+      if (s200 != null && price > s200) score += 5; if (s200 != null && price < s200) score -= 5;
+      if (rsiv1 != null) { if (rsiv1 > 50 && rsiv1 < 70) score += 4; if (rsiv1 < 40) score -= 4; if (rsiv1 > 70) score -= 2; if (rsiv1 < 30) score += 2; }
+      if (macdHist != null) { if (macdHist > 0) score += 5; else score -= 5; }
+      if (volAbove && dailyUp) score += 3; if (volAbove && !dailyUp) score -= 3;
+      if (s50 != null && s200 != null && s50 > s200) score += 3; else if (s50 != null && s200 != null) score -= 3;
+      // NEW factors
+      if (ema9v && ema21v) { if (ema9v > ema21v) score += 5; else score -= 5; } // EMA 9/21 crossover
+      if (adxVal != null) { if (adxVal > 25 && dailyDir !== 'Neutral') score += 5; if (adxVal < 20) score -= 2; } // ADX trend strength
+      if (rsiDivergence.detected) { if (rsiDivergence.type === 'bullish') score += 6; else score -= 6; } // RSI divergence
+      if (obvVal) { if (obvVal.rising && !obvVal.divergence) score += 4; if (!obvVal.rising && !obvVal.divergence) score -= 4; if (obvVal.divergence) score -= 3; } // OBV flow
+      if (stochVal) { if (rsiv1 != null && ((stochVal.k > 50 && rsiv1 > 50) || (stochVal.k < 50 && rsiv1 < 50))) score += 3; else score -= 2; } // Stochastic confirms RSI
+      if (atrVal != null && bbWidth > 0) { if (bbWidth < 0.04) score += 2; } // ATR squeeze = breakout potential
+      if (rocVal != null) { if (rocVal > 5 && dailyDir === 'Bullish') score += 3; if (rocVal < -5 && dailyDir === 'Bearish') score -= 3; } // ROC momentum
+      score = Math.max(0, Math.min(100, score));
+      const rating = score >= 78 ? 'Strong Buy' : score >= 62 ? 'Buy' : score >= 42 ? 'Hold' : score >= 28 ? 'Sell' : 'Strong Sell';
+
+      // ── Confidence factors ──
+      const factors = [];
+      factors.push(`${dailyDir} daily, ${weeklyDir} weekly, ${monthlyDir} monthly`);
+      if (rsiv1 != null) factors.push(`RSI ${rsiv1.toFixed(1)} (${rsiZone})`);
+      if (macdHist != null) factors.push(`MACD ${macdSig}`);
+      if (ema9v && ema21v) factors.push(`EMA-9/21 ${emasBullish ? 'bullish' : 'bearish'} cross`);
+      if (adxVal != null) factors.push(`ADX ${adxVal.toFixed(1)} (${adxVal > 25 ? 'trending' : 'ranging'})`);
+      if (stochVal) factors.push(`Stoch %K=${stochVal.k.toFixed(1)}`);
+      if (obvVal) factors.push(`OBV ${obvVal.rising ? 'rising' : 'falling'}${obvVal.divergence ? ' (DIVERGENCE)' : ''}`);
+      if (rsiDivergence.detected) factors.push(`RSI ${rsiDivergence.type} divergence`);
+      if (rocVal != null) factors.push(`ROC ${rocVal.toFixed(1)}%`);
+      if (atrVal != null) factors.push(`ATR $${atrVal.toFixed(2)}`);
+      const confFactors = `16-factor score from ${aggs.length} daily + ${wAggs.length} weekly bars. ${factors.join(' · ')}.`;
+
+      const summary = `${ticker} (${TICKERS_DB[ticker] || ticker}) ${marketOpen ? 'is trading' : 'closed'} at $${price.toFixed(2)} (${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%). ${dailyDir} daily with ${emasBullish ? 'bullish' : 'bearish'} EMA crossover, ADX ${adxVal != null ? adxVal.toFixed(0) + '(' + (adxVal > 25 ? 'trending' : 'ranging') + ')' : 'N/A'}, RSI ${rsiv1 != null ? rsiv1.toFixed(1) : 'N/A'}${rsiDivergence.detected ? ' (⚠ divergence)' : ''}, ${macdSig} MACD. Rating: ${rating} (${score}/100).`;
+
+      return {
+        ticker, company_name: TICKERS_DB[ticker] || ticker, current_price: price, price_change_pct: Number(changePct.toFixed(2)),
+        as_of_date: dataDate, data_source: 'massive_api', market_status: marketOpen ? 'live' : 'last_session',
+        position_note: position || (marketOpen ? '' : 'Market closed — last session prices'),
+        trend_analysis: { daily: { direction: dailyDir, description: dDesc }, weekly: { direction: weeklyDir, description: wDesc }, monthly: { direction: monthlyDir, description: mDesc } },
+        support_resistance: { support_levels: supportLevels, resistance_levels: resistanceLevels },
+        moving_averages: { ma_50: maSignal(s50, '50-day'), ma_100: maSignal(s100, '100-day'), ma_200: maSignal(s200, '200-day'), crossover_signals: crossSig },
+        // NEW: EMA section
+        ema: { ema_9: ema9v ? Number(Number(ema9v).toFixed(2)) : null, ema_21: ema21v ? Number(Number(ema21v).toFixed(2)) : null, crossover: emasBullish ? 'Bullish' : 'Bearish', interpretation: ema9v && ema21v ? `EMA-9 ($${Number(ema9v).toFixed(2)}) ${emasBullish ? 'above' : 'below'} EMA-21 ($${Number(ema21v).toFixed(2)}) — ${emasBullish ? 'short-term bullish momentum' : 'short-term bearish momentum'}.` : 'EMA data unavailable.' },
+        indicators: {
+          rsi: { value: rsiv1 != null ? Number(rsiv1.toFixed(2)) : null, zone: rsiZone, interpretation: rsiInterp, divergence: rsiDivergence },
+          macd: { macd_line: macdLine != null ? Number(Number(macdLine).toFixed(4)) : null, signal_line: macdSignal != null ? Number(Number(macdSignal).toFixed(4)) : null, histogram: macdHist != null ? Number(Number(macdHist).toFixed(4)) : null, signal: macdSig, interpretation: macdInterp },
+          bollinger_bands: { upper: bbU ? Number(bbU.toFixed(2)) : null, middle: bbM ? Number(bbM.toFixed(2)) : null, lower: bbL ? Number(bbL.toFixed(2)) : null, price_position: bbPos, interpretation: bbInterp, width: Number((bbWidth * 100).toFixed(1)) },
+          // NEW indicators
+          stochastic: stochVal ? { k: Number(stochVal.k.toFixed(2)), d: Number(stochVal.d.toFixed(2)), zone: stochVal.k > 80 ? 'Overbought' : stochVal.k < 20 ? 'Oversold' : 'Neutral', interpretation: `%K=${stochVal.k.toFixed(1)}, %D=${stochVal.d.toFixed(1)}. ${stochVal.k > 80 ? 'Overbought — reversal risk.' : stochVal.k < 20 ? 'Oversold — bounce potential.' : stochVal.k > stochVal.d ? '%K above %D — bullish momentum.' : '%K below %D — bearish momentum.'}` } : null,
+          atr: atrVal != null ? { value: Number(atrVal.toFixed(2)), pct: Number((atrVal / price * 100).toFixed(2)), interpretation: `ATR(14) $${atrVal.toFixed(2)} (${(atrVal / price * 100).toFixed(1)}% of price). ${atrVal / price > 0.03 ? 'High volatility — use wider stops and smaller position size.' : atrVal / price > 0.015 ? 'Moderate volatility — standard position sizing.' : 'Low volatility — tight stops viable, larger position possible.'}` } : null,
+          adx: adxVal != null ? { value: Number(adxVal.toFixed(2)), zone: adxVal > 40 ? 'Strong Trend' : adxVal > 25 ? 'Trending' : adxVal > 20 ? 'Weak Trend' : 'No Trend', interpretation: `ADX ${adxVal.toFixed(1)}: ${adxVal > 40 ? 'Very strong trend — follow it, don\'t fade.' : adxVal > 25 ? 'Trending market — MA crossovers and momentum signals are reliable.' : adxVal > 20 ? 'Weak trend — signals have lower conviction.' : 'No trend / ranging — avoid trend-following strategies. Use mean-reversion.'}` } : null,
+          obv: obvVal ? { rising: obvVal.rising, divergence: obvVal.divergence, interpretation: `OBV is ${obvVal.rising ? 'rising (accumulation — smart money buying)' : 'falling (distribution — smart money selling)'}. ${obvVal.divergence ? '⚠ OBV diverges from price — ' + (obvVal.priceUp ? 'price up but volume flow down = distribution warning.' : 'price down but volume flow up = accumulation signal.') : 'OBV confirms price direction.'}` } : null,
+          roc: rocVal != null ? { value: Number(rocVal.toFixed(2)), interpretation: `ROC(14) ${rocVal.toFixed(1)}%: ${rocVal > 10 ? 'Strong upward acceleration.' : rocVal > 3 ? 'Positive momentum building.' : rocVal > -3 ? 'Momentum flat — consolidating.' : rocVal > -10 ? 'Negative momentum — weakening.' : 'Sharp decline — selling accelerating.'}` } : null
+        },
+        pivot_points: pivotVals ? { r3: Number(pivotVals.r3.toFixed(2)), r2: Number(pivotVals.r2.toFixed(2)), r1: Number(pivotVals.r1.toFixed(2)), pivot: Number(pivotVals.pivot.toFixed(2)), s1: Number(pivotVals.s1.toFixed(2)), s2: Number(pivotVals.s2.toFixed(2)), s3: Number(pivotVals.s3.toFixed(2)) } : null,
+        volume_analysis: { current_volume: fmtVol(vol), avg_volume: fmtVol(avgV), relative_volume: relVol, volume_trend: volAbove ? 'Above average' : 'Below average', interpretation: volInterp },
+        chart_patterns: { identified_patterns: patterns, summary: patterns.map(p => p.pattern).join(', ') },
+        fibonacci_levels: { swing_high: Number(h52.toFixed(2)), swing_low: Number(l52.toFixed(2)), levels: { '236': Number(fib236.toFixed(2)), '382': Number(fib382.toFixed(2)), '500': Number(fib500.toFixed(2)), '618': Number(fib618.toFixed(2)), '786': Number(fib786.toFixed(2)) }, key_bounce_zone: `Nearest: ${nearestFib.l} at $${nearestFib.v.toFixed(2)}. Golden ratio (61.8%) at $${fib618.toFixed(2)}.` },
+        trade_plan: { ideal_entry: Number(entry.toFixed(2)), stop_loss: stopLoss, profit_target_1: Number(t1.toFixed(2)), profit_target_2: Number(t2.toFixed(2)), profit_target_3: Number(t3.toFixed(2)), risk_reward_ratio: rrRatio, position_sizing_note: tpNote, atr: atrVal != null ? Number(atrVal.toFixed(2)) : null },
+        overall_rating: rating, confidence_score: score,
+        confidence_factors: confFactors,
+        future_triggers: {
+          buy_triggers: [`Break above $${res1.toFixed(2)} on above-avg volume`, `RSI crosses above 50${rsiDivergence.type === 'bullish' ? ' (bullish divergence active)' : ''}`, `EMA-9 crosses above EMA-21`, `MACD histogram turns positive`, `ADX rises above 25 confirming trend`],
+          sell_triggers: [`Break below $${sup1.toFixed(2)} on heavy volume`, `RSI drops below 30${rsiDivergence.type === 'bearish' ? ' (bearish divergence active)' : ''}`, `EMA-9 crosses below EMA-21`, `MACD histogram turns negative`, `OBV diverges from price (distribution)`]
+        },
+        executive_summary: summary
+      };
+    }
+
+    // ═══════════════════════════════════════
+    // ANALYSIS RUNNER
+    // ═══════════════════════════════════════
+    async function runAnalysis() {
+      const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+      if (!ticker) return;
+      if (!state.apiKey) { alert('Enter your Massive.com API key in Settings first.'); return }
+      state.loading = true; state.error = null; state.analysis = null; state.page = 'analysis';
+      const position = document.getElementById('positionInput').value;
+      const setMsg = m => { state.loadingMsg = m; render() };
+      render();
+      try {
+        const md = await fetchMassiveData(ticker, setMsg);
+        if (md.snapshotErr && md.aggsErr) throw new Error(`Massive API errors:\nSnapshot: ${md.snapshotErr}\nAggregates: ${md.aggsErr}`);
+        setMsg('Computing analysis from verified exchange data...');
+        const analysis = computeAnalysis(ticker, md, position);
+        state.analysis = fixReport(analysis); saveReport(ticker, fixReport(analysis)); state.historyTicker = ticker;
+      } catch (e) { state.error = e.message }
+      state.loading = false; render();
+    }
+
+    // ═══════════════════════════════════════
+    // UI
+    // ═══════════════════════════════════════
+    // ═══════════════════════════════════════
+    // PDF REPORT GENERATION
+    // ═══════════════════════════════════════
+    function generatePDF(a) {
+      if (!a) return;
+      if (!window.jspdf) {
+        alert('PDF library (jsPDF) failed to load. Check your internet connection and reload the page.\n\nAlternative: Right-click the report → Print → Save as PDF.');
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const W = 210, H = 297, M = 15; // page width, height, margin
+      const CW = W - 2 * M; // content width
+      let y = M;
+      const ri = getRating(a.overall_rating);
+
+      // Colors
+      const dark = [10, 14, 20];
+      const amber = [255, 140, 0];
+      const green = [0, 255, 65];
+      const red = [255, 59, 59];
+      const cyan = [0, 212, 255];
+      const white = [232, 236, 240];
+      const muted = [107, 123, 141];
+      const bg2 = [15, 19, 25];
+      const ratingColor = a.overall_rating.includes('Buy') ? green : a.overall_rating.includes('Sell') ? red : [255, 215, 0];
+
+      function checkPage(need) { if (y + need > H - M) { doc.addPage(); y = M; drawPageBg(); } }
+      function drawPageBg() { doc.setFillColor(...dark); doc.rect(0, 0, W, H, 'F'); }
+      function label(text, x, yy) { doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...muted); doc.text(text.toUpperCase(), x, yy); }
+      function val(text, x, yy, color = white, size = 10, style = 'bold') { doc.setFont('helvetica', style); doc.setFontSize(size); doc.setTextColor(...color); doc.text(String(text), x, yy); }
+      function valR(text, x, yy, color = white, size = 10, style = 'bold') { doc.setFont('helvetica', style); doc.setFontSize(size); doc.setTextColor(...color); doc.text(String(text), x, yy, { align: 'right' }); }
+      function divider(yy) { doc.setDrawColor(28, 37, 48); doc.setLineWidth(0.3); doc.line(M, yy, W - M, yy); }
+      function sectionHeader(icon, title, yy) { checkPage(12); doc.setFillColor(...bg2); doc.rect(M, yy - 4, CW, 8, 'F'); doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...amber); doc.text(`${icon}  ${title.toUpperCase()}`, M + 3, yy + 1); return yy + 10; }
+      function wrappedText(text, x, yy, maxW, color = white, size = 8) {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(size); doc.setTextColor(...color);
+        const lines = doc.splitTextToSize(String(text || ''), maxW);
+        lines.forEach((line, i) => { checkPage(4); doc.text(line, x, yy + i * 3.5); });
+        return yy + lines.length * 3.5;
+      }
+
+      // ── Page 1 Background ──
+      drawPageBg();
+
+      // ── Header Bar ──
+      doc.setFillColor(...bg2);
+      doc.rect(0, 0, W, 18, 'F');
+      doc.setDrawColor(...amber); doc.setLineWidth(0.5); doc.line(0, 18, W, 18);
+      doc.setFillColor(...green); doc.circle(M, 9, 1.5, 'F');
+      val('QUANT TA ENGINE', M + 5, 10.5, amber, 11);
+      val('TECHNICAL ANALYSIS REPORT', M + 58, 10.5, muted, 7, 'normal');
+      valR(a.saved_at ? fmtDateTime(a.saved_at) : a.as_of_date, W - M, 10.5, muted, 7, 'normal');
+      y = 25;
+
+      // ── Hero Section ──
+      doc.setFillColor(15, 19, 25);
+      doc.rect(M, y - 3, CW, 32, 'F');
+      doc.setDrawColor(...amber); doc.setLineWidth(0.8); doc.line(M, y - 3, M + CW, y - 3);
+
+      val(a.ticker, M + 3, y + 3, amber, 22);
+      val(a.company_name || a.ticker, M + 38, y + 3, muted, 9, 'normal');
+
+      val(`$${fmt(a.current_price)}`, M + 3, y + 14, white, 18);
+      const chgColor = a.price_change_pct >= 0 ? green : red;
+      val(pct(a.price_change_pct), M + 50, y + 14, chgColor, 11);
+
+      // Rating box
+      const rbx = W - M - 38;
+      doc.setFillColor(...ratingColor.map(c => Math.min(255, c)), 30);
+      doc.rect(rbx, y - 1, 35, 26, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(...ratingColor);
+      doc.text(a.overall_rating, rbx + 17.5, y + 10, { align: 'center' });
+      doc.setFontSize(8); doc.setTextColor(...muted);
+      doc.text(`Confidence: ${a.confidence_score}/100`, rbx + 17.5, y + 17, { align: 'center' });
+
+      label('MASSIVE API · DIRECT · 100% EXCHANGE DATA', M + 3, y + 24);
+      y += 35;
+
+      // ── Executive Summary ──
+      doc.setDrawColor(...ratingColor); doc.setLineWidth(0.6); doc.line(M, y, M, y + 12);
+      y = wrappedText(a.executive_summary, M + 3, y + 3, CW - 6, white, 8);
+      y += 6;
+
+      // ── Trend Analysis ──
+      y = sectionHeader('◎', 'Multi-Timeframe Trend', y);
+      ['daily', 'weekly', 'monthly'].forEach(tf => {
+        const d = a.trend_analysis?.[tf]; if (!d) return;
+        checkPage(14);
+        const tc = d.direction === 'Bullish' ? green : d.direction === 'Bearish' ? red : [255, 215, 0];
+        label(tf, M + 3, y);
+        val(`${d.direction === 'Bullish' ? '▲' : d.direction === 'Bearish' ? '▼' : '■'} ${d.direction}`, M + 25, y, tc, 8);
+        y += 4;
+        y = wrappedText(d.description, M + 3, y, CW - 6, muted, 7);
+        y += 3;
+      });
+
+      // ── Support & Resistance ──
+      y = sectionHeader('⇅', 'Support & Resistance', y);
+      label('RESISTANCE', M + 3, y); y += 4;
+      (a.support_resistance?.resistance_levels || []).forEach(l => {
+        checkPage(6);
+        val(`$${fmt(l.price)}`, M + 3, y, red, 9);
+        val(l.strength, M + 30, y, muted, 7, 'normal');
+        val(l.note, M + 52, y, muted, 7, 'normal');
+        y += 5;
+      });
+      checkPage(8);
+      doc.setFillColor(0, 212, 255, 15); doc.rect(M, y - 2, CW, 6, 'F');
+      val(`CURRENT: $${fmt(a.current_price)}`, M + CW / 2, y + 2, cyan, 9, 'bold');
+      y += 8;
+      label('SUPPORT', M + 3, y); y += 4;
+      (a.support_resistance?.support_levels || []).forEach(l => {
+        checkPage(6);
+        val(`$${fmt(l.price)}`, M + 3, y, green, 9);
+        val(l.strength, M + 30, y, muted, 7, 'normal');
+        val(l.note, M + 52, y, muted, 7, 'normal');
+        y += 5;
+      });
+      y += 3;
+
+      // ── Moving Averages ──
+      y = sectionHeader('〰', 'Moving Averages', y);
+      ['ma_50', 'ma_100', 'ma_200'].forEach(k => {
+        const d = a.moving_averages?.[k]; if (!d || !d.value) return;
+        checkPage(12);
+        const above = d.signal?.toLowerCase().includes('above');
+        val(`${k.replace('ma_', '')}-Day SMA`, M + 3, y, muted, 8);
+        val(`$${fmt(d.value)}`, M + 40, y, white, 9);
+        val(above ? '▲ Above' : '▼ Below', M + 70, y, above ? green : red, 7);
+        y += 4;
+        y = wrappedText(d.interpretation, M + 3, y, CW - 6, muted, 7);
+        y += 2;
+      });
+      if (a.moving_averages?.crossover_signals) {
+        checkPage(8);
+        val('CROSSOVER:', M + 3, y, [255, 215, 0], 7);
+        y = wrappedText(a.moving_averages.crossover_signals, M + 26, y, CW - 30, white, 7);
+        y += 2;
+      }
+
+      // ── Indicators ──
+      y = sectionHeader('◈', 'RSI · MACD · Bollinger Bands', y);
+      // RSI
+      checkPage(10);
+      const rsiVal = a.indicators?.rsi?.value;
+      const rsiC = rsiVal > 70 ? red : rsiVal < 30 ? green : [255, 215, 0];
+      val(`RSI(14): ${fmt(rsiVal, 1)}`, M + 3, y, rsiC, 10);
+      val(a.indicators?.rsi?.zone || '', M + 40, y, muted, 8, 'normal');
+      y += 4;
+      y = wrappedText(a.indicators?.rsi?.interpretation, M + 3, y, CW - 6, muted, 7);
+      y += 2;
+      // MACD
+      checkPage(10);
+      const macdC = a.indicators?.macd?.signal === 'Bullish' ? green : red;
+      val(`MACD: ${fmt(a.indicators?.macd?.histogram, 4)}`, M + 3, y, macdC, 10);
+      val(a.indicators?.macd?.signal || '', M + 45, y, muted, 8, 'normal');
+      y += 4;
+      y = wrappedText(a.indicators?.macd?.interpretation, M + 3, y, CW - 6, muted, 7);
+      y += 2;
+      // Bollinger
+      checkPage(10);
+      val(`BB: ${fmt(a.indicators?.bollinger_bands?.lower)} — ${fmt(a.indicators?.bollinger_bands?.middle)} — ${fmt(a.indicators?.bollinger_bands?.upper)}`, M + 3, y, cyan, 9);
+      y += 4;
+      y = wrappedText(a.indicators?.bollinger_bands?.interpretation, M + 3, y, CW - 6, muted, 7);
+      y += 2;
+
+      // ── Volume ──
+      y = sectionHeader('▥', 'Volume Analysis', y);
+      checkPage(12);
+      // Parse RVOL
+      const parseV = s => { if (!s) return 0; const n = parseFloat(s); if (isNaN(n)) return 0; if (s.includes('B')) return n * 1e9; if (s.includes('M')) return n * 1e6; if (s.includes('K')) return n * 1e3; return n; };
+      const rv = a.volume_analysis?.relative_volume || (parseV(a.volume_analysis?.avg_volume) > 0 ? parseV(a.volume_analysis?.current_volume) / parseV(a.volume_analysis?.avg_volume) : 0);
+      const rvC = rv >= 1.5 ? green : rv >= 1 ? cyan : rv >= 0.5 ? [255, 215, 0] : red;
+
+      val(`Current: ${a.volume_analysis?.current_volume || 'N/A'}`, M + 3, y, white, 9);
+      val(`RVOL: ${rv.toFixed(2)}x`, M + 55, y, rvC, 9);
+      val(`Avg: ${a.volume_analysis?.avg_volume || 'N/A'}`, M + 100, y, muted, 9);
+      y += 5;
+      y = wrappedText(a.volume_analysis?.interpretation, M + 3, y, CW - 6, muted, 7);
+      y += 2;
+
+      // ── Trade Plan ──
+      y = sectionHeader('⊕', 'Trade Plan', y);
+      checkPage(30);
+      const tp = a.trade_plan || {};
+      const planItems = [
+        { label: 'ENTRY', val: tp.ideal_entry, color: cyan },
+        { label: 'STOP LOSS', val: tp.stop_loss, color: red },
+        { label: 'TARGET 1', val: tp.profit_target_1, color: green },
+        { label: 'TARGET 2', val: tp.profit_target_2, color: [0, 204, 51] },
+        { label: 'TARGET 3', val: tp.profit_target_3, color: [0, 153, 34] },
+        { label: 'RISK:REWARD', val: tp.risk_reward_ratio, color: amber, isText: true },
+      ];
+      const colW = CW / 3;
+      planItems.forEach((item, i) => {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        const bx = M + col * colW;
+        const by = y + row * 14;
+        checkPage(14);
+        doc.setFillColor(...bg2); doc.rect(bx, by - 2, colW - 2, 12, 'F');
+        doc.setDrawColor(...item.color); doc.setLineWidth(0.6); doc.line(bx, by - 2, bx, by + 10);
+        label(item.label, bx + 3, by + 1);
+        val(item.isText ? item.val : `$${fmt(item.val)}`, bx + 3, by + 7, item.color, 10);
+      });
+      y += Math.ceil(planItems.length / 3) * 14 + 4;
+      if (tp.position_sizing_note) {
+        y = wrappedText(tp.position_sizing_note, M + 3, y, CW - 6, muted, 7);
+        y += 2;
+      }
+
+      // ── Fibonacci ──
+      y = sectionHeader('φ', 'Fibonacci Retracement', y);
+      checkPage(18);
+      const fib = a.fibonacci_levels;
+      if (fib) {
+        val(`52W High: $${fmt(fib.swing_high)}`, M + 3, y, red, 8);
+        val(`52W Low: $${fmt(fib.swing_low)}`, M + 55, y, green, 8);
+        y += 5;
+        if (fib.levels) {
+          Object.entries(fib.levels).forEach(([k, v]) => {
+            checkPage(5);
+            const isGolden = k === '618';
+            val(`${(Number(k) / 10).toFixed(1)}%`, M + 3, y, muted, 7);
+            val(`$${fmt(v)}`, M + 20, y, isGolden ? amber : white, 8);
+            y += 4;
+          });
+        }
+        if (fib.key_bounce_zone) {
+          y = wrappedText(fib.key_bounce_zone, M + 3, y + 1, CW - 6, muted, 7);
+        }
+        y += 3;
+      }
+
+      // ── Future Triggers ──
+      if (a.future_triggers) {
+        y = sectionHeader('⚡', 'Future Buy / Sell Triggers', y);
+        const halfW = CW / 2 - 2;
+        label('BUY TRIGGERS', M + 3, y); label('SELL TRIGGERS', M + halfW + 6, y);
+        y += 4;
+        const maxLen = Math.max((a.future_triggers.buy_triggers || []).length, (a.future_triggers.sell_triggers || []).length);
+        for (let i = 0; i < maxLen; i++) {
+          checkPage(8);
+          const bt = a.future_triggers.buy_triggers?.[i];
+          const st = a.future_triggers.sell_triggers?.[i];
+          if (bt) {
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...green);
+            doc.text('▸', M + 3, y);
+            const blines = doc.splitTextToSize(bt, halfW - 8);
+            doc.setTextColor(...white); blines.forEach((l, li) => doc.text(l, M + 7, y + li * 3));
+          }
+          if (st) {
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...red);
+            doc.text('▸', M + halfW + 6, y);
+            const slines = doc.splitTextToSize(st, halfW - 8);
+            doc.setTextColor(...white); slines.forEach((l, li) => doc.text(l, M + halfW + 10, y + li * 3));
+          }
+          y += 7;
+        }
+        y += 2;
+      }
+
+      // ── Confidence Factors ──
+      if (a.confidence_factors) {
+        checkPage(14);
+        y = sectionHeader('◉', 'Confidence Factors', y);
+        y = wrappedText(a.confidence_factors, M + 3, y, CW - 6, white, 7);
+        y += 4;
+      }
+
+      // ── Footer ──
+      checkPage(12);
+      divider(y);
+      y += 4;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(6); doc.setTextColor(...muted);
+      doc.text('DISCLAIMER: 100% verified exchange data from Massive.com. Analysis computed locally. Not financial advice. Consult a licensed advisor.', M, y);
+      y += 3;
+      doc.text(`Generated by Quant TA Engine · ${new Date().toISOString()} · massive.com`, M, y);
+
+      // Save
+      const filename = `${a.ticker}_TA_Report_${(a.saved_at || a.as_of_date || new Date().toISOString()).split('T')[0]}.pdf`;
+      doc.save(filename);
+    }
+
+    function downloadReportPDF(ticker, index) {
+      const reports = getReports(ticker);
+      if (reports[index]) generatePDF(fixReport(reports[index]));
+    }
+
+    function goHome() { state.page = 'dashboard'; state.analysis = null; state.error = null; render() }
+    function toggleSettings() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none' }
+    function saveSettings() { state.apiKey = document.getElementById('apiKeyInput').value.trim(); localStorage.setItem('ta_apiKey', state.apiKey); document.getElementById('settingsPanel').style.display = 'none'; render() }
+    function clearSettings() { state.apiKey = ''; localStorage.removeItem('ta_apiKey'); document.getElementById('apiKeyInput').value = ''; render() }
+    // Recompute S/R levels from saved report data (fixes old reports with stale/inverted levels)
+    function fixReport(a) {
+      if (!a || !a.current_price) return a;
+      const price = a.current_price;
+      const margin = price * 0.002;
+
+      // ALWAYS rebuild S/R from saved indicator data to ensure correctness
+      const cands = [];
+      const ma50 = a.moving_averages?.ma_50?.value; if (ma50) cands.push({ price: ma50, note: '50-day SMA — dynamic support/resistance' });
+      const ma100 = a.moving_averages?.ma_100?.value; if (ma100) cands.push({ price: ma100, note: '100-day SMA — key institutional level' });
+      const ma200 = a.moving_averages?.ma_200?.value; if (ma200) cands.push({ price: ma200, note: '200-day SMA — major trend line' });
+      const bbU = a.indicators?.bollinger_bands?.upper; if (bbU) cands.push({ price: bbU, note: 'Upper Bollinger Band — volatility resistance' });
+      const bbL = a.indicators?.bollinger_bands?.lower; if (bbL) cands.push({ price: bbL, note: 'Lower Bollinger Band — volatility support' });
+      const bbM = a.indicators?.bollinger_bands?.middle; if (bbM) cands.push({ price: bbM, note: '20-day mean — Bollinger midline' });
+      const h52 = a.fibonacci_levels?.swing_high; if (h52) cands.push({ price: h52, note: '52-week high' });
+      const l52 = a.fibonacci_levels?.swing_low; if (l52) cands.push({ price: l52, note: '52-week low' });
+      if (a.fibonacci_levels?.levels) {
+        Object.entries(a.fibonacci_levels.levels).forEach(([k, v]) => { if (v) cands.push({ price: v, note: `Fibonacci ${(Number(k) / 10).toFixed(1)}% retracement` }); });
+      }
+      // Round number levels
+      const rb = price > 500 ? 25 : price > 100 ? 10 : price > 50 ? 5 : price > 10 ? 2 : 1;
+      const rAbove = Math.ceil(price / rb) * rb; const rBelow = Math.floor(price / rb) * rb;
+      if (rAbove !== price) cands.push({ price: rAbove, note: `Round number psychological level ($${rAbove})` });
+      if (rBelow !== price && rBelow > 0) cands.push({ price: rBelow, note: `Round number psychological level ($${rBelow})` });
+      // Percentage-based zones
+      cands.push({ price: price * 1.03, note: '+3% overhead resistance zone' });
+      cands.push({ price: price * 1.07, note: '+7% extended resistance target' });
+      cands.push({ price: price * 0.97, note: '-3% near-term support zone' });
+      cands.push({ price: price * 0.93, note: '-7% deeper support level' });
+
+      const res = cands.filter(c => c.price > price + margin).sort((a, b) => a.price - b.price)
+        .filter((c, i, arr) => i === 0 || Math.abs(c.price - arr[i - 1].price) / price > 0.005).slice(0, 3)
+        .map((c, i) => ({ price: Number(c.price.toFixed(2)), strength: i === 0 ? 'Strong' : i === 1 ? 'Moderate' : 'Weak', note: c.note }));
+      const sup = cands.filter(c => c.price < price - margin).sort((a, b) => b.price - a.price)
+        .filter((c, i, arr) => i === 0 || Math.abs(c.price - arr[i - 1].price) / price > 0.005).slice(0, 3)
+        .map((c, i) => ({ price: Number(c.price.toFixed(2)), strength: i === 0 ? 'Strong' : i === 1 ? 'Moderate' : 'Weak', note: c.note }));
+
+      a.support_resistance = { resistance_levels: res, support_levels: sup };
+
+      // Recompute trade plan from MA-based levels (live data, not stale aggs)
+      const sup1 = sup[0]?.price || price * 0.97;
+      const res1 = res[0]?.price || price * 1.03;
+      if (a.trade_plan) {
+        const tp = a.trade_plan;
+        const masB = [ma50, ma100, ma200].filter(v => v && v < price).sort((x, y) => y - x);
+        const masA = [ma50, ma100, ma200].filter(v => v && v > price).sort((x, y) => x - y);
+        const stopBase = masB.length > 0 ? masB[0] : price * 0.95;
+        const newStop = Number((stopBase * 0.995).toFixed(2));
+        const rsiv = a.indicators?.rsi?.value;
+        const newEntry = rsiv != null
+          ? Number((rsiv > 65 ? price * 0.985 : rsiv > 50 ? price * 0.995 : rsiv < 35 ? price * 1.005 : price * 1.01).toFixed(2))
+          : Number((price * 0.995).toFixed(2));
+        const risk = Math.max(newEntry - newStop, price * 0.02);
+        tp.ideal_entry = newEntry;
+        tp.stop_loss = newStop;
+        tp.profit_target_1 = Number((masA.length > 0 ? Math.max(masA[0], newEntry + risk * 1.5) : newEntry + risk * 2).toFixed(2));
+        tp.profit_target_2 = Number((newEntry + risk * 3).toFixed(2));
+        tp.profit_target_3 = Number((newEntry + risk * 4.5).toFixed(2));
+        tp.risk_reward_ratio = risk > 0 ? `1:${((tp.profit_target_2 - newEntry) / risk).toFixed(1)}` : 'N/A';
+        tp.position_sizing_note = `Risk $${risk.toFixed(2)}/share. Stop below ${masB.length > 0 ? 'nearest SMA' : '5% level'} at $${newStop}. All levels from live snapshot + SMA data.`;
+      }
+
+      // Fix buy/sell triggers with correct levels
+      if (a.future_triggers) {
+        a.future_triggers.buy_triggers = [
+          `Price breaks above $${res1.toFixed(2)} resistance with above-average volume`,
+          `RSI crosses above 50 from oversold territory`,
+          `MACD histogram turns positive / bullish crossover`,
+          `Golden cross: 50-day SMA crosses above 200-day SMA`
+        ];
+        a.future_triggers.sell_triggers = [
+          `Price breaks below $${sup1.toFixed(2)} support on heavy volume`,
+          `RSI drops below 30 or shows bearish divergence`,
+          `MACD histogram turns negative / bearish crossover`,
+          `Death cross: 50-day SMA crosses below 200-day SMA`
+        ];
+      }
+
+      return a;
+    }
+
+    function viewReport(t, i) { const r = getReports(t); if (r[i]) { state.analysis = fixReport(r[i]); state.page = 'analysis'; state.historyTicker = t; render() } }
+
+    function render() {
+      const sb = document.getElementById('statusBadge');
+      sb.textContent = state.apiKey ? 'DIRECT API · LIVE' : 'NO API KEY';
+      sb.style.cssText = `color:${state.apiKey ? 'var(--green)' : 'var(--red)'};background:${state.apiKey ? 'rgba(0,255,65,0.1)' : 'rgba(255,59,59,0.1)'};border:1px solid ${state.apiKey ? 'rgba(0,255,65,0.3)' : 'rgba(255,59,59,0.3)'}`;
+      const cb = document.getElementById('connBadge');
+      cb.textContent = state.apiKey ? 'CONNECTED' : 'NOT SET';
+      cb.style.cssText = `color:${state.apiKey ? 'var(--green)' : 'var(--red)'};background:${state.apiKey ? 'rgba(0,255,65,0.1)' : 'rgba(255,59,59,0.1)'};border:1px solid ${state.apiKey ? 'rgba(0,255,65,0.3)' : 'rgba(255,59,59,0.3)'}`;
+      document.getElementById('apiKeyInput').value = state.apiKey;
+      document.getElementById('homeBtn').style.display = state.page !== 'dashboard' ? 'inline-block' : 'none';
+      const mc = document.getElementById('mainContent');
+      const fi = document.getElementById('footerInfo');
+      if (state.page === 'dashboard') { fi.innerHTML = `<span>DATA: <span style="color:${state.apiKey ? 'var(--green)' : 'var(--red)'}">MASSIVE API DIRECT</span></span>`; renderDashboard(mc) }
+      else if (state.page === 'analysis') { const a = state.analysis; fi.innerHTML = a ? `<span>TICKER: <span style="color:var(--amber)">${a.ticker}</span></span><span>RATING: <span style="color:${getRating(a.overall_rating).color}">${a.overall_rating}</span></span><span>SOURCE: <span style="color:var(--green)">DIRECT API</span></span>` : ''; renderAnalysis(mc) }
+      else if (state.page === 'history') { fi.innerHTML = `<span>HISTORY: <span style="color:var(--amber)">${state.historyTicker}</span></span>`; renderHistory(mc) }
+      updateBackupCount();
+    }
+
+    function renderDashboard(el) {
+      const tickers = getAllTickers(); const total = tickers.reduce((s, t) => s + getReports(t).length, 0);
+      let h = `<div style="display:flex;gap:1px;margin-top:20px"><div class="panel" style="flex:1"><div class="label">TRACKED</div><div style="margin-top:4px;color:var(--cyan);font-size:20px;font-weight:700">${tickers.length}</div></div><div class="panel" style="flex:1"><div class="label">REPORTS</div><div style="margin-top:4px;color:var(--green);font-size:20px;font-weight:700">${total}</div></div></div>
+  <div style="margin-top:28px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><span style="color:var(--amber);font-size:13px;font-weight:700">REPORT ARCHIVE</span><div style="flex:1;height:1px;background:rgba(255,140,0,0.3)"></div></div>`;
+      if (!tickers.length) { h += `<div class="panel" style="text-align:center;padding:40px"><span style="color:var(--muted)">No reports yet. Enter a ticker and execute analysis.</span></div>` }
+      else tickers.forEach(t => {
+        const rpts = getReports(t); const la = rpts[0]; if (!la) return; const ri = getRating(la.overall_rating);
+        h += `<div class="report-row" onclick="viewReport('${t}',0)" style="margin-bottom:1px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="color:var(--amber);font-size:15px;font-weight:700">${t}</span>
+        <span style="color:var(--muted);font-size:10px">${la.company_name || ''}</span>
+        <span style="color:var(--white);font-size:13px;font-weight:700">$${fmt(la.current_price)}</span>
+        <span style="color:${la.price_change_pct >= 0 ? 'var(--green)' : 'var(--red)'};font-size:11px;font-weight:600">${pct(la.price_change_pct)}</span>
+        ${badge(ri.icon + ' ' + la.overall_rating, ri.color)} ${badge(rpts.length + ' REPORT' + (rpts.length > 1 ? 'S' : ''), 'var(--muted)')} ${badge('DIRECT API', 'var(--green)')}
+        <span style="flex:1"></span>
+        <span style="color:var(--muted);font-size:10px">${fmtDate(la.saved_at)}</span>
+        <button class="btn btn-outline" onclick="event.stopPropagation();state.historyTicker='${t}';state.page='history';render()" style="font-size:9px;padding:3px 8px">⏱</button>
+        <button class="btn btn-outline" onclick="event.stopPropagation();deleteTicker('${t}')" style="font-size:9px;padding:3px 6px;color:var(--red);border-color:rgba(255,59,59,0.3)">✕</button>
+      </div>
+    </div>`});
+      el.innerHTML = h;
+    }
+
+    function renderHistory(el) {
+      const t = state.historyTicker, rpts = getReports(t);
+      let h = `<div style="display:flex;gap:8px;margin:16px 0"><button class="btn btn-outline" onclick="goHome()">◂ DASHBOARD</button>${rpts.length ? `<button class="btn btn-outline" onclick="viewReport('${t}',0)" style="color:var(--cyan);border-color:rgba(0,212,255,0.3)">VIEW LATEST</button>` : ''}</div>
+  <div class="panel" style="border-color:rgba(255,140,0,0.3);margin-bottom:1px;position:relative"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--amber)"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center"><div><span style="color:var(--amber);font-size:20px;font-weight:700">${t}</span></div><div><div class="label">REPORTS</div><span style="color:var(--cyan);font-size:16px;font-weight:700">${rpts.length}</span></div></div></div>`;
+      rpts.forEach((r, i) => {
+        const ri = getRating(r.overall_rating);
+        h += `<div class="report-row" style="${i === 0 ? 'border-color:rgba(255,140,0,0.3)' : ''}" onclick="viewReport('${t}',${i})">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="color:var(--white);font-size:12px;font-weight:${i === 0 ? 700 : 400}">${fmtDateTime(r.saved_at)}</span>
+        ${i === 0 ? badge('LATEST', 'var(--cyan)') : ''} ${badge('DIRECT API', 'var(--green)')}
+        <span style="flex:1"></span>
+        <span style="color:var(--white);font-size:12px;font-weight:700">$${fmt(r.current_price)}</span>
+        <span style="color:${r.price_change_pct >= 0 ? 'var(--green)' : 'var(--red)'};font-size:11px">${pct(r.price_change_pct)}</span>
+        ${badge(ri.icon + ' ' + r.overall_rating, ri.color)}
+        <span style="color:var(--white);font-size:12px;font-weight:700">${r.confidence_score || '—'}<span style="color:var(--muted);font-size:9px">/100</span></span>
+        <button class="btn btn-outline" onclick="event.stopPropagation();downloadReportPDF('${t}',${i})" style="font-size:9px;padding:3px 6px;color:var(--amber);border-color:rgba(255,140,0,0.3)" title="Download PDF">⬇</button>
+        <button class="btn btn-outline" onclick="event.stopPropagation();if(confirm('Delete this ${t} report from ${fmtDateTime(r.saved_at)}?'))deleteReport('${t}',${i})" style="font-size:9px;padding:3px 6px;color:var(--red);border-color:rgba(255,59,59,0.3)" title="Delete this report">✕</button>
+      </div>
+    </div>`});
+      el.innerHTML = h;
+    }
+
+    function renderAnalysis(el) {
+      if (state.loading) { el.innerHTML = `<div style="text-align:center;padding:80px 20px"><div class="spinner"></div><div style="color:var(--amber);font-size:12px;font-weight:600;animation:pulse 2s ease infinite">${state.loadingMsg || 'Analyzing...'}</div><div style="color:var(--muted);font-size:9px;margin-top:8px">Direct from Massive.com exchange feeds → local quantitative computation</div></div>`; return }
+      if (state.error) { el.innerHTML = `<div style="margin-top:16px"><button class="btn btn-outline" onclick="goHome()">◂ DASHBOARD</button></div><div class="panel" style="margin-top:16px;background:rgba(255,59,59,0.05);border-color:rgba(255,59,59,0.3)"><div style="color:var(--red);font-size:12px;font-weight:700;margin-bottom:6px">ANALYSIS ERROR</div><div style="color:var(--white);font-size:11px;white-space:pre-wrap">${state.error}</div><button class="btn btn-outline" onclick="runAnalysis()" style="margin-top:10px;color:var(--red);border-color:rgba(255,59,59,0.3);font-size:9px">RETRY</button></div>`; return }
+      const a = state.analysis; if (!a) return; const ri = getRating(a.overall_rating);
+      const sH = (title, icon) => `<div class="section-hdr"><span style="color:var(--cyan);font-size:13px">${icon}</span><h3>${title}</h3><div class="line"></div></div>`;
+      const tB = tf => { const d = a.trend_analysis?.[tf]; if (!d) return ''; const tc = d.direction === 'Bullish' ? 'var(--green)' : d.direction === 'Bearish' ? 'var(--red)' : 'var(--yellow)'; const ic = d.direction === 'Bullish' ? '▲' : d.direction === 'Bearish' ? '▼' : '■'; return `<div style="margin-bottom:12px;padding:10px 12px;background:var(--bg);border:1px solid var(--border)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span class="label">${tf}</span>${badge(ic + ' ' + d.direction, tc)}</div><span style="color:var(--white);font-size:11px;font-family:var(--sans)">${d.description}</span></div>` };
+      const mB = k => { const d = a.moving_averages?.[k]; if (!d) return ''; const ab = d.signal?.toLowerCase().includes('above'); return `<div style="margin-bottom:12px;padding:10px 12px;background:var(--bg);border:1px solid var(--border)"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted);font-size:11px;font-weight:700">${k.replace('ma_', '')}-Day MA</span><span style="color:var(--white);font-size:12px;font-weight:700">$${fmt(d.value)}</span></div><span style="color:${ab ? 'var(--green)' : 'var(--red)'};font-size:10px;font-weight:600">Price ${d.signal}</span><div style="margin-top:4px"><span style="color:var(--muted);font-size:11px;font-family:var(--sans)">${d.interpretation}</span></div></div>` };
+
+      let h = `<div style="display:flex;gap:8px;margin:16px 0;flex-wrap:wrap"><button class="btn btn-outline" onclick="goHome()">◂ DASHBOARD</button><button class="btn btn-outline" onclick="state.historyTicker='${a.ticker}';state.page='history';render()" style="color:var(--cyan);border-color:rgba(0,212,255,0.3)">⏱ HISTORY</button><button class="btn btn-outline" onclick="document.getElementById('tickerInput').value='${a.ticker}';runAnalysis()" style="color:var(--cyan);border-color:rgba(0,212,255,0.3)">↻ REFRESH</button><button class="btn btn-outline" onclick="generatePDF(fixReport(state.analysis))" style="color:var(--amber);border-color:rgba(255,140,0,0.3)">⬇ DOWNLOAD PDF</button></div>`;
+
+      // Hero
+      h += `<div class="panel" style="border-color:rgba(255,140,0,0.3);position:relative;padding:24px"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--amber)"></div><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px"><div><div style="display:flex;align-items:baseline;gap:10px"><span style="color:var(--amber);font-size:20px;font-weight:700">${a.ticker}</span><span style="color:var(--muted);font-size:11px">${a.company_name}</span></div><div style="display:flex;align-items:baseline;gap:12px;margin-top:8px"><span style="color:var(--white);font-size:28px;font-weight:700">$${fmt(a.current_price)}</span><span style="color:${a.price_change_pct >= 0 ? 'var(--green)' : 'var(--red)'};font-size:15px;font-weight:600">${pct(a.price_change_pct)}</span></div><div style="margin-top:4px;display:flex;gap:8px;align-items:center"><span style="color:var(--muted);font-size:9px">${a.saved_at ? fmtDateTime(a.saved_at) : fmtDate(a.as_of_date)}</span>${a.market_status === 'last_session' ? badge('MARKET CLOSED · LAST SESSION', 'var(--yellow)') : badge('LIVE', 'var(--green)')}</div>${a.position_note ? `<div style="margin-top:8px">${badge('📌 ' + a.position_note, 'var(--yellow)')}</div>` : ''}</div><div style="text-align:center;padding:16px 24px;background:${ri.color}18;border:1px solid ${ri.color}40"><div style="color:${ri.color};font-size:20px">${ri.icon}</div><div style="color:${ri.color};font-size:15px;font-weight:700;margin-top:4px">${a.overall_rating}</div><div style="color:var(--muted);font-size:9px;margin-top:4px">Confidence: ${a.confidence_score}/100</div></div></div><div style="margin-top:16px;padding:12px 16px;background:var(--bg);border-left:3px solid ${ri.color}"><span style="color:var(--white);font-size:12px;font-family:var(--sans)">${a.executive_summary}</span></div></div>`;
+
+      // Grid
+      h += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1px;margin-top:1px">`;
+      h += `<div class="panel">${sH('Trend', '◎')}${tB('daily')}${tB('weekly')}${tB('monthly')}</div>`;
+      h += `<div class="panel">${sH('Support & Resistance', '⇅')}<div class="label" style="margin-bottom:6px">RESISTANCE</div>${(a.support_resistance?.resistance_levels || []).map(l => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--red);font-size:12px;font-weight:700;min-width:80px">$${fmt(l.price)}</span><span style="color:var(--muted);font-size:11px;flex:1">${l.note}</span>${badge(l.strength, 'var(--red)')}</div>`).join('')}<div style="margin:12px 0;padding:6px 12px;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.3);text-align:center"><span style="color:var(--cyan);font-size:12px;font-weight:700">CURRENT: $${fmt(a.current_price)}</span></div><div class="label" style="margin-bottom:6px">SUPPORT</div>${(a.support_resistance?.support_levels || []).map(l => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green);font-size:12px;font-weight:700;min-width:80px">$${fmt(l.price)}</span><span style="color:var(--muted);font-size:11px;flex:1">${l.note}</span>${badge(l.strength, 'var(--green)')}</div>`).join('')}</div>`;
+      h += `<div class="panel">${sH('Moving Averages', '〰')}${mB('ma_50')}${mB('ma_100')}${mB('ma_200')}${a.moving_averages?.crossover_signals ? `<div style="margin-top:8px;padding:8px 12px;background:rgba(255,215,0,0.06);border-left:3px solid var(--yellow)"><div class="label" style="color:var(--yellow);margin-bottom:4px">CROSSOVER</div><span style="color:var(--white);font-size:11px;font-family:var(--sans)">${a.moving_averages.crossover_signals}</span></div>` : ''}</div>`;
+
+      // EMA Section
+      if (a.ema) { h += `<div class="panel">${sH('EMA Crossover', '⚡')}<div style="display:flex;gap:8px;margin-bottom:12px"><div style="flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);text-align:center"><div class="label">EMA-9</div><div style="margin-top:4px;color:var(--white);font-size:14px;font-weight:700">${a.ema.ema_9 ? '$' + fmt(a.ema.ema_9) : 'N/A'}</div></div><div style="flex:1;padding:10px;background:var(--bg);border:1px solid ${a.ema.crossover === 'Bullish' ? 'rgba(0,255,65,0.3)' : 'rgba(255,59,59,0.3)'};text-align:center"><div class="label">SIGNAL</div><div style="margin-top:4px;color:${a.ema.crossover === 'Bullish' ? 'var(--green)' : 'var(--red)'};font-size:14px;font-weight:700">${a.ema.crossover === 'Bullish' ? '▲ BULLISH' : '▼ BEARISH'}</div></div><div style="flex:1;padding:10px;background:var(--bg);border:1px solid var(--border);text-align:center"><div class="label">EMA-21</div><div style="margin-top:4px;color:var(--white);font-size:14px;font-weight:700">${a.ema.ema_21 ? '$' + fmt(a.ema.ema_21) : 'N/A'}</div></div></div><div style="padding:6px 10px;background:var(--bg)"><span style="color:var(--white);font-size:11px;font-family:var(--sans)">${a.ema.interpretation || ''}</span></div></div>`; }
+
+      const rsiC = a.indicators?.rsi?.value > 70 ? 'var(--red)' : a.indicators?.rsi?.value < 30 ? 'var(--green)' : 'var(--yellow)';
+      h += `<div class="panel">${sH('Indicators', '◈')}<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px"><div style="text-align:center"><div class="label">RSI</div><div style="margin-top:4px;color:${rsiC};font-size:16px;font-weight:700">${fmt(a.indicators?.rsi?.value, 1)}</div><div style="color:var(--muted);font-size:9px">${a.indicators?.rsi?.zone || ''}</div></div><div style="text-align:center"><div class="label">MACD</div><div style="margin-top:4px;color:${a.indicators?.macd?.signal === 'Bullish' ? 'var(--green)' : 'var(--red)'};font-size:16px;font-weight:700">${fmt(a.indicators?.macd?.histogram)}</div><div style="color:var(--muted);font-size:9px">${a.indicators?.macd?.signal || ''}</div></div><div style="text-align:center"><div class="label">BB WIDTH</div><div style="margin-top:4px;color:var(--cyan);font-size:16px;font-weight:700">${fmt((a.indicators?.bollinger_bands?.upper || 0) - (a.indicators?.bollinger_bands?.lower || 0), 1)}</div><div style="color:var(--muted);font-size:9px">${a.indicators?.bollinger_bands?.price_position || ''}</div></div></div>${['rsi', 'macd', 'bollinger_bands'].map(k => { const d = a.indicators?.[k]; return d ? `<div style="margin-bottom:8px;padding:6px 10px;background:var(--bg)"><div class="label" style="margin-bottom:2px">${k.replace(/_/g, ' ')}</div><span style="color:var(--white);font-size:11px;font-family:var(--sans)">${d.interpretation}</span></div>` : '' }).join('')}</div>`;
+
+      // ── NEW: Momentum Dashboard (ATR, ADX, Stochastic, OBV, ROC) ──
+      const stoch = a.indicators?.stochastic; const atr = a.indicators?.atr; const adx = a.indicators?.adx; const obv = a.indicators?.obv; const roc = a.indicators?.roc;
+      h += `<div class="panel">${sH('Momentum & Volatility Dashboard', '◉')}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:16px">
+      ${atr ? `<div style="padding:10px;background:var(--bg);border:1px solid var(--border);text-align:center"><div class="label">ATR(14)</div><div style="margin-top:4px;color:var(--cyan);font-size:14px;font-weight:700">$${fmt(atr.value)}</div><div style="color:var(--muted);font-size:8px">${atr.pct}% of price</div></div>` : ''}
+      ${adx ? `<div style="padding:10px;background:var(--bg);border:1px solid ${adx.value > 25 ? 'rgba(0,255,65,0.3)' : 'rgba(255,215,0,0.3)'};text-align:center"><div class="label">ADX(14)</div><div style="margin-top:4px;color:${adx.value > 25 ? 'var(--green)' : 'var(--yellow)'};font-size:14px;font-weight:700">${fmt(adx.value, 1)}</div><div style="color:var(--muted);font-size:8px">${adx.zone}</div></div>` : ''}
+      ${stoch ? `<div style="padding:10px;background:var(--bg);border:1px solid ${stoch.k > 80 ? 'rgba(255,59,59,0.3)' : stoch.k < 20 ? 'rgba(0,255,65,0.3)' : 'var(--border)'};text-align:center"><div class="label">STOCH %K</div><div style="margin-top:4px;color:${stoch.k > 80 ? 'var(--red)' : stoch.k < 20 ? 'var(--green)' : 'var(--yellow)'};font-size:14px;font-weight:700">${fmt(stoch.k, 1)}</div><div style="color:var(--muted);font-size:8px">${stoch.zone}</div></div>` : ''}
+      ${obv ? `<div style="padding:10px;background:var(--bg);border:1px solid ${obv.divergence ? 'rgba(255,59,59,0.3)' : obv.rising ? 'rgba(0,255,65,0.3)' : 'var(--border)'};text-align:center"><div class="label">OBV</div><div style="margin-top:4px;color:${obv.divergence ? 'var(--red)' : obv.rising ? 'var(--green)' : 'var(--red)'};font-size:14px;font-weight:700">${obv.rising ? '▲ ACCUM' : '▼ DISTRIB'}</div><div style="color:var(--muted);font-size:8px">${obv.divergence ? '⚠ DIVERGENCE' : 'Confirms'}</div></div>` : ''}
+      ${roc ? `<div style="padding:10px;background:var(--bg);border:1px solid var(--border);text-align:center"><div class="label">ROC(14)</div><div style="margin-top:4px;color:${roc.value > 0 ? 'var(--green)' : 'var(--red)'};font-size:14px;font-weight:700">${roc.value > 0 ? '+' : ''}${fmt(roc.value, 1)}%</div><div style="color:var(--muted);font-size:8px">${roc.value > 5 ? 'Accelerating' : roc.value > 0 ? 'Positive' : roc.value > -5 ? 'Slowing' : 'Declining'}</div></div>` : ''}
+    </div>
+    ${[{ n: 'ATR', d: atr }, { n: 'ADX', d: adx }, { n: 'Stochastic', d: stoch }, { n: 'OBV', d: obv }, { n: 'ROC', d: roc }].map(i => i.d ? `<div style="margin-bottom:8px;padding:6px 10px;background:var(--bg)"><div class="label" style="margin-bottom:2px">${i.n}</div><span style="color:var(--white);font-size:11px;font-family:var(--sans)">${i.d.interpretation}</span></div>` : '').join('')}
+  </div>`;
+
+      // ── NEW: Pivot Points ──
+      if (a.pivot_points) {
+        const pp = a.pivot_points; h += `<div class="panel">${sH('Pivot Points (Standard)', '⊞')}
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">
+      ${[{ l: 'S3', v: pp.s3, c: 'var(--green)' }, { l: 'S2', v: pp.s2, c: 'var(--green)' }, { l: 'S1', v: pp.s1, c: 'var(--green)' }, { l: 'PIVOT', v: pp.pivot, c: 'var(--cyan)' }, { l: 'R1', v: pp.r1, c: 'var(--red)' }, { l: 'R2', v: pp.r2, c: 'var(--red)' }, { l: 'R3', v: pp.r3, c: 'var(--red)' }].map(p => `<div style="padding:8px 4px;background:var(--bg);border:1px solid ${p.l === 'PIVOT' ? 'rgba(0,212,255,0.3)' : 'var(--border)'}"><div class="label">${p.l}</div><div style="margin-top:4px;color:${p.c};font-size:11px;font-weight:700">$${fmt(p.v)}</div></div>`).join('')}
+    </div>
+    <div style="margin-top:8px;padding:6px 10px;background:var(--bg)"><span style="color:var(--muted);font-size:10px">Pivot = (High + Low + Close) / 3 from previous session. Used for intraday S/R levels.</span></div>
+  </div>`;
+      }
+      // Parse volume strings back to numbers for RVOL calculation (handles old reports without relative_volume)
+      function parseVol(s) { if (!s) return 0; const n = parseFloat(s); if (isNaN(n)) return 0; if (s.includes('B')) return n * 1e9; if (s.includes('M')) return n * 1e6; if (s.includes('K')) return n * 1e3; return n; }
+      const rvolCur = parseVol(a.volume_analysis?.current_volume); const rvolAvg = parseVol(a.volume_analysis?.avg_volume);
+      const rvol = a.volume_analysis?.relative_volume || (rvolAvg > 0 ? rvolCur / rvolAvg : 0);
+      const rvolColor = rvol >= 1.5 ? 'var(--green)' : rvol >= 1 ? 'var(--cyan)' : rvol >= 0.5 ? 'var(--yellow)' : 'var(--red)';
+      h += `<div class="panel">${sH('Volume', '▥')}<div style="display:flex;gap:8px;margin-bottom:16px"><div style="flex:1;padding:12px;background:var(--bg);border:1px solid var(--border);text-align:center"><div class="label">CURRENT VOL</div><div style="margin-top:4px;color:var(--white);font-size:15px;font-weight:700">${a.volume_analysis?.current_volume || ''}</div></div><div style="flex:1;padding:12px;background:var(--bg);border:1px solid ${rvolColor}40;text-align:center"><div class="label">RELATIVE VOL</div><div style="margin-top:4px;color:${rvolColor};font-size:15px;font-weight:700">${rvol.toFixed(2)}x</div><div style="margin-top:2px;color:var(--muted);font-size:8px">${rvol >= 2 ? 'EXTREMELY HIGH' : rvol >= 1.5 ? 'HIGH' : rvol >= 1 ? 'ABOVE AVG' : rvol >= 0.7 ? 'BELOW AVG' : 'LOW'}</div></div><div style="flex:1;padding:12px;background:var(--bg);border:1px solid var(--border);text-align:center"><div class="label">AVG VOL (250d)</div><div style="margin-top:4px;color:var(--muted);font-size:15px;font-weight:700">${a.volume_analysis?.avg_volume || ''}</div></div></div><div style="margin-bottom:10px">${badge(a.volume_analysis?.volume_trend || '', a.volume_analysis?.volume_trend?.includes('Above') ? 'var(--green)' : 'var(--red)')}</div><span style="color:var(--white);font-size:11px;font-family:var(--sans)">${a.volume_analysis?.interpretation || ''}</span></div>`;
+      h += `<div class="panel" style="border-color:rgba(0,212,255,0.3);position:relative"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--cyan)"></div>${sH('Trade Plan', '⊕')}<div class="grid2">${[{ l: 'ENTRY', v: a.trade_plan?.ideal_entry, c: 'var(--cyan)' }, { l: 'STOP LOSS', v: a.trade_plan?.stop_loss, c: 'var(--red)' }, { l: 'TARGET 1', v: a.trade_plan?.profit_target_1, c: 'var(--green)' }, { l: 'TARGET 2', v: a.trade_plan?.profit_target_2, c: '#00CC33' }, { l: 'TARGET 3', v: a.trade_plan?.profit_target_3, c: '#009922' }].map(i => `<div style="padding:10px;background:var(--bg);border-left:3px solid ${i.c}"><div class="label">${i.l}</div><div style="margin-top:4px;color:${i.c};font-size:16px;font-weight:700">$${fmt(i.v)}</div></div>`).join('')}<div style="padding:10px;background:var(--bg);border-left:3px solid var(--amber)"><div class="label">RISK:REWARD</div><div style="margin-top:4px;color:var(--amber);font-size:16px;font-weight:700">${a.trade_plan?.risk_reward_ratio || ''}</div></div></div></div>`;
+      h += `</div>`;
+
+      if (a.future_triggers) { h += `<div class="panel" style="margin-top:1px">${sH('Triggers', '⚡')}<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><div class="label" style="color:var(--green);margin-bottom:8px">BUY</div>${(a.future_triggers.buy_triggers || []).map(t => `<div style="display:flex;gap:8px;margin-bottom:8px;padding:8px 10px;background:rgba(0,255,65,0.04);border-left:2px solid rgba(0,255,65,0.3)"><span style="color:var(--green)">▸</span><span style="color:var(--white);font-size:11px;font-family:var(--sans)">${t}</span></div>`).join('')}</div><div><div class="label" style="color:var(--red);margin-bottom:8px">SELL</div>${(a.future_triggers.sell_triggers || []).map(t => `<div style="display:flex;gap:8px;margin-bottom:8px;padding:8px 10px;background:rgba(255,59,59,0.04);border-left:2px solid rgba(255,59,59,0.3)"><span style="color:var(--red)">▸</span><span style="color:var(--white);font-size:11px;font-family:var(--sans)">${t}</span></div>`).join('')}</div></div></div>` }
+      if (a.confidence_factors) { h += `<div style="margin-top:1px;padding:14px 20px;background:var(--bg2);border:1px solid rgba(0,212,255,0.2)"><div class="label" style="color:var(--cyan);margin-bottom:6px">CONFIDENCE FACTORS</div><span style="color:var(--white);font-size:12px;font-family:var(--sans)">${a.confidence_factors}</span></div>` }
+      h += `<div style="margin-top:1px;padding:8px 16px;background:var(--bg2);border-left:2px solid var(--border)"><span style="color:var(--muted);font-size:9px">DISCLAIMER: 100% verified exchange data from Massive.com. Analysis computed locally — no AI estimation. Not financial advice.</span></div>`;
+      el.innerHTML = h;
+    }
+
+    render();
+  </script>
+</body>
+
+</html>
