@@ -386,7 +386,19 @@
       const el = document.getElementById('backupStatus');
       if (el) el.innerHTML = `<span style="color:var(--green)">✓ Exported ${getAllTickers().length} tickers, ${count} reports</span>`;
     }
-
+    function deleteReport(ticker, index) {
+      const reports = getReports(ticker);
+      if (index < 0 || index >= reports.length) return;
+      reports.splice(index, 1);
+      if (reports.length === 0) {
+        localStorage.removeItem(STORAGE_PREFIX + ticker);
+        goHome();
+      } else {
+        localStorage.setItem(STORAGE_PREFIX + ticker, JSON.stringify(reports));
+        state.page = 'history'; state.historyTicker = ticker;
+        render();
+      }
+    }
     function importData(event) {
       const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader();
