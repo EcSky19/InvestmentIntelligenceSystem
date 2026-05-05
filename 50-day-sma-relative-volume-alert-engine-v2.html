@@ -302,3 +302,3672 @@
       background: rgba(168, 85, 247, 0.2);
       box-shadow: 0 0 8px var(--purple-glow);
     }
+
+    /* ── INLINE KEY FORM ── */
+    .inline-key-form {
+      border-top: 1px solid var(--border);
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .inline-key-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .inline-key-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .inline-key-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: var(--bg-base);
+      border: 1px solid var(--border-bright);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      outline: none;
+    }
+
+    .inline-key-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+
+    .inline-key-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .inline-key-save {
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: var(--green);
+      transition: all 0.15s;
+    }
+
+    .inline-key-save:hover {
+      background: rgba(34, 197, 94, 0.25);
+    }
+
+    .inline-key-clear {
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      background: var(--red-glow);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: var(--red);
+      transition: all 0.15s;
+    }
+
+    .inline-key-clear:hover {
+      background: rgba(244, 63, 94, 0.25);
+    }
+
+    .key-status {
+      font-size: 10px;
+    }
+
+    .key-status.ok {
+      color: var(--green);
+    }
+
+    .key-status.missing {
+      color: var(--text-muted);
+    }
+
+    /* ── CONTROLS ROW ── */
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .ctrl-select {
+      padding: 5px 8px;
+      border-radius: 4px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .ctrl-select:hover,
+    .ctrl-select:focus {
+      border-color: var(--border-bright);
+      color: var(--text);
+    }
+
+    .ctrl-select.active {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .ctrl-select.tier-select {
+      font-weight: 700;
+      border-color: rgba(59, 130, 246, 0.4);
+      color: var(--blue);
+      min-width: 200px;
+    }
+
+    .ctrl-select.tier-select.t3 {
+      border-color: rgba(168, 85, 247, 0.4);
+      color: var(--purple);
+    }
+
+    .ctrl-select.tier-select.t4 {
+      border-color: rgba(244, 63, 94, 0.4);
+      color: var(--red);
+    }
+
+    .ctrl-search {
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      outline: none;
+      width: 150px;
+      transition: border-color 0.15s;
+    }
+
+    .ctrl-search:focus {
+      border-color: var(--blue);
+    }
+
+    .ctrl-search::placeholder {
+      color: var(--text-muted);
+    }
+
+    .ctrl-clear {
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+      color: var(--red);
+      letter-spacing: 0.04em;
+      transition: all 0.15s;
+    }
+
+    .ctrl-clear:hover {
+      background: rgba(244, 63, 94, 0.15);
+    }
+
+    .ctrl-count {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      padding: 0 4px;
+    }
+
+    .liquidity-toggle-btn {
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--bg-card2);
+      border: 1px solid var(--border-bright);
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .liquidity-toggle-btn:hover {
+      color: var(--text);
+      border-color: var(--amber);
+    }
+
+    .liquidity-toggle-btn.active {
+      border-color: rgba(245, 158, 11, 0.4);
+      color: var(--amber);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    /* ── LIQUIDITY FILTER PANEL ── */
+    .liquidity-panel {
+      border-top: 1px solid var(--border);
+      padding: 8px 0;
+      background: var(--bg-card2);
+    }
+
+    .liquidity-panel-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .liq-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .liq-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .liq-select {
+      padding: 4px 7px;
+      border-radius: 4px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .liq-select:hover,
+    .liq-select:focus {
+      border-color: var(--border-bright);
+      color: var(--text);
+    }
+
+    .liq-select.active {
+      border-color: rgba(245, 158, 11, 0.4);
+      color: var(--amber);
+    }
+
+    .liq-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .liq-toggle.on {
+      border-color: rgba(34, 197, 94, 0.3);
+      color: var(--green);
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .liq-toggle.on::before {
+      content: '✓ ';
+    }
+
+    .liq-toggle.off {
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+
+    .liq-toggle.off::before {
+      content: '✕ ';
+      color: var(--red);
+    }
+
+    .liq-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .liq-filter-chips {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      font-size: 9px;
+    }
+
+    .liq-chip {
+      padding: 2px 7px;
+      border-radius: 3px;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      color: var(--amber);
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    /* ── TIER BADGE ── */
+    .tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      border: 1px solid;
+    }
+
+    .tier-1 {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: var(--blue);
+    }
+
+    .tier-2 {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: var(--green);
+    }
+
+    .tier-3 {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: rgba(168, 85, 247, 0.3);
+      color: var(--purple);
+    }
+
+    .tier-4 {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--red);
+    }
+
+    /* ── KPI ROW ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border);
+    }
+
+    @media (max-width: 1200px) {
+      .kpi-row {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card:hover {
+      border-color: var(--border-bright);
+      background: var(--bg-hover);
+    }
+
+    .kpi-card.active {
+      border-color: currentColor;
+    }
+
+    .kpi-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .kpi-sub {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    .kpi-prog {
+      margin-top: 5px;
+      height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+
+    .kpi-prog-fill {
+      height: 100%;
+      border-radius: 1px;
+      transition: width 0.4s;
+    }
+
+    .kpi-card.green .kpi-value {
+      color: var(--green);
+    }
+
+    .kpi-card.red .kpi-value {
+      color: var(--red);
+    }
+
+    .kpi-card.blue .kpi-value {
+      color: var(--blue);
+    }
+
+    .kpi-card.blue-green .kpi-value {
+      color: var(--teal);
+    }
+
+    .kpi-card.purple .kpi-value {
+      color: var(--purple);
+    }
+
+    .kpi-card.orange .kpi-value {
+      color: var(--orange);
+    }
+
+    .kpi-card.muted .kpi-value {
+      color: var(--text-dim);
+    }
+
+    .kpi-card.amber .kpi-value {
+      color: var(--amber);
+    }
+
+    .kpi-card.glow-green {
+      box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.05);
+    }
+
+    .kpi-card.glow-red {
+      box-shadow: inset 0 0 20px rgba(244, 63, 94, 0.05);
+    }
+
+    /* ── DIFF BANNER ── */
+    .diff-banner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 6px 16px;
+      background: var(--bg-card2);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      white-space: nowrap;
+      font-size: 10px;
+    }
+
+    .diff-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .diff-label {
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+
+    .diff-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .diff-dot.green {
+      background: var(--green);
+    }
+
+    .diff-dot.red {
+      background: var(--red);
+    }
+
+    .diff-dot.blue {
+      background: var(--blue);
+    }
+
+    .diff-dot.orange {
+      background: var(--orange);
+    }
+
+    .diff-dot.purple {
+      background: var(--purple);
+    }
+
+    .diff-ticker-chip {
+      display: inline-block;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 5px;
+      margin: 0 2px;
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .diff-ticker-chip.green {
+      border-color: rgba(34, 197, 94, 0.3);
+      color: var(--green);
+    }
+
+    .diff-ticker-chip.red {
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--red);
+    }
+
+    .diff-ticker-chip.blue {
+      border-color: rgba(59, 130, 246, 0.3);
+      color: var(--blue);
+    }
+
+    .diff-ticker-chip.purple {
+      border-color: rgba(168, 85, 247, 0.3);
+      color: var(--purple);
+    }
+
+    .diff-ticker-chip.orange {
+      border-color: rgba(251, 146, 60, 0.3);
+      color: var(--orange);
+    }
+
+    /* ── SCAN STATS BAR ── */
+    .scan-stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 5px 16px;
+      background: var(--bg-card2);
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .stat-val {
+      font-weight: 600;
+    }
+
+    .stat-val.ok {
+      color: var(--green);
+    }
+
+    .stat-val.warn {
+      color: var(--amber);
+    }
+
+    .stat-val.err {
+      color: var(--red);
+    }
+
+    .stat-val.info {
+      color: var(--blue);
+    }
+
+    /* ── LIVE SCAN DASHBOARD ── */
+    .scan-dashboard {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 7, 13, 0.96);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 24px 24px;
+      overflow-y: auto;
+    }
+
+    .scan-dash-inner {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .scan-dash-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .scan-dash-tier {
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .scan-progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .scan-progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      transition: width 0.4s ease;
+    }
+
+    .scan-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .scan-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .scan-stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .scan-stat-card .s-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .scan-stat-card .s-val {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .scan-stat-card.ok .s-val {
+      color: var(--green);
+    }
+
+    .scan-stat-card.warn .s-val {
+      color: var(--amber);
+    }
+
+    .scan-stat-card.err .s-val {
+      color: var(--red);
+    }
+
+    .scan-stat-card.info .s-val {
+      color: var(--blue);
+    }
+
+    .scan-current-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 11px;
+    }
+
+    .scan-current-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px 0;
+    }
+
+    .scan-current-label {
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+
+    .scan-current-val {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .scan-latest-alert {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 8px 12px;
+      font-size: 10px;
+    }
+
+    .scan-latest-label {
+      color: var(--text-muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .scan-btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .scan-action-btn {
+      padding: 8px 24px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all 0.15s;
+      min-width: 120px;
+    }
+
+    .scan-action-btn.pause {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: var(--amber);
+    }
+
+    .scan-action-btn.pause:hover {
+      background: rgba(245, 158, 11, 0.2);
+    }
+
+    .scan-action-btn.resume {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: var(--green);
+    }
+
+    .scan-action-btn.resume:hover {
+      background: rgba(34, 197, 94, 0.2);
+    }
+
+    .scan-action-btn.cancel {
+      background: var(--red-glow);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--red);
+    }
+
+    .scan-action-btn.cancel:hover {
+      background: rgba(244, 63, 94, 0.2);
+    }
+
+    .scan-action-btn.done {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: var(--green);
+    }
+
+    .scan-action-btn.done:hover {
+      background: rgba(34, 197, 94, 0.2);
+    }
+
+    .scan-note {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .scan-note.warn {
+      color: var(--amber);
+    }
+
+    .scan-resume-banner {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 6px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .scan-resume-text {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .scan-resume-text strong {
+      color: var(--blue);
+    }
+
+    .scan-resume-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .scan-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── CONFIRM DIALOG ── */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 7, 13, 0.9);
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .confirm-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 460px;
+      width: 100%;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+      animation: modalIn 0.2s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+    }
+
+    .confirm-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--red);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .confirm-body {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--font-sans);
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+
+    .confirm-stats {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 16px;
+      font-size: 10px;
+      margin-bottom: 16px;
+      background: var(--bg-card2);
+      border-radius: 5px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+    }
+
+    .confirm-stat-label {
+      color: var(--text-muted);
+    }
+
+    .confirm-stat-val {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .confirm-recs {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.8;
+      font-family: var(--font-sans);
+    }
+
+    .confirm-recs li {
+      margin-left: 16px;
+    }
+
+    .confirm-btns {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .confirm-btn {
+      padding: 7px 20px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all 0.15s;
+    }
+
+    .confirm-btn.cancel {
+      background: var(--bg-card2);
+      border-color: var(--border-bright);
+      color: var(--text-muted);
+    }
+
+    .confirm-btn.cancel:hover {
+      color: var(--text);
+    }
+
+    .confirm-btn.confirm {
+      background: var(--red-glow);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: var(--red);
+    }
+
+    .confirm-btn.confirm:hover {
+      background: rgba(244, 63, 94, 0.2);
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto;
+      padding: 12px 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    thead th {
+      padding: 6px 8px;
+      text-align: left;
+      color: var(--text-muted);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      position: sticky;
+      top: 0;
+      transition: color 0.15s;
+    }
+
+    thead th:hover {
+      color: var(--text-dim);
+    }
+
+    thead th.sort-active {
+      color: var(--blue);
+    }
+
+    .sort-icon {
+      font-size: 8px;
+      margin-left: 4px;
+      opacity: 0.5;
+    }
+
+    .sort-icon.active {
+      opacity: 1;
+    }
+
+    tbody tr {
+      background: var(--bg-row);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover {
+      background: var(--bg-hover);
+    }
+
+    tbody tr.new-alert {
+      animation: flashNew 2s ease-out;
+    }
+
+    @keyframes flashNew {
+      0% {
+        background: rgba(59, 130, 246, 0.12);
+      }
+
+      100% {
+        background: var(--bg-row);
+      }
+    }
+
+    tbody tr.streaming {
+      animation: flashNew 1s ease-out;
+    }
+
+    td {
+      padding: 6px 8px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .td-num {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .td-ticker {
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .td-company {
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-dim);
+      font-family: var(--font-sans);
+    }
+
+    /* ── SCORE BAR ── */
+    .score-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .score-val {
+      font-weight: 700;
+      font-size: 12px;
+      width: 26px;
+      text-align: right;
+    }
+
+    .score-track {
+      width: 50px;
+      height: 5px;
+      background: var(--bg-hover);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .score-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    /* ── STATUS BADGES ── */
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      border: 1px solid;
+    }
+
+    .status-cross-above,
+    .status-reclaimed,
+    .status-first-above {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: var(--green);
+    }
+
+    .status-hold-above {
+      background: rgba(34, 197, 94, 0.06);
+      border-color: rgba(34, 197, 94, 0.2);
+      color: #16a34a;
+    }
+
+    .status-cross-below,
+    .status-lost,
+    .status-first-below {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--red);
+    }
+
+    .status-hold-below {
+      background: rgba(244, 63, 94, 0.06);
+      border-color: rgba(244, 63, 94, 0.2);
+      color: #be123c;
+    }
+
+    .status-rejected {
+      background: rgba(251, 146, 60, 0.1);
+      border-color: rgba(251, 146, 60, 0.3);
+      color: var(--orange);
+    }
+
+    .status-test-below {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: rgba(168, 85, 247, 0.3);
+      color: var(--purple);
+    }
+
+    .status-test-above {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: var(--amber);
+    }
+
+    .status-na {
+      background: rgba(71, 85, 105, 0.1);
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+
+    /* ── DIRECTION TAG ── */
+    .dir-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+
+    .dir-bull {
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--green);
+    }
+
+    .dir-bear {
+      background: rgba(244, 63, 94, 0.1);
+      color: var(--red);
+    }
+
+    .dir-neut {
+      background: rgba(168, 85, 247, 0.1);
+      color: var(--purple);
+    }
+
+    /* ── RVOL ── */
+    .rvol-val {
+      font-weight: 600;
+    }
+
+    .rvol-extreme {
+      color: var(--green);
+      text-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+    }
+
+    .rvol-very-high {
+      color: #4ade80;
+    }
+
+    .rvol-high {
+      color: var(--teal);
+    }
+
+    .rvol-elevated {
+      color: var(--blue);
+    }
+
+    .rvol-normal {
+      color: var(--text-dim);
+    }
+
+    .rvol-low {
+      color: var(--text-muted);
+    }
+
+    .rvol-very-low {
+      color: var(--text-faint);
+    }
+
+    /* ── NUMBER COLORS ── */
+    .num-pos {
+      color: var(--green);
+    }
+
+    .num-neg {
+      color: var(--red);
+    }
+
+    .num-warn {
+      color: var(--amber);
+    }
+
+    .num-neu {
+      color: var(--text-dim);
+    }
+
+    /* ── EXCHANGE BADGE ── */
+    .exch-badge {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+      background: var(--bg-hover);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 7, 13, 0.88);
+      z-index: 500;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 820px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+      animation: modalIn 0.2s ease;
+      margin: auto;
+    }
+
+    .modal-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .modal-ticker-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .modal-ticker {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .modal-company {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: var(--font-sans);
+    }
+
+    .modal-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .modal-close {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .modal-close:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .modal-body {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-section-title {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .entry-map {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .entry-map {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .map-item {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 8px 10px;
+    }
+
+    .map-item-label {
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .map-item-val {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .map-item-note {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    .levels-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .levels-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .level-item {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 8px 10px;
+    }
+
+    .level-label {
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .level-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .level-note {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .game-plan-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 500px) {
+      .game-plan-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .game-plan {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .game-plan-title {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .game-plan-body {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.7;
+      font-family: var(--font-sans);
+    }
+
+    .signals-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 500px) {
+      .signals-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .signal-list {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .signal-list-title {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .signal-list-title.pos {
+      color: var(--green);
+    }
+
+    .signal-list-title.neg {
+      color: var(--red);
+    }
+
+    .signal-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      padding: 4px 0;
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: var(--font-sans);
+      border-top: 1px solid var(--border);
+    }
+
+    .signal-item:first-of-type {
+      border-top: none;
+    }
+
+    .signal-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .signal-dot.green {
+      background: var(--green);
+    }
+
+    .signal-dot.red {
+      background: var(--red);
+    }
+
+    .signal-dot.amber {
+      background: var(--amber);
+    }
+
+    .signal-dot.blue {
+      background: var(--blue);
+    }
+
+    .signal-dot.gray {
+      background: var(--text-muted);
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .module-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .module-card {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 10px 12px;
+    }
+
+    .module-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .module-name {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .module-score {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .module-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-hover);
+      border-radius: 2px;
+      margin-bottom: 5px;
+      overflow: hidden;
+    }
+
+    .module-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .module-detail {
+      font-size: 9px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      font-family: var(--font-sans);
+    }
+
+    .bottom-strip {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 700px) {
+      .bottom-strip {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .strip-item {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 10px;
+    }
+
+    .strip-label {
+      font-size: 8px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .strip-val {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .explanation-box {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--font-sans);
+      line-height: 1.75;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .empty-sub {
+      font-size: 12px;
+      line-height: 1.8;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ── DEMO BANNER ── */
+    .demo-banner {
+      background: rgba(168, 85, 247, 0.12);
+      border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--purple);
+    }
+
+    /* ── TOAST ── */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: 6px;
+      padding: 10px 14px;
+      min-width: 240px;
+      max-width: 360px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      animation: slideIn 0.25s ease;
+      pointer-events: all;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(20px);
+        opacity: 0;
+      }
+    }
+
+    .toast-title {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .toast-msg {
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .toast.error .toast-title {
+      color: var(--red);
+    }
+
+    .toast.warn .toast-title {
+      color: var(--amber);
+    }
+
+    .toast.success .toast-title {
+      color: var(--green);
+    }
+
+    .toast.info .toast-title {
+      color: var(--blue);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+    /* ─────────────── CONSTANTS ─────────────── */
+    const API_BASE = 'https://api.polygon.io';
+    const SK_APIKEY = 'sma_crossing_api_key';
+    const SK_LAST_SCAN = 'sma_crossing_last_scan';
+    const SK_HISTORY = 'sma_crossing_alert_history';
+    const SK_PREV_SCAN = 'sma_crossing_prev_scan';
+    const SK_PROGRESS = 'sma_crossing_scan_progress';
+
+    const STATUS_CODES = {
+      CA: 'Crossing Above 50-Day SMA', CB: 'Crossing Below 50-Day SMA',
+      FA: 'First Close Above 50-Day SMA', FB: 'First Close Below 50-Day SMA',
+      TB: 'Testing 50-Day SMA From Below', TA: 'Testing 50-Day SMA From Above',
+      HA: 'Holding Above 50-Day SMA', HB: 'Holding Below 50-Day SMA',
+      RJ: 'Rejected At 50-Day SMA', RC: 'Reclaimed 50-Day SMA',
+      LS: 'Lost 50-Day SMA', NA: 'No Active 50DMA Signal'
+    };
+    const STATUS_CLASS = {
+      CA: 'status-cross-above', CB: 'status-cross-below',
+      FA: 'status-first-above', FB: 'status-first-below',
+      TB: 'status-test-below', TA: 'status-test-above',
+      HA: 'status-hold-above', HB: 'status-hold-below',
+      RJ: 'status-rejected', RC: 'status-reclaimed',
+      LS: 'status-lost', NA: 'status-na'
+    };
+    const DIRECTION = {
+      CA: 'Bullish', FA: 'Bullish', RC: 'Bullish', HA: 'Bullish',
+      CB: 'Bearish', FB: 'Bearish', LS: 'Bearish', RJ: 'Bearish', HB: 'Bearish',
+      TB: 'Neutral', TA: 'Neutral', NA: 'Neutral'
+    };
+    const STATUS_PRIORITY = { CA: 1, FA: 1, RC: 1, CB: 1, FB: 1, LS: 1, RJ: 2, TB: 3, TA: 3, HA: 4, HB: 4, NA: 5 };
+
+    /* ─────────────── TIERS ─────────────── */
+    const TIERS = {
+      T1: { id: 'T1', label: 'Tier 1 · S&P 500 Core', short: 'S&P 500', approx: 503, estTime: '1–2 min', color: 'blue' },
+      T2: { id: 'T2', label: 'Tier 2 · S&P 500 + Nasdaq 100 + NYSE 100', short: '~650 stocks', approx: 650, estTime: '2–4 min', color: 'green' },
+      T3: { id: 'T3', label: 'Tier 3 · Liquid US Equities (filtered)', short: '~1,500–2,500', approx: 2000, estTime: '8–15 min', color: 'purple' },
+      T4: { id: 'T4', label: 'Tier 4 · Full Nasdaq + NYSE (filtered)', short: '~3,000–5,000', approx: 4000, estTime: '20–35 min', color: 'red' },
+    };
+
+    /* ─────────────── S&P 500 TICKER LIST ─────────────── */
+    const SP500 = [
+      'AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'TSLA', 'BRK.B', 'JPM', 'LLY',
+      'V', 'UNH', 'XOM', 'MA', 'JNJ', 'AVGO', 'PG', 'HD', 'COST', 'ABBV', 'MRK', 'AMD',
+      'ORCL', 'CVX', 'WMT', 'BAC', 'KO', 'NFLX', 'PEP', 'TMO', 'CRM', 'CSCO', 'ACN', 'ABT',
+      'WFC', 'LIN', 'IBM', 'PM', 'NOW', 'MS', 'GS', 'MCD', 'INTU', 'AMAT', 'TXN', 'AMGN',
+      'ISRG', 'QCOM', 'RTX', 'SPGI', 'BKNG', 'CAT', 'BLK', 'GILD', 'PFE', 'ADBE', 'LOW',
+      'PANW', 'MU', 'LRCX', 'ETN', 'CB', 'UPS', 'DE', 'KLAC', 'MDT', 'MDLZ', 'SYK', 'MMM',
+      'GE', 'NEE', 'REGN', 'AMT', 'ADI', 'SNPS', 'CDNS', 'ABNB', 'SBUX', 'PLD', 'AXP',
+      'CEG', 'CRWD', 'MRVL', 'MSI', 'DELL', 'HPQ', 'INTC', 'F', 'GM', 'T', 'VZ', 'DIS',
+      'CMCSA', 'CVS', 'CI', 'HUM', 'PNC', 'USB', 'C', 'SCHW', 'PYPL', 'ANET', 'FTNT',
+      'ADSK', 'NKE', 'TGT', 'TJX', 'CMG', 'DHR', 'BSX', 'VRTX', 'BIIB', 'MRNA', 'LMT',
+      'NOC', 'BA', 'HON', 'EMR', 'FCX', 'NEM', 'OXY', 'COP', 'SLB', 'MPC', 'PSX', 'O',
+      'SPG', 'EQR', 'AME', 'CTAS', 'PAYX', 'WM', 'RSG', 'EW', 'ZTS', 'IDXX', 'DXCM',
+      'FICO', 'ROP', 'VRSK', 'MPWR', 'ANSS', 'FSLR', 'PCG', 'AEP', 'DUK', 'SO', 'D',
+      'ED', 'EXC', 'XEL', 'AWK', 'PPL', 'CNP', 'NI', 'AES', 'FE', 'ETR', 'EVRG',
+      'WEC', 'DTE', 'AEE', 'PNW', 'SRE', 'CMS', 'ES', 'EVRG', 'PEG', 'EIX',
+      'MTB', 'KEY', 'RF', 'CFG', 'HBAN', 'FITB', 'ZION', 'CMA', 'FHN',
+      'NTRS', 'STT', 'BK', 'SIVB', 'SBNY', 'WAL', 'TCBI', 'GBCI',
+      'HIG', 'ALL', 'PGR', 'TRV', 'AIG', 'L', 'LNC', 'UNM', 'MET', 'PRU', 'AFL',
+      'MCO', 'MSCI', 'IEX', 'INFO', 'NDAQ', 'ICE', 'CME', 'CBOE',
+      'HAL', 'BKR', 'DVN', 'EOG', 'FANG', 'HES', 'MRO', 'APA', 'OVV', 'PXD',
+      'VLO', 'HFC', 'DINO', 'CTRA', 'AR', 'RRC', 'EQT', 'CNX',
+      'NUE', 'STLD', 'RS', 'CMC', 'ATI', 'CRS', 'KALU', 'HWM', 'AA', 'ACH',
+      'LYB', 'DOW', 'EMN', 'CE', 'ASH', 'RPM', 'IFF', 'SON', 'IP', 'PKG', 'SEE',
+      'UBER', 'LYFT', 'ABNB', 'BKNG', 'EXPE', 'TRIP', 'OPEN', 'RDFN', 'Z',
+      'SHOP', 'SQ', 'COIN', 'HOOD', 'SOFI', 'AFRM', 'UPST', 'LC',
+      'PLTR', 'SNOW', 'DDOG', 'NET', 'CRWD', 'ZS', 'OKTA', 'S', 'CYBR',
+      'BILL', 'HUBS', 'GTLB', 'FROG', 'ESTC', 'MDB', 'COUCHBASE',
+      'APP', 'RBLX', 'SPOT', 'SNAP', 'PINS', 'MTCH', 'IAC',
+      'RIVN', 'LCID', 'NKLA', 'FSR', 'XPEV', 'NIO', 'LI',
+      'WBA', 'RAD', 'PRGO', 'CTLT', 'AMCR', 'AVY', 'OI', 'SLVM',
+      'EXPD', 'CHRW', 'JBHT', 'XPO', 'ODFL', 'SAIA', 'WERN', 'KNX',
+      'DAL', 'UAL', 'AAL', 'LUV', 'ALK', 'SAVE', 'JBLU', 'HA',
+      'CCL', 'RCL', 'NCLH', 'HLT', 'MAR', 'H', 'CHH', 'WH',
+      'MGM', 'LVS', 'WYNN', 'PENN', 'CZR', 'DKNG', 'RSI',
+      'MO', 'BTI', 'PM', 'VGR', 'STZ', 'BF.B', 'SAM', 'TAP',
+      'HRL', 'CAG', 'SJM', 'MKC', 'CPB', 'GIS', 'K', 'POST', 'LNDC',
+      'RACE', 'HMC', 'TM', 'NSANY', 'VWAGY', 'BMWYY', 'MBGYY',
+      'TSM', 'ASML', 'SMCI', 'MCHP', 'ON', 'SWKS', 'QRVO', 'MTSI',
+      'NXPI', 'WOLF', 'AMBA', 'COHU', 'ACLS', 'FORM', 'UCTT',
+    ];
+
+    const NASDAQ100 = [
+      'AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'TSLA', 'AVGO', 'COST', 'NFLX',
+      'AMD', 'INTU', 'CSCO', 'AMAT', 'TXN', 'AMGN', 'ISRG', 'QCOM', 'BKNG', 'ADI',
+      'SNPS', 'CDNS', 'KLAC', 'PANW', 'LRCX', 'MU', 'MRVL', 'ADBE', 'CRWD', 'CEG',
+      'SBUX', 'MELI', 'ABNB', 'PYPL', 'WDAY', 'DDOG', 'FTNT', 'ADSK', 'PCAR', 'KDP',
+      'BIIB', 'VRTX', 'MRNA', 'REGN', 'GILD', 'IDXX', 'DXCM', 'ZS', 'TEAM', 'TTD',
+      'CTAS', 'PAYX', 'ROST', 'ODFL', 'EXC', 'XEL', 'AEP', 'MNST', 'FAST', 'VRSK',
+      'CPRT', 'SIRI', 'ANSS', 'FANG', 'DLTR', 'CTSH', 'ILMN', 'NXPI', 'MCHP', 'SWKS',
+      'WBA', 'CMCSA', 'HON', 'PEP', 'LIN', 'LULU', 'ON', 'ARM', 'SMCI', 'APP', 'HOOD',
+    ];
+
+    const NYSE100 = [
+      'BRK.B', 'JPM', 'LLY', 'V', 'UNH', 'XOM', 'MA', 'JNJ', 'PG', 'HD',
+      'WMT', 'BAC', 'KO', 'CVX', 'MRK', 'ORCL', 'ACN', 'ABT', 'WFC', 'IBM',
+      'PM', 'NOW', 'MS', 'GS', 'MCD', 'CAT', 'BLK', 'UPS', 'DE', 'ETN',
+      'CB', 'MDT', 'SYK', 'MMM', 'GE', 'NEE', 'AMT', 'PLD', 'AXP', 'LOW',
+      'NKE', 'TGT', 'TJX', 'CMG', 'DHR', 'BSX', 'LMT', 'NOC', 'BA', 'HON',
+      'EMR', 'FCX', 'NEM', 'OXY', 'COP', 'SLB', 'O', 'SPG', 'RTX', 'SPGI',
+      'TMO', 'ABBV', 'PFE', 'CVS', 'CI', 'HUM', 'PNC', 'USB', 'C', 'SCHW',
+      'ANET', 'DELL', 'HPQ', 'F', 'GM', 'T', 'VZ', 'DIS', 'AIG', 'PYPL',
+      'SNOW', 'PLTR', 'NET', 'UBER', 'SHOP', 'SQ', 'RBLX', 'SPOT', 'COIN', 'HOOD',
+    ];
+
+    /* Combined deduped T2 list */
+    const T2_TICKERS = [...new Set([...SP500.slice(0, 500), ...NASDAQ100, ...NYSE100])];
+
+    /* ── T3 EXTENDED: additional liquid mid/large cap tickers ── */
+    const T3_EXTENDED = [
+      /* Technology – SaaS/Cloud */
+      'ZM', 'DOCU', 'BOX', 'ASAN', 'MNDY', 'SMAR', 'BRZE', 'NCNO', 'BILL', 'HUBS',
+      'GTLB', 'ESTC', 'PSTG', 'NTAP', 'STX', 'WDC', 'NTNX', 'FSLY', 'CFLT',
+      'CTSH', 'EPAM', 'GLOB', 'IT', 'LDOS', 'SAIC', 'BAH', 'CACI', 'VRNS',
+      /* Semiconductors */
+      'ONTO', 'ACLS', 'FORM', 'COHU', 'UCTT', 'AMBA', 'WOLF', 'ALGM', 'CRUS',
+      'SLAB', 'MTSI', 'QRVO', 'SWKS', 'POWI', 'DIOD', 'MKSI', 'AEHR', 'ICHR',
+      /* Cybersecurity */
+      'TENB', 'QLYS', 'RPD', 'CYBR', 'CHKP', 'VRNT', 'MIME', 'S', 'SAIL',
+      /* FinTech/Finance */
+      'ALLY', 'COF', 'SYF', 'DFS', 'SOFI', 'NU', 'UPST', 'LC', 'AFRM',
+      'ICE', 'CME', 'CBOE', 'NDAQ', 'MKTX', 'VIRT', 'LPLA', 'RJF', 'SF',
+      /* Healthcare – biotech */
+      'JAZZ', 'EXEL', 'ALKS', 'ACAD', 'SAGE', 'NBIX', 'HOLX', 'ALGN', 'HSIC',
+      'NTRA', 'VCYT', 'EXAS', 'GHDX', 'SDGR', 'IONS', 'ARVN', 'RVMD', 'BEAM',
+      'EDIT', 'NTLA', 'CRSP', 'FATE', 'BLUE', 'ARWR', 'PTCT', 'MDGL', 'VKTX',
+      'RXRX', 'RCKT', 'VERV', 'FOLD', 'PRGO', 'VTRS', 'AMRN', 'AUPH', 'BBIO',
+      'BCRX', 'BHVN', 'BPMC', 'CCCC', 'CDXS', 'INSM', 'KROS', 'LEGN', 'PRAX',
+      'TGTX', 'ALDX', 'ATRC', 'AXNX', 'NVST', 'NVCR', 'INSP', 'PODD', 'HOLX2',
+      /* Devices/Health services */
+      'OMCL', 'NXGN', 'VEEV', 'HMSY', 'AMED', 'MMSI', 'ICUI', 'LMAT',
+      /* Consumer Discretionary */
+      'DKNG', 'PENN', 'CHWY', 'CROX', 'ONON', 'SKX', 'DECK', 'UAA', 'UA',
+      'LEVI', 'PVH', 'HBI', 'CPRI', 'TPR', 'FOSL', 'BOOT', 'CVNA', 'KMX',
+      'AN', 'LAD', 'ABG', 'CAR', 'HTZ',
+      /* Consumer Staples */
+      'POST', 'SMPL', 'USFD', 'SFM', 'PFGC', 'ULTA', 'ELF', 'TSN', 'JJSF',
+      /* Energy */
+      'RIG', 'NBR', 'HP', 'PTEN', 'OII', 'WMB', 'OKE', 'KMI', 'EPD', 'ET',
+      'TRGP', 'MPLX', 'MPC2', 'DVN', 'FANG', 'SM', 'MTDR', 'PR', 'VTLE', 'CTRA',
+      /* Industrials */
+      'GXO', 'XPO', 'ARCB', 'HTLD', 'ZIM', 'DAC', 'SFL', 'TREX', 'APOG', 'AAON',
+      'SPXC', 'ENS', 'MDU', 'MYRG', 'PWR', 'EME', 'TTEK', 'VSE',
+      /* Real Estate */
+      'INVH', 'AMH', 'UDR', 'CPT', 'AVB', 'ESS', 'MAA', 'NNN', 'ADC', 'VICI',
+      'GLPI', 'CCI', 'SBAC', 'IRM', 'CUBE', 'EXR', 'NSA', 'REXR', 'FR', 'EGP',
+      'STAG', 'COLD', 'PEB', 'APLE', 'RHP',
+      /* Utilities */
+      'OGE', 'PNM', 'MGEE', 'AVA', 'IDACORP', 'BKH', 'NWN', 'SJW',
+      /* Materials */
+      'MP', 'ARNC', 'GEF', 'GPK', 'BERY', 'CENX', 'CSTM', 'HAYN',
+      /* Banks/Regionals */
+      'WAL', 'WTFC', 'TCBI', 'GBCI', 'UMBF', 'BOH', 'WAFD', 'BANR', 'SBCF',
+      'CVBF', 'PPBI', 'BANF', 'FFIN', 'HOMB', 'PB', 'FULT', 'WSBC', 'UBSI',
+      'BRKL', 'NYCB', 'TRMK', 'CATY', 'HOPE', 'HTBK', 'TBBK', 'HTLF',
+      /* Alt finance/BDCs */
+      'ARCC', 'GSBD', 'PFLT', 'CSWC', 'TRIN', 'MAIN', 'GAIN', 'NEWT',
+      'STWD', 'BXMT', 'RITM', 'PMT', 'MFA',
+    ];
+
+    const T4_EXTRA = [
+      'GEVO', 'ENPH', 'SEDG', 'RUN', 'NOVA', 'ARRY', 'CSIQ', 'JKS', 'DAQO',
+      'BURL', 'FIVE', 'OLLI', 'BIG', 'TXRH', 'EAT', 'JACK', 'QSR', 'YUM',
+      'DPZ', 'PZZA', 'WEN', 'SHAK', 'WING', 'PLNT', 'XPOF',
+      'WSM', 'LESL', 'SSD', 'BLDR', 'IBP', 'BECN', 'GMS', 'UFP', 'UFPI',
+      'SUM', 'EXP', 'VMC', 'MLM', 'CRH', 'ROCK', 'GRNT', 'SLCA',
+      'STRL', 'MTZ', 'WIX', 'ACGL', 'ERIE', 'AFG', 'KMPR', 'HCI',
+      'OXLC', 'EFC', 'HRZN', 'OCSL', 'PSEC', 'SLRC', 'FDUS',
+    ];
+
+    const T3_TICKERS = [...new Set([...T2_TICKERS, ...T3_EXTENDED])];
+    const T4_TICKERS = [...new Set([...T3_TICKERS, ...T4_EXTRA])];
+
+    /* Sector/industry/exchange metadata for known tickers */
+    const TICKER_META = {
+      AAPL: { c: 'Apple Inc.', e: 'NASDAQ', s: 'Technology', i: 'Hardware' },
+      MSFT: { c: 'Microsoft Corp.', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      NVDA: { c: 'NVIDIA Corp.', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      AMZN: { c: 'Amazon.com Inc.', e: 'NASDAQ', s: 'Consumer Discretionary', i: 'Internet' },
+      GOOGL: { c: 'Alphabet Inc.', e: 'NASDAQ', s: 'Communication Services', i: 'Internet' },
+      META: { c: 'Meta Platforms Inc.', e: 'NASDAQ', s: 'Communication Services', i: 'Internet' },
+      TSLA: { c: 'Tesla Inc.', e: 'NASDAQ', s: 'Consumer Discretionary', i: 'Auto' },
+      'BRK.B': { c: 'Berkshire Hathaway', e: 'NYSE', s: 'Financials', i: 'Asset Management' },
+      JPM: { c: 'JPMorgan Chase', e: 'NYSE', s: 'Financials', i: 'Banks' },
+      LLY: { c: 'Eli Lilly', e: 'NYSE', s: 'Healthcare', i: 'Pharmaceuticals' },
+      V: { c: 'Visa Inc.', e: 'NYSE', s: 'Financials', i: 'FinTech' },
+      UNH: { c: 'UnitedHealth Group', e: 'NYSE', s: 'Healthcare', i: 'Medical Devices' },
+      XOM: { c: 'Exxon Mobil', e: 'NYSE', s: 'Energy', i: 'Energy Exploration' },
+      MA: { c: 'Mastercard Inc.', e: 'NYSE', s: 'Financials', i: 'FinTech' },
+      JNJ: { c: 'Johnson & Johnson', e: 'NYSE', s: 'Healthcare', i: 'Pharmaceuticals' },
+      AVGO: { c: 'Broadcom Inc.', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      PG: { c: 'Procter & Gamble', e: 'NYSE', s: 'Consumer Staples', i: 'Consumer Brands' },
+      HD: { c: 'Home Depot Inc.', e: 'NYSE', s: 'Consumer Discretionary', i: 'Retail' },
+      COST: { c: 'Costco Wholesale', e: 'NASDAQ', s: 'Consumer Staples', i: 'Retail' },
+      ABBV: { c: 'AbbVie Inc.', e: 'NYSE', s: 'Healthcare', i: 'Pharmaceuticals' },
+      MRK: { c: 'Merck & Co.', e: 'NYSE', s: 'Healthcare', i: 'Pharmaceuticals' },
+      AMD: { c: 'Advanced Micro Devices', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      ORCL: { c: 'Oracle Corp.', e: 'NYSE', s: 'Technology', i: 'Software' },
+      CVX: { c: 'Chevron Corp.', e: 'NYSE', s: 'Energy', i: 'Energy Exploration' },
+      WMT: { c: 'Walmart Inc.', e: 'NYSE', s: 'Consumer Staples', i: 'Retail' },
+      BAC: { c: 'Bank of America', e: 'NYSE', s: 'Financials', i: 'Banks' },
+      KO: { c: 'Coca-Cola Co.', e: 'NYSE', s: 'Consumer Staples', i: 'Consumer Brands' },
+      NFLX: { c: 'Netflix Inc.', e: 'NASDAQ', s: 'Communication Services', i: 'Internet' },
+      PEP: { c: 'PepsiCo Inc.', e: 'NASDAQ', s: 'Consumer Staples', i: 'Consumer Brands' },
+      TMO: { c: 'Thermo Fisher', e: 'NYSE', s: 'Healthcare', i: 'Medical Devices' },
+      CRM: { c: 'Salesforce Inc.', e: 'NYSE', s: 'Technology', i: 'Software' },
+      CSCO: { c: 'Cisco Systems', e: 'NASDAQ', s: 'Technology', i: 'Hardware' },
+      ACN: { c: 'Accenture PLC', e: 'NYSE', s: 'Technology', i: 'Software' },
+      ABT: { c: 'Abbott Labs', e: 'NYSE', s: 'Healthcare', i: 'Medical Devices' },
+      WFC: { c: 'Wells Fargo', e: 'NYSE', s: 'Financials', i: 'Banks' },
+      LIN: { c: 'Linde PLC', e: 'NASDAQ', s: 'Materials', i: 'Other' },
+      IBM: { c: 'IBM Corp.', e: 'NYSE', s: 'Technology', i: 'Software' },
+      PM: { c: 'Philip Morris', e: 'NYSE', s: 'Consumer Staples', i: 'Consumer Brands' },
+      NOW: { c: 'ServiceNow Inc.', e: 'NYSE', s: 'Technology', i: 'Software' },
+      MS: { c: 'Morgan Stanley', e: 'NYSE', s: 'Financials', i: 'Asset Management' },
+      GS: { c: 'Goldman Sachs', e: 'NYSE', s: 'Financials', i: 'Banks' },
+      MCD: { c: "McDonald's Corp.", e: 'NYSE', s: 'Consumer Discretionary', i: 'Consumer Brands' },
+      INTU: { c: 'Intuit Inc.', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      AMAT: { c: 'Applied Materials', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      TXN: { c: 'Texas Instruments', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      AMGN: { c: 'Amgen Inc.', e: 'NASDAQ', s: 'Healthcare', i: 'Biotechnology' },
+      ISRG: { c: 'Intuitive Surgical', e: 'NASDAQ', s: 'Healthcare', i: 'Medical Devices' },
+      QCOM: { c: 'QUALCOMM Inc.', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      RTX: { c: 'RTX Corp.', e: 'NYSE', s: 'Industrials', i: 'Aerospace & Defense' },
+      SPGI: { c: 'S&P Global Inc.', e: 'NYSE', s: 'Financials', i: 'Asset Management' },
+      BKNG: { c: 'Booking Holdings', e: 'NASDAQ', s: 'Consumer Discretionary', i: 'Internet' },
+      CAT: { c: 'Caterpillar Inc.', e: 'NYSE', s: 'Industrials', i: 'Industrials' },
+      BLK: { c: 'BlackRock Inc.', e: 'NYSE', s: 'Financials', i: 'Asset Management' },
+      GILD: { c: 'Gilead Sciences', e: 'NASDAQ', s: 'Healthcare', i: 'Biotechnology' },
+      PFE: { c: 'Pfizer Inc.', e: 'NYSE', s: 'Healthcare', i: 'Pharmaceuticals' },
+      ADBE: { c: 'Adobe Inc.', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      LOW: { c: "Lowe's Companies", e: 'NYSE', s: 'Consumer Discretionary', i: 'Retail' },
+      PANW: { c: 'Palo Alto Networks', e: 'NASDAQ', s: 'Technology', i: 'Cybersecurity' },
+      MU: { c: 'Micron Technology', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      LRCX: { c: 'Lam Research', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      ETN: { c: 'Eaton Corp.', e: 'NYSE', s: 'Industrials', i: 'Industrials' },
+      CB: { c: 'Chubb Ltd.', e: 'NYSE', s: 'Financials', i: 'Asset Management' },
+      UPS: { c: 'United Parcel Service', e: 'NYSE', s: 'Industrials', i: 'Industrials' },
+      DE: { c: 'Deere & Company', e: 'NYSE', s: 'Industrials', i: 'Industrials' },
+      KLAC: { c: 'KLA Corp.', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      MDT: { c: 'Medtronic PLC', e: 'NYSE', s: 'Healthcare', i: 'Medical Devices' },
+      SYK: { c: 'Stryker Corp.', e: 'NYSE', s: 'Healthcare', i: 'Medical Devices' },
+      MMM: { c: '3M Company', e: 'NYSE', s: 'Industrials', i: 'Industrials' },
+      GE: { c: 'GE Aerospace', e: 'NYSE', s: 'Industrials', i: 'Aerospace & Defense' },
+      NEE: { c: 'NextEra Energy', e: 'NYSE', s: 'Utilities', i: 'Utilities' },
+      REGN: { c: 'Regeneron Pharma', e: 'NASDAQ', s: 'Healthcare', i: 'Biotechnology' },
+      AMT: { c: 'American Tower', e: 'NYSE', s: 'Real Estate', i: 'Other' },
+      ADI: { c: 'Analog Devices', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      SNPS: { c: 'Synopsys Inc.', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      CDNS: { c: 'Cadence Design', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      ABNB: { c: 'Airbnb Inc.', e: 'NASDAQ', s: 'Consumer Discretionary', i: 'Internet' },
+      SBUX: { c: 'Starbucks Corp.', e: 'NASDAQ', s: 'Consumer Discretionary', i: 'Consumer Brands' },
+      PLD: { c: 'Prologis Inc.', e: 'NYSE', s: 'Real Estate', i: 'Other' },
+      AXP: { c: 'American Express', e: 'NYSE', s: 'Financials', i: 'FinTech' },
+      MELI: { c: 'MercadoLibre', e: 'NASDAQ', s: 'Consumer Discretionary', i: 'Internet' },
+      CEG: { c: 'Constellation Energy', e: 'NASDAQ', s: 'Utilities', i: 'Utilities' },
+      CRWD: { c: 'CrowdStrike', e: 'NASDAQ', s: 'Technology', i: 'Cybersecurity' },
+      MRVL: { c: 'Marvell Technology', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      ZS: { c: 'Zscaler Inc.', e: 'NASDAQ', s: 'Technology', i: 'Cybersecurity' },
+      WDAY: { c: 'Workday Inc.', e: 'NASDAQ', s: 'Technology', i: 'Cloud Computing' },
+      DDOG: { c: 'Datadog Inc.', e: 'NASDAQ', s: 'Technology', i: 'Cloud Computing' },
+      SNOW: { c: 'Snowflake Inc.', e: 'NYSE', s: 'Technology', i: 'Cloud Computing' },
+      PLTR: { c: 'Palantir Tech.', e: 'NYSE', s: 'Technology', i: 'AI Infrastructure' },
+      APP: { c: 'Applovin Corp.', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      COIN: { c: 'Coinbase Global', e: 'NASDAQ', s: 'Financials', i: 'FinTech' },
+      UBER: { c: 'Uber Technologies', e: 'NYSE', s: 'Consumer Discretionary', i: 'Internet' },
+      LYFT: { c: 'Lyft Inc.', e: 'NASDAQ', s: 'Consumer Discretionary', i: 'Internet' },
+      NET: { c: 'Cloudflare Inc.', e: 'NYSE', s: 'Technology', i: 'Cybersecurity' },
+      RBLX: { c: 'Roblox Corp.', e: 'NYSE', s: 'Communication Services', i: 'Internet' },
+      SPOT: { c: 'Spotify Technology', e: 'NYSE', s: 'Communication Services', i: 'Internet' },
+      SQ: { c: 'Block Inc.', e: 'NYSE', s: 'Financials', i: 'FinTech' },
+      SHOP: { c: 'Shopify Inc.', e: 'NYSE', s: 'Technology', i: 'Internet' },
+      ARM: { c: 'Arm Holdings', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      SMCI: { c: 'Super Micro Computer', e: 'NASDAQ', s: 'Technology', i: 'AI Infrastructure' },
+      DELL: { c: 'Dell Technologies', e: 'NYSE', s: 'Technology', i: 'Hardware' },
+      HPQ: { c: 'HP Inc.', e: 'NYSE', s: 'Technology', i: 'Hardware' },
+      INTC: { c: 'Intel Corp.', e: 'NASDAQ', s: 'Technology', i: 'Semiconductors' },
+      F: { c: 'Ford Motor Co.', e: 'NYSE', s: 'Consumer Discretionary', i: 'Auto' },
+      GM: { c: 'General Motors', e: 'NYSE', s: 'Consumer Discretionary', i: 'Auto' },
+      T: { c: 'AT&T Inc.', e: 'NYSE', s: 'Communication Services', i: 'Other' },
+      VZ: { c: 'Verizon Comms.', e: 'NYSE', s: 'Communication Services', i: 'Other' },
+      DIS: { c: 'Walt Disney Co.', e: 'NYSE', s: 'Communication Services', i: 'Other' },
+      CMCSA: { c: 'Comcast Corp.', e: 'NASDAQ', s: 'Communication Services', i: 'Other' },
+      CVS: { c: 'CVS Health', e: 'NYSE', s: 'Healthcare', i: 'Pharmaceuticals' },
+      CI: { c: 'Cigna Group', e: 'NYSE', s: 'Healthcare', i: 'Other' },
+      HUM: { c: 'Humana Inc.', e: 'NYSE', s: 'Healthcare', i: 'Other' },
+      PNC: { c: 'PNC Financial', e: 'NYSE', s: 'Financials', i: 'Banks' },
+      USB: { c: 'U.S. Bancorp', e: 'NYSE', s: 'Financials', i: 'Banks' },
+      C: { c: 'Citigroup Inc.', e: 'NYSE', s: 'Financials', i: 'Banks' },
+      SCHW: { c: 'Charles Schwab', e: 'NYSE', s: 'Financials', i: 'Asset Management' },
+      PYPL: { c: 'PayPal Holdings', e: 'NASDAQ', s: 'Financials', i: 'FinTech' },
+      ANET: { c: 'Arista Networks', e: 'NYSE', s: 'Technology', i: 'Hardware' },
+      FTNT: { c: 'Fortinet Inc.', e: 'NASDAQ', s: 'Technology', i: 'Cybersecurity' },
+      ADSK: { c: 'Autodesk Inc.', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      TEAM: { c: 'Atlassian Corp.', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      MDB: { c: 'MongoDB Inc.', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      OKTA: { c: 'Okta Inc.', e: 'NASDAQ', s: 'Technology', i: 'Cybersecurity' },
+      TTD: { c: 'Trade Desk Inc.', e: 'NASDAQ', s: 'Technology', i: 'Software' },
+      HOOD: { c: 'Robinhood Markets', e: 'NASDAQ', s: 'Financials', i: 'FinTech' },
+      RIVN: { c: 'Rivian Automotive', e: 'NASDAQ', s: 'Consumer Discretionary', i: 'Auto' },
+      NKE: { c: 'Nike Inc.', e: 'NYSE', s: 'Consumer Discretionary', i: 'Consumer Brands' },
+      TGT: { c: 'Target Corp.', e: 'NYSE', s: 'Consumer Discretionary', i: 'Retail' },
+      TJX: { c: 'TJX Companies', e: 'NYSE', s: 'Consumer Discretionary', i: 'Retail' },
+      CMG: { c: 'Chipotle Mexican Grill', e: 'NYSE', s: 'Consumer Discretionary', i: 'Consumer Brands' },
+      DHR: { c: 'Danaher Corp.', e: 'NYSE', s: 'Healthcare', i: 'Medical Devices' },
+      BSX: { c: 'Boston Scientific', e: 'NYSE', s: 'Healthcare', i: 'Medical Devices' },
+      VRTX: { c: 'Vertex Pharma.', e: 'NASDAQ', s: 'Healthcare', i: 'Biotechnology' },
+      BIIB: { c: 'Biogen Inc.', e: 'NASDAQ', s: 'Healthcare', i: 'Biotechnology' },
+      MRNA: { c: 'Moderna Inc.', e: 'NASDAQ', s: 'Healthcare', i: 'Biotechnology' },
+      LMT: { c: 'Lockheed Martin', e: 'NYSE', s: 'Industrials', i: 'Aerospace & Defense' },
+      NOC: { c: 'Northrop Grumman', e: 'NYSE', s: 'Industrials', i: 'Aerospace & Defense' },
+      BA: { c: 'Boeing Company', e: 'NYSE', s: 'Industrials', i: 'Aerospace & Defense' },
+      HON: { c: 'Honeywell Intl.', e: 'NASDAQ', s: 'Industrials', i: 'Industrials' },
+      EMR: { c: 'Emerson Electric', e: 'NYSE', s: 'Industrials', i: 'Industrials' },
+      FCX: { c: 'Freeport-McMoRan', e: 'NYSE', s: 'Materials', i: 'Other' },
+      NEM: { c: 'Newmont Corp.', e: 'NYSE', s: 'Materials', i: 'Other' },
+      OXY: { c: 'Occidental Petro.', e: 'NYSE', s: 'Energy', i: 'Energy Exploration' },
+      COP: { c: 'ConocoPhillips', e: 'NYSE', s: 'Energy', i: 'Energy Exploration' },
+      SLB: { c: 'SLB (Schlumberger)', e: 'NYSE', s: 'Energy', i: 'Energy Exploration' },
+      O: { c: 'Realty Income', e: 'NYSE', s: 'Real Estate', i: 'Other' },
+      SPG: { c: 'Simon Property Group', e: 'NYSE', s: 'Real Estate', i: 'Other' },
+      AIG: { c: 'American Intl. Group', e: 'NYSE', s: 'Financials', i: 'Asset Management' },
+      WBA: { c: 'Walgreens Boots', e: 'NASDAQ', s: 'Consumer Staples', i: 'Retail' },
+      LULU: { c: 'Lululemon Athletica', e: 'NASDAQ', s: 'Consumer Discretionary', i: 'Consumer Brands' },
+      MSI: { c: 'Motorola Solutions', e: 'NYSE', s: 'Technology', i: 'Hardware' },
+      HAL: { c: 'Halliburton Co.', e: 'NYSE', s: 'Energy', i: 'Energy Exploration' },
+      DVN: { c: 'Devon Energy', e: 'NYSE', s: 'Energy', i: 'Energy Exploration' },
+      MPC: { c: 'Marathon Petroleum', e: 'NYSE', s: 'Energy', i: 'Energy Exploration' },
+      PSX: { c: 'Phillips 66', e: 'NYSE', s: 'Energy', i: 'Energy Exploration' },
+    };
+
+    function getMeta(ticker) {
+      return TICKER_META[ticker] || { c: ticker, e: 'US', s: 'Unknown', i: 'Other' };
+    }
+
+    const SECTORS = ['All Sectors', 'Technology', 'Communication Services', 'Consumer Discretionary', 'Consumer Staples', 'Financials', 'Healthcare', 'Industrials', 'Energy', 'Utilities', 'Materials', 'Real Estate'];
+    const INDUSTRIES = ['All Industries', 'Software', 'Semiconductors', 'Hardware', 'Internet', 'AI Infrastructure', 'Cybersecurity', 'Cloud Computing', 'FinTech', 'Banks', 'Asset Management', 'Biotechnology', 'Pharmaceuticals', 'Medical Devices', 'Aerospace & Defense', 'Industrials', 'Energy Exploration', 'Utilities', 'Consumer Brands', 'Retail', 'Auto', 'Other'];
+    const CROSSING_OPTS = ['Any', 'Crossing Above 50-Day SMA', 'Crossing Below 50-Day SMA', 'First Close Above 50-Day SMA', 'First Close Below 50-Day SMA', 'Testing 50-Day SMA From Below', 'Testing 50-Day SMA From Above', 'Holding Above 50-Day SMA', 'Holding Below 50-Day SMA', 'Rejected At 50-Day SMA', 'Reclaimed 50-Day SMA', 'Lost 50-Day SMA'];
+    const RVOL_OPTS = ['Any', 'Relative Volume Under 0.1', 'Relative Volume Under 0.25', 'Relative Volume Under 0.5', 'Relative Volume Under 0.75', 'Relative Volume Under 1', 'Relative Volume Over 0.25', 'Relative Volume Over 0.5', 'Relative Volume Over 0.75', 'Relative Volume Over 1', 'Relative Volume Over 1.5', 'Relative Volume Over 2', 'Relative Volume Over 3', 'Relative Volume Over 5', 'Relative Volume Over 10'];
+    const DIR_OPTS = ['Any Direction', 'Bullish Only', 'Bearish Only', 'Neutral / Testing Only'];
+    const BATCH_SIZES = [
+      { v: '25', label: '25 · Safest (slowest)' },
+      { v: '50', label: '50 · Default' },
+      { v: '100', label: '100 · Aggressive' },
+    ];
+
+    /* ─────────────── LIQUIDITY DEFAULTS ─────────────── */
+    const LIQ_DEFAULTS = {
+      minPrice: '2',
+      minAvgVol: '250000',
+      minDollarVol: '5000000',
+      minHistory: '60',
+      excludeETFs: true,
+      excludeSub2: true,
+      marketCapTier: 'All',
+    };
+
+    /* ─────────────── UTILS ─────────────── */
+    const fmt = (v, d = 2) => v == null || isNaN(v) ? '—' : Number(v).toFixed(d);
+    const fmtPct = v => v == null || isNaN(v) ? '—' : (v >= 0 ? '+' : '') + Number(v).toFixed(2) + '%';
+    const fmtVol = v => !v ? '—' : v >= 1e9 ? (v / 1e9).toFixed(2) + 'B' : v >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1) + 'K' : String(Math.round(v));
+    const fmtPrice = v => v == null || isNaN(v) ? '—' : '$' + Number(v).toFixed(2);
+    const fmtRvol = v => v == null || isNaN(v) ? '—' : Number(v).toFixed(2) + 'x';
+    const fmtNum = v => v == null ? '—' : String(v);
+    const dateStr = d => d.toISOString().split('T')[0];
+    const subtractDays = (date, n) => { const d = new Date(date); d.setDate(d.getDate() - n); return d; };
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const chunk = (arr, size) => { const c = []; for (let i = 0; i < arr.length; i += size) c.push(arr.slice(i, i + size)); return c; };
+
+    function rvolClass(rv) {
+      if (!rv) return 'rvol-very-low';
+      if (rv >= 5) return 'rvol-extreme';
+      if (rv >= 3) return 'rvol-very-high';
+      if (rv >= 2) return 'rvol-high';
+      if (rv >= 1.5) return 'rvol-elevated';
+      if (rv >= 0.75) return 'rvol-normal';
+      if (rv >= 0.25) return 'rvol-low';
+      return 'rvol-very-low';
+    }
+    function scoreColor(s) {
+      if (s >= 80) return 'var(--green)';
+      if (s >= 60) return 'var(--blue)';
+      if (s >= 40) return 'var(--amber)';
+      return 'var(--text-muted)';
+    }
+
+    /* ─────────────── API ─────────────── */
+    async function apiFetch(url, apiKey) {
+      const sep = url.includes('?') ? '&' : '?';
+      const resp = await fetch(`${url}${sep}apiKey=${apiKey}`);
+      if (resp.status === 403) throw Object.assign(new Error('Invalid API key'), { code: 'AUTH' });
+      if (resp.status === 429) throw Object.assign(new Error('Rate limit exceeded'), { code: 'RATE' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      return resp.json();
+    }
+
+    async function fetchBars(ticker, from, to, apiKey) {
+      const url = `${API_BASE}/v2/aggs/ticker/${encodeURIComponent(ticker)}/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=200`;
+      const data = await apiFetch(url, apiKey);
+      return data.results || [];
+    }
+
+    /* Fetch reference tickers page by page for T3/T4 — with fixed params and empty-check */
+    async function fetchTickerPage(cursor, apiKey) {
+      // Use market=stocks only; do NOT pass exchange as comma-separated (not supported)
+      // type=CS filters to Common Stock on supported plan tiers
+      const params = new URLSearchParams({
+        market: 'stocks',
+        active: 'true',
+        type: 'CS',
+        limit: '1000',
+      });
+      if (cursor) params.set('cursor', cursor);
+      const url = `${API_BASE}/v3/reference/tickers?${params}`;
+      const data = await apiFetch(url, apiKey);
+      return {
+        results: data.results || [],
+        nextCursor: data.next_url
+          ? (new URL(data.next_url).searchParams.get('cursor') || null)
+          : null
+      };
+    }
+
+    async function fetchFullUniverse(apiKey, onProgress) {
+      let allTickers = [];
+      let cursor = null;
+      let page = 0;
+      let consecutiveEmpty = 0;
+      do {
+        onProgress(`Fetching ticker reference page ${page + 1}…`);
+        try {
+          const { results, nextCursor } = await fetchTickerPage(cursor, apiKey);
+          if (results.length === 0) {
+            consecutiveEmpty++;
+            if (consecutiveEmpty >= 2) break; // stop if API keeps returning empty
+          } else {
+            consecutiveEmpty = 0;
+          }
+          allTickers = [...allTickers, ...results];
+          cursor = nextCursor;
+          page++;
+          await sleep(350);
+        } catch (e) {
+          if (e.code === 'AUTH') throw e;
+          // Any other error: stop pagination and return what we have
+          break;
+        }
+      } while (cursor && page < 12);
+
+      const tickers = allTickers.map(r => r.ticker).filter(Boolean);
+      // Guard: if API returned nothing useful, throw so caller falls back to curated list
+      if (tickers.length < 100) {
+        throw new Error(`API returned only ${tickers.length} tickers — falling back to curated list`);
+      }
+      return tickers;
+    }
+
+    /* ─────────────── CALCULATIONS ─────────────── */
+    const computeSMA = (closes, period) => {
+      if (!closes || closes.length < period) return null;
+      const sl = closes.slice(-period);
+      return sl.reduce((a, b) => a + b, 0) / period;
+    };
+    const computeAvgVol = (vols, period) => {
+      if (!vols || vols.length < period) return null;
+      const sl = vols.slice(-period);
+      return sl.reduce((a, b) => a + b, 0) / period;
+    };
+    const computeRelVol = (cur, avg) => (!avg || avg === 0 || !cur) ? null : cur / avg;
+    const computeCloseLocation = (o, h, l, c) => h === l ? 0.5 : (c - l) / (h - l);
+
+    function computeDaysOnSide(bars, smaValues, side) {
+      // side: 'below' or 'above' — count consecutive days from bar before last
+      let count = 0;
+      for (let i = bars.length - 2; i >= 0; i--) {
+        const sma = smaValues[i];
+        if (!sma) break;
+        const cond = side === 'below' ? bars[i].c < sma : bars[i].c > sma;
+        if (cond) count++;
+        else break;
+      }
+      return count;
+    }
+
+    function classify50DMA(bars, smaValues) {
+      if (!bars || bars.length < 3 || !smaValues || smaValues.length < 2) return 'NA';
+      const n = bars.length;
+      const latest = bars[n - 1], prev = bars[n - 2];
+      const smaNow = smaValues[n - 1], smaPrev = smaValues[n - 2];
+      if (!smaNow || !smaPrev) return 'NA';
+      const cc = latest.c, pc = prev.c, ch = latest.h;
+
+      if (pc <= smaPrev && cc > smaNow) {
+        const days = computeDaysOnSide(bars, smaValues, 'below');
+        return days >= 5 ? 'RC' : days >= 1 ? 'FA' : 'CA';
+      }
+      if (pc >= smaPrev && cc < smaNow) {
+        const days = computeDaysOnSide(bars, smaValues, 'above');
+        return days >= 5 ? 'LS' : days >= 1 ? 'FB' : 'CB';
+      }
+      if (cc < smaNow) {
+        if (ch >= smaNow * 0.998) return 'RJ';
+        const highDist = (ch - smaNow) / smaNow * 100;
+        if (highDist >= -1.5 && highDist < 0) return 'TB';
+        return 'HB';
+      }
+      if (cc > smaNow) {
+        const lowDist = (latest.l - smaNow) / smaNow * 100;
+        if (lowDist <= 1.5 && lowDist > 0) return 'TA';
+        return 'HA';
+      }
+      return 'NA';
+    }
+
+    /* ─────────────── SIGNAL SCORING ─────────────── */
+    function scoreCQ(status, distPct, closeLocation, days) {
+      const base = { CA: 75, CB: 75, FA: 82, FB: 82, RC: 88, LS: 88, RJ: 55, TB: 38, TA: 38, HA: 28, HB: 28, NA: 10 }[status] || 10;
+      let s = base;
+      if (['FA', 'FB', 'RC', 'LS'].includes(status)) s += Math.min(10, (days || 0) * 0.5);
+      if (Math.abs(distPct || 0) > 3) s += 5; else if (Math.abs(distPct || 0) > 1.5) s += 3;
+      const bull = ['CA', 'FA', 'RC', 'HA', 'TA'].includes(status);
+      const bear = ['CB', 'FB', 'LS', 'HB', 'TB', 'RJ'].includes(status);
+      if (bull && closeLocation > 0.7) s += 5;
+      if (bear && closeLocation < 0.3) s += 5;
+      return Math.min(100, Math.max(0, Math.round(s)));
+    }
+    function scoreRV(rv) {
+      if (!rv) return 10;
+      if (rv >= 10) return 100; if (rv >= 5) return 92; if (rv >= 3) return 82;
+      if (rv >= 2) return 70; if (rv >= 1.5) return 60; if (rv >= 1.0) return 50;
+      if (rv >= 0.75) return 38; if (rv >= 0.5) return 26; if (rv >= 0.25) return 16;
+      return 8;
+    }
+    function scoreCL(loc, status) {
+      if (loc == null) return 50;
+      const bull = ['CA', 'FA', 'RC', 'HA'].includes(status);
+      const bear = ['CB', 'FB', 'LS', 'HB', 'RJ'].includes(status);
+      if (bull) return Math.round(loc * 100);
+      if (bear) return Math.round((1 - loc) * 100);
+      return 50;
+    }
+    function scoreDD(distPct, status) {
+      const abs = Math.abs(distPct || 0);
+      if (['TB', 'TA'].includes(status)) return abs < 0.5 ? 90 : abs < 1.0 ? 75 : abs < 1.5 ? 60 : 30;
+      if (['CA', 'CB', 'FA', 'FB', 'RC', 'LS'].includes(status)) {
+        if (abs > 5) return 80; if (abs > 3) return 65; if (abs > 1.5) return 55; if (abs > 0.5) return 45; return 35;
+      }
+      return 50;
+    }
+    function scorePC(days, status) {
+      if (!days) return 40;
+      if (['CA', 'CB', 'FA', 'FB', 'RC', 'LS'].includes(status)) {
+        if (days >= 20) return 90; if (days >= 10) return 75; if (days >= 5) return 60; if (days >= 2) return 50; return 35;
+      }
+      return 45;
+    }
+    function computeSignalScore(status, distPct, relVol, closeLocation, daysOnPrevSide) {
+      const cq = scoreCQ(status, distPct, closeLocation, daysOnPrevSide);
+      const rv = scoreRV(relVol);
+      const cl = scoreCL(closeLocation, status);
+      const dd = scoreDD(distPct, status);
+      const pc = scorePC(daysOnPrevSide, status);
+      const total = Math.round(Math.min(100, Math.max(0, cq * 0.45 + rv * 0.35 + cl * 0.10 + dd * 0.05 + pc * 0.05)));
+      return { total, crossingQuality: cq, relVolScore: rv, closeLocScore: cl, distScore: dd, priorContextScore: pc };
+    }
+
+    /* ─────────────── LIQUIDITY CHECK ─────────────── */
+    function passesLiquidity(ticker, price, avgVol20, liqFilters) {
+      const minP = parseFloat(liqFilters.minPrice) || 2;
+      const minV = parseFloat(liqFilters.minAvgVol) || 250000;
+      const minD = parseFloat(liqFilters.minDollarVol) || 5000000;
+      if (price < minP) return false;
+      if (!avgVol20 || avgVol20 < minV) return false;
+      if (avgVol20 * price < minD) return false;
+      return true;
+    }
+
+    /* ─────────────── MARKET CAP TIER ─────────────── */
+    function marketCapTier(price, avgVol20) {
+      const dollarVol = price * (avgVol20 || 0);
+      if (dollarVol > 500e6) return 'Mega';
+      if (dollarVol > 100e6) return 'Large';
+      if (dollarVol > 25e6) return 'Mid';
+      if (dollarVol > 5e6) return 'Small';
+      return 'Micro';
+    }
+
+    /* ─────────────── REGIME ─────────────── */
+    function computeRegime(results) {
+      if (!results || results.length === 0) return { label: 'Unknown', pctAbove: null, aboveCrosses: 0, belowCrosses: 0 };
+      const valid = results.filter(r => r.status !== 'NA' && r.sma50 != null);
+      if (valid.length === 0) return { label: 'Unknown', pctAbove: null, aboveCrosses: 0, belowCrosses: 0 };
+      const above = valid.filter(r => r.currentClose > r.sma50).length;
+      const pctAbove = above / valid.length * 100;
+      const aboveCrosses = results.filter(r => ['CA', 'FA', 'RC'].includes(r.status)).length;
+      const belowCrosses = results.filter(r => ['CB', 'FB', 'LS'].includes(r.status)).length;
+      const hvA = results.filter(r => ['CA', 'FA', 'RC'].includes(r.status) && (r.relVol20 || 0) > 1.5).length;
+      const hvB = results.filter(r => ['CB', 'FB', 'LS'].includes(r.status) && (r.relVol20 || 0) > 1.5).length;
+      let label;
+      if (pctAbove >= 55 && aboveCrosses >= belowCrosses && hvA >= hvB) label = 'Bullish';
+      else if (pctAbove <= 45 && belowCrosses > aboveCrosses) label = 'Bearish';
+      else label = 'Neutral';
+      return { label, pctAbove, aboveCrosses, belowCrosses };
+    }
+
+    /* ─────────────── FILTERS ─────────────── */
+    function rvolFilterPass(rv, opt) {
+      if (opt === 'Any' || !rv) return true;
+      if (opt.startsWith('Relative Volume Under')) return rv < parseFloat(opt.split('Under ')[1]);
+      if (opt.startsWith('Relative Volume Over')) return rv > parseFloat(opt.split('Over ')[1]);
+      return true;
+    }
+
+    /* ─────────────── EXPLANATION ─────────────── */
+    function generateExplanation(r) {
+      const { ticker: t, status: s, relVol20: rv, distPct: dp, direction: dir, daysOnPrevSide: d } = r;
+      const dist = fmt(Math.abs(dp || 0));
+      const rvStr = fmtRvol(rv);
+      if (['CA', 'FA', 'RC'].includes(s)) {
+        const w = s === 'RC' ? 'reclaimed' : s === 'FA' ? 'had its first close above' : 'crossed above';
+        return `${t} ${w} its 50-day SMA. The latest close is ${dist}% above the 50DMA, and relative volume is ${rvStr} the 20-day average.${d > 5 ? ` The stock spent ${d} days below the 50DMA before this event.` : ''} Bullish continuation depends on price holding above the 50DMA with sustained volume.`;
+      }
+      if (['CB', 'FB', 'LS'].includes(s)) {
+        const w = s === 'LS' ? 'lost' : s === 'FB' ? 'had its first close below' : 'crossed below';
+        return `${t} ${w} its 50-day SMA. The latest close is ${dist}% below the 50DMA, and relative volume is ${rvStr} the 20-day average.${d > 5 ? ` The stock spent ${d} days above the 50DMA before this event.` : ''} Continued weakness likely if price holds below the 50DMA.`;
+      }
+      if (s === 'TB') return `${t} is testing its 50-day SMA from below. Price is within ${dist}% of the 50DMA but has not closed above it. Relative volume is ${rvStr}. Watchlist alert — not a confirmed crossing.`;
+      if (s === 'TA') return `${t} is testing its 50-day SMA from above. Intraday low came close to the 50DMA (${dist}% distance) but held. Relative volume is ${rvStr}. Watch for a potential breakdown.`;
+      if (s === 'RJ') return `${t} was rejected at its 50-day SMA. Intraday high touched the SMA but close was below it. Bearish rejection. Relative volume is ${rvStr}.`;
+      if (s === 'HA') return `${t} is holding above its 50-day SMA. No fresh crossing event today. Relative volume is ${rvStr}. Price is ${dist}% above the 50DMA.`;
+      if (s === 'HB') return `${t} is holding below its 50-day SMA. No fresh crossing event today. Relative volume is ${rvStr}. Price is ${dist}% below the 50DMA.`;
+      return `${t} shows no active 50DMA signal. Distance from 50DMA is ${dist}%. Relative volume is ${rvStr}.`;
+    }
+
+    /* ─────────────── SCAN SINGLE TICKER ─────────────── */
+    async function scanTicker(ticker, apiKey, liqFilters, fromDate, toDate) {
+      const bars = await fetchBars(ticker, fromDate, toDate, apiKey);
+      const minHistory = parseInt(liqFilters.minHistory) || 60;
+      if (!bars || bars.length < minHistory) return null;
+
+      const closes = bars.map(b => b.c);
+      const vols = bars.map(b => b.v);
+      const latestPrice = closes[closes.length - 1];
+
+      const avgVol20 = computeAvgVol(vols, 20);
+      if (!passesLiquidity(ticker, latestPrice, avgVol20, liqFilters)) return null;
+
+      const smaValues = bars.map((_, idx) => idx < 49 ? null : computeSMA(closes.slice(0, idx + 1), 50));
+      const sma50 = smaValues[smaValues.length - 1];
+      if (!sma50) return null;
+
+      const latest = bars[bars.length - 1];
+      const prevBar = bars[bars.length - 2];
+      const avgVol50 = computeAvgVol(vols, 50);
+      const relVol20 = computeRelVol(latest.v, avgVol20);
+      const relVol50 = avgVol50 ? computeRelVol(latest.v, avgVol50) : null;
+      const distPct = (latest.c - sma50) / sma50 * 100;
+      const smaPrev = smaValues[smaValues.length - 2];
+      const prevCloseVs50 = prevBar && smaPrev ? (prevBar.c - smaPrev) / smaPrev * 100 : 0;
+      const closeLocation = computeCloseLocation(latest.o, latest.h, latest.l, latest.c);
+      const status = classify50DMA(bars, smaValues);
+      const direction = DIRECTION[status] || 'Neutral';
+      const daysBelow = computeDaysOnSide(bars, smaValues, 'below');
+      const daysAbove = computeDaysOnSide(bars, smaValues, 'above');
+      const daysOnPrevSide = ['CA', 'FA', 'RC'].includes(status) ? daysBelow : daysAbove;
+
+      const ret5d = bars.length >= 6 ? (latest.c - bars[bars.length - 6].c) / bars[bars.length - 6].c * 100 : null;
+      const ret10d = bars.length >= 11 ? (latest.c - bars[bars.length - 11].c) / bars[bars.length - 11].c * 100 : null;
+
+      const mcTier = marketCapTier(latestPrice, avgVol20);
+      const mcFilter = liqFilters.marketCapTier;
+      if (mcFilter !== 'All' && mcTier !== mcFilter) return null;
+
+      const scores = computeSignalScore(status, distPct, relVol20, closeLocation, daysOnPrevSide);
+      const meta = getMeta(ticker);
+
+      const result = {
+        ticker, company: meta.c, exchange: meta.e, sector: meta.s, industry: meta.i,
+        status, direction,
+        price: latest.c, prevClose: prevBar?.c,
+        high: latest.h, low: latest.l, open: latest.o,
+        sma50, distPct, currentClose: latest.c,
+        prevCloseVs50, currentCloseVs50: distPct,
+        volume: latest.v, avgVol20, avgVol50,
+        relVol20, relVol50,
+        closeLocation, ret5d, ret10d,
+        daysOnPrevSide, mcTier,
+        signalScore: scores.total, scores,
+        dataFresh: true, demo: false,
+        timestamp: new Date(latest.t || Date.now()).toISOString(),
+        isNew: false,
+      };
+      result.explanation = generateExplanation(result);
+      return result;
+    }
+
+    /* ─────────────── DIFF ─────────────── */
+    function compareScans(current, prevMap) {
+      const diff = { newAbove: [], newBelow: [], highRvol: [], rejections: [], testing: [] };
+      for (const r of current) {
+        const prev = prevMap[r.ticker];
+        const isNew = !prev || prev !== r.status;
+        r.isNew = isNew && ['CA', 'FA', 'RC', 'CB', 'FB', 'LS'].includes(r.status);
+        if (isNew) {
+          if (['CA', 'FA', 'RC'].includes(r.status)) diff.newAbove.push(r.ticker);
+          if (['CB', 'FB', 'LS'].includes(r.status)) diff.newBelow.push(r.ticker);
+        }
+        if ((r.relVol20 || 0) > 2 && ['CA', 'FA', 'RC', 'CB', 'FB', 'LS'].includes(r.status)) diff.highRvol.push(r.ticker);
+        if (r.status === 'RJ') diff.rejections.push(r.ticker);
+        if (['TB', 'TA'].includes(r.status)) diff.testing.push(r.ticker);
+      }
+      return diff;
+    }
+
+    /* ─────────────── SORT ─────────────── */
+    function sortResults(results, sortKey, sortDir) {
+      const dir = sortDir === 'asc' ? 1 : -1;
+      return [...results].sort((a, b) => {
+        if (sortKey === 'default') {
+          const pa = STATUS_PRIORITY[a.status] || 5, pb = STATUS_PRIORITY[b.status] || 5;
+          if (pa !== pb) return pa - pb;
+          return (b.relVol20 || 0) - (a.relVol20 || 0);
+        }
+        let va = a[sortKey], vb = b[sortKey];
+        if (va == null) return 1; if (vb == null) return -1;
+        if (typeof va === 'string') return va.localeCompare(vb) * dir;
+        return (va - vb) * dir;
+      });
+    }
+
+    /* ─────────────── ALERT HISTORY ─────────────── */
+    function saveAlertHistory(results) {
+      try {
+        const existing = JSON.parse(localStorage.getItem(SK_HISTORY) || '[]');
+        const today = new Date().toISOString().split('T')[0];
+        const newAlerts = results
+          .filter(r => ['CA', 'FA', 'RC', 'CB', 'FB', 'LS', 'RJ'].includes(r.status) && !r.demo)
+          .map(r => ({
+            alertId: `${r.ticker}-${today}-${r.status}`,
+            alertDate: today, ticker: r.ticker, company: r.company,
+            direction: r.direction, crossingStatus: STATUS_CODES[r.status] || r.status,
+            signalScore: r.signalScore, price: r.price, sma50: r.sma50,
+            relVol20: r.relVol20, distPct: r.distPct, outcomeLabel: 'Still Active',
+          }));
+        const merged = [...existing];
+        for (const a of newAlerts) {
+          if (!merged.find(e => e.alertId === a.alertId)) merged.push(a);
+        }
+        localStorage.setItem(SK_HISTORY, JSON.stringify(merged.slice(-500)));
+      } catch (e) { }
+    }
+
+    /* ─────────────── MOCK DATA (DEMO) ─────────────── */
+    function generateMock(ticker) {
+      const meta = getMeta(ticker);
+      const price = 5 + Math.random() * 495;
+      const sma = price * (0.92 + Math.random() * 0.16);
+      const distPct = (price - sma) / sma * 100;
+      const vol = 500000 + Math.random() * 10000000;
+      const avgVol = vol * (0.4 + Math.random() * 1.2);
+      const rv = vol / avgVol;
+      const statuses = ['CA', 'CB', 'FA', 'FB', 'TB', 'TA', 'HA', 'HB', 'RJ', 'RC', 'LS'];
+      const weights = [8, 8, 5, 5, 10, 10, 20, 20, 5, 5, 5];
+      let rnd = Math.random() * 100, acc = 0, status = 'HA';
+      for (let i = 0; i < statuses.length; i++) { acc += weights[i]; if (rnd < acc) { status = statuses[i]; break; } }
+      const cl = 0.2 + Math.random() * 0.6;
+      const days = Math.floor(Math.random() * 30) + 1;
+      const scores = computeSignalScore(status, distPct, rv, cl, days);
+      const r = {
+        ticker, company: meta.c, exchange: meta.e, sector: meta.s, industry: meta.i,
+        status, direction: DIRECTION[status] || 'Neutral',
+        price, prevClose: price * (0.97 + Math.random() * 0.06),
+        high: price * (1 + Math.random() * 0.02), low: price * (0.98 + Math.random() * 0.01), open: price,
+        sma50: sma, distPct, currentClose: price,
+        prevCloseVs50: (price * (0.98 + Math.random() * 0.04) - sma) / sma * 100,
+        currentCloseVs50: distPct,
+        volume: Math.round(vol), avgVol20: Math.round(avgVol), avgVol50: Math.round(avgVol * 0.95),
+        relVol20: rv, relVol50: vol / (avgVol * 0.95),
+        closeLocation: cl, ret5d: (-8 + Math.random() * 16), ret10d: (-12 + Math.random() * 24),
+        daysOnPrevSide: days, signalScore: scores.total, scores,
+        dataFresh: true, timestamp: new Date().toISOString(), isNew: false, demo: true,
+      };
+      r.explanation = generateExplanation(r);
+      return r;
+    }
+
+    /* ─────────────── COMPONENTS ─────────────── */
+    function ToastContainer({ toasts }) {
+      return <div className="toast-container">{toasts.map(t => (
+        <div key={t.id} className={`toast ${t.type}`}>
+          <div className="toast-title">{t.title}</div>
+          {t.msg && <div className="toast-msg">{t.msg}</div>}
+        </div>
+      ))}</div>;
+    }
+
+    function ScoreBar({ score }) {
+      const c = scoreColor(score);
+      return <div className="score-bar"><span className="score-val" style={{ color: c }}>{score}</span><div className="score-track"><div className="score-fill" style={{ width: `${score}%`, background: c }} /></div></div>;
+    }
+
+    function StatusBadge({ code }) {
+      return <span className={`stage-badge ${STATUS_CLASS[code] || 'status-na'}`}>{STATUS_CODES[code] || '—'}</span>;
+    }
+
+    function DirTag({ dir }) {
+      const c = dir === 'Bullish' ? 'dir-bull' : dir === 'Bearish' ? 'dir-bear' : 'dir-neut';
+      return <span className={`dir-tag ${c}`}>{dir || '—'}</span>;
+    }
+
+    function RvolCell({ rv }) {
+      if (rv == null) return <span className="rvol-val rvol-very-low">—</span>;
+      return (
+        <span className={`rvol-val ${rvolClass(rv)}`}>
+          {fmtRvol(rv)}
+          {rv >= 10 && <span style={{ marginLeft: 4, fontSize: 8, background: 'rgba(34,197,94,0.15)', padding: '1px 4px', borderRadius: 3, border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)' }}>EXTREME</span>}
+        </span>
+      );
+    }
+
+    function KpiCard({ label, value, sub, color, onClick, active, prog, total }) {
+      const pct = prog && total ? Math.min(100, Math.round(prog / total * 100)) : null;
+      return (
+        <div className={`kpi-card ${color || ''} ${active ? 'active' : ''}`} onClick={onClick}>
+          <div className="kpi-label">{label}</div>
+          <div className="kpi-value">{value}</div>
+          <div className="kpi-sub">{sub}</div>
+          {pct != null && <div className="kpi-prog"><div className="kpi-prog-fill" style={{ width: `${pct}%`, background: 'var(--blue)' }} /></div>}
+        </div>
+      );
+    }
+
+    /* ─────────────── DETAIL MODAL ─────────────── */
+    function DetailModal({ stock, onClose }) {
+      if (!stock) return null;
+      const s = stock;
+      const sc = s.scores || {};
+      const dirColor = s.direction === 'Bullish' ? 'var(--green)' : s.direction === 'Bearish' ? 'var(--red)' : 'var(--purple)';
+      const statusName = STATUS_CODES[s.status] || s.status;
+
+      const sigSigs = [], flags = [];
+      if ((s.relVol20 || 0) > 1.5) sigSigs.push({ c: 'green', t: `Relative volume ${fmtRvol(s.relVol20)} vs 20-day avg — elevated confirmation` });
+      if ((s.relVol20 || 0) > 3) sigSigs.push({ c: 'green', t: 'Extreme relative volume — high conviction event' });
+      if (['CA', 'FA', 'RC'].includes(s.status)) sigSigs.push({ c: 'green', t: 'Price crossed / reclaimed above 50DMA — bullish' });
+      if (['CB', 'FB', 'LS'].includes(s.status)) sigSigs.push({ c: 'red', t: 'Price crossed / lost below 50DMA — bearish' });
+      if ((s.daysOnPrevSide || 0) > 10) sigSigs.push({ c: 'blue', t: `Stock spent ${s.daysOnPrevSide} days on prior side before crossing` });
+      if (s.closeLocation > 0.7 && ['CA', 'FA', 'RC'].includes(s.status)) sigSigs.push({ c: 'green', t: `Strong close in upper ${Math.round((1 - s.closeLocation) * 100)}% of range` });
+      if (s.closeLocation < 0.3 && ['CB', 'FB', 'LS'].includes(s.status)) sigSigs.push({ c: 'red', t: `Weak close in lower ${Math.round(s.closeLocation * 100)}% of range` });
+      if (Math.abs(s.distPct || 0) > 3) sigSigs.push({ c: 'blue', t: `${fmt(Math.abs(s.distPct || 0))}% from 50DMA — decisive crossing` });
+      if (sigSigs.length === 0) sigSigs.push({ c: 'gray', t: 'No strong significance signals' });
+
+      if ((s.relVol20 || 0) < 1.0) flags.push({ c: 'amber', t: 'Volume below average — weaker confirmation' });
+      if ((s.relVol20 || 0) < 0.5) flags.push({ c: 'red', t: 'Very low volume — signal may be insignificant' });
+      if (Math.abs(s.distPct || 0) < 0.5) flags.push({ c: 'amber', t: 'Within 0.5% of 50DMA — borderline crossing' });
+      if (['TB', 'TA'].includes(s.status)) flags.push({ c: 'amber', t: 'Not a confirmed crossing — watchlist only' });
+      if (s.status === 'RJ') flags.push({ c: 'red', t: 'Intraday rejection at 50DMA — failed to reclaim' });
+      if (['HA', 'HB'].includes(s.status)) flags.push({ c: 'gray', t: 'No fresh crossing — continuation hold only' });
+      if (flags.length === 0) flags.push({ c: 'gray', t: 'No major quality flags' });
+
+      const sma_up = s.sma50 ? s.sma50 * 1.015 : null;
+      const sma_dn = s.sma50 ? s.sma50 * 0.985 : null;
+
+      return (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+          <div className="modal">
+            <div className="modal-header">
+              <div className="modal-header-left">
+                <div className="modal-ticker-row">
+                  <span className="modal-ticker">{s.ticker}</span>
+                  <StatusBadge code={s.status} />
+                  <DirTag dir={s.direction} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: scoreColor(s.signalScore) }}>Score: {s.signalScore}</span>
+                  {s.demo && <span className="tier-badge tier-3">DEMO</span>}
+                </div>
+                <div className="modal-company">{s.company}</div>
+                <div className="modal-meta-row">
+                  <span className="exch-badge">{s.exchange}</span>
+                  <span>•</span><span>{s.sector}</span>
+                  <span>•</span><span>{s.industry}</span>
+                  {s.mcTier && <><span>•</span><span style={{ color: 'var(--text-muted)' }}>{s.mcTier} cap</span></>}
+                </div>
+              </div>
+              <button className="modal-close" onClick={onClose}>✕ CLOSE</button>
+            </div>
+            <div className="modal-body">
+              <div>
+                <div className="modal-section-title">50DMA Alert Explanation</div>
+                <div className="explanation-box">{s.explanation || generateExplanation(s)}</div>
+              </div>
+              <div>
+                <div className="modal-section-title">50DMA Alert Map</div>
+                <div className="entry-map">
+                  {[
+                    { l: 'Price', v: fmtPrice(s.price), n: `${fmtPct(s.distPct)} vs 50DMA` },
+                    { l: '50-Day SMA', v: fmtPrice(s.sma50), n: '50-bar simple average' },
+                    { l: 'Distance vs 50DMA', v: fmtPct(s.distPct), n: Math.abs(s.distPct || 0) > 3 ? 'Strong distance' : 'Near SMA' },
+                    { l: 'Prev Close vs 50DMA', v: fmtPct(s.prevCloseVs50), n: 'Prior session' },
+                    { l: 'Current Close vs 50DMA', v: fmtPct(s.currentCloseVs50), n: 'Latest close' },
+                    { l: 'Relative Volume 20D', v: fmtRvol(s.relVol20), n: 'vs 20-day avg' },
+                    { l: 'Relative Volume 50D', v: fmtRvol(s.relVol50), n: 'vs 50-day avg' },
+                    { l: 'Data Freshness', v: s.demo ? 'DEMO' : '15-MIN DELAYED', n: 'Massive Starter plan' },
+                  ].map(m => (
+                    <div className="map-item" key={m.l}>
+                      <div className="map-item-label">{m.l}</div>
+                      <div className="map-item-val">{m.v}</div>
+                      <div className="map-item-note">{m.n}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="modal-section-title">Key Price Levels</div>
+                <div className="levels-grid">
+                  {[
+                    { l: 'Latest Price', p: fmtPrice(s.price), n: 'Current' },
+                    { l: 'Previous Close', p: fmtPrice(s.prevClose), n: 'Prior session' },
+                    { l: 'Day High', p: fmtPrice(s.high), n: 'Intraday' },
+                    { l: 'Day Low', p: fmtPrice(s.low), n: 'Intraday' },
+                    { l: '50-Day SMA', p: fmtPrice(s.sma50), n: 'Key level' },
+                    { l: '1.5% Above 50DMA', p: fmtPrice(sma_up), n: 'Resistance zone' },
+                    { l: '1.5% Below 50DMA', p: fmtPrice(sma_dn), n: 'Support zone' },
+                    { l: 'Market Cap Tier', p: s.mcTier || '—', n: 'Avg $ vol based' },
+                  ].map(lv => (
+                    <div className="level-item" key={lv.l}>
+                      <div className="level-label">{lv.l}</div>
+                      <div className="level-price">{lv.p}</div>
+                      <div className="level-note">{lv.n}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="modal-section-title">Direction + Status</div>
+                <div className="game-plan-grid">
+                  <div className="game-plan">
+                    <div className="game-plan-title" style={{ color: dirColor }}>DIRECTION: {s.direction}</div>
+                    <div className="game-plan-body">
+                      {s.direction === 'Bullish' && `${s.ticker} is in a bullish 50DMA interaction. ${['CA', 'FA', 'RC'].includes(s.status) ? 'The stock is crossing or reclaiming above its 50-day SMA.' : 'Price is holding above the 50DMA.'} Bullish continuation depends on price holding above the 50DMA and volume remaining elevated.`}
+                      {s.direction === 'Bearish' && `${s.ticker} is in a bearish 50DMA interaction. ${['CB', 'FB', 'LS'].includes(s.status) ? 'The stock is crossing or losing below its 50-day SMA.' : 'Price is holding below or rejecting at the 50DMA.'} Continued weakness likely if price stays below the 50DMA.`}
+                      {s.direction === 'Neutral' && `${s.ticker} is in a neutral 50DMA interaction. The stock is testing or indecisive around the 50-day SMA. No confirmed crossing has occurred. Monitor for a definitive break in either direction.`}
+                    </div>
+                  </div>
+                  <div className="game-plan">
+                    <div className="game-plan-title">STATUS: {statusName}</div>
+                    <div className="game-plan-body">
+                      {s.status === 'CA' && 'Fresh crossing above the 50DMA today. Prior close was below. Watch for confirmation with follow-through volume.'}
+                      {s.status === 'CB' && 'Fresh crossing below the 50DMA today. Prior close was above. Watch for continuation with elevated selling volume.'}
+                      {s.status === 'FA' && `First closing cross above the 50DMA after ${s.daysOnPrevSide || 'several'} days below. More significant than a simple crossing.`}
+                      {s.status === 'FB' && `First closing cross below the 50DMA after ${s.daysOnPrevSide || 'several'} days above. Potentially meaningful breakdown.`}
+                      {s.status === 'RC' && `50DMA reclaim after ${s.daysOnPrevSide || 'multiple'} days below. Strong bullish event. Look for continuation volume.`}
+                      {s.status === 'LS' && `50DMA lost after ${s.daysOnPrevSide || 'multiple'} days above. Significant breakdown. Watch for continuation.`}
+                      {s.status === 'TB' && 'Testing 50DMA from below. Not a confirmed crossing yet — watchlist alert.'}
+                      {s.status === 'TA' && 'Testing 50DMA from above. Intraday low approached SMA but held. Watch for breakdown.'}
+                      {s.status === 'RJ' && 'Rejected at the 50DMA. High touched SMA but close was below. Bearish failure to reclaim.'}
+                      {s.status === 'HA' && 'Holding above the 50DMA. No fresh crossing today. Bullish continuation posture.'}
+                      {s.status === 'HB' && 'Holding below the 50DMA. No fresh crossing today. Bearish continuation posture.'}
+                      {s.status === 'NA' && 'No active 50DMA signal detected.'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="modal-section-title">Confirmation + Risk Signals</div>
+                <div className="signals-grid">
+                  <div className="signal-list">
+                    <div className="signal-list-title pos">SIGNIFICANCE SIGNALS</div>
+                    {sigSigs.map((sg, i) => (
+                      <div className="signal-item" key={i}>
+                        <div className={`signal-dot ${sg.c}`} />
+                        <span>{sg.t}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="signal-list">
+                    <div className="signal-list-title neg">QUALITY / FAILURE FLAGS</div>
+                    {flags.map((f, i) => (
+                      <div className="signal-item" key={i}>
+                        <div className={`signal-dot ${f.c}`} />
+                        <span>{f.t}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="modal-section-title">Signal Score Breakdown</div>
+                <div className="module-grid">
+                  {[
+                    { n: '50DMA Crossing Quality', sc: sc.crossingQuality, w: '45%', d: `${statusName} · days on prior side: ${s.daysOnPrevSide || 0}` },
+                    { n: 'Relative Volume', sc: sc.relVolScore, w: '35%', d: `${fmtRvol(s.relVol20)} vs 20D avg · ${(s.relVol20 || 0) > 1.5 ? 'elevated' : 'below/normal'}` },
+                    { n: 'Close Location', sc: sc.closeLocScore, w: '10%', d: `Close at ${fmt((s.closeLocation || 0.5) * 100)}% of range` },
+                    { n: 'Distance From 50DMA', sc: sc.distScore, w: '5%', d: `${fmt(Math.abs(s.distPct || 0))}% from 50DMA` },
+                    { n: 'Prior Side Context', sc: sc.priorContextScore, w: '5%', d: `${s.daysOnPrevSide || 0} days on prior side` },
+                    { n: 'Data Source', sc: s.demo ? 40 : 82, w: '—', d: s.demo ? 'DEMO — not real data' : 'Massive Starter · 15-min delayed' },
+                  ].map(m => (
+                    <div className="module-card" key={m.n}>
+                      <div className="module-header">
+                        <span className="module-name">{m.n}</span>
+                        <span className="module-score" style={{ color: scoreColor(m.sc) }}>{m.sc}</span>
+                      </div>
+                      <div className="module-bar"><div className="module-fill" style={{ width: `${m.sc}%`, background: scoreColor(m.sc) }} /></div>
+                      <div className="module-detail">{m.d}{m.w !== '—' && ` · Weight: ${m.w}`}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="modal-section-title">Return + Volume Summary</div>
+                <div className="bottom-strip">
+                  {[
+                    { l: '5D Return', v: fmtPct(s.ret5d), c: s.ret5d >= 0 ? 'var(--green)' : 'var(--red)' },
+                    { l: '10D Return', v: fmtPct(s.ret10d), c: s.ret10d >= 0 ? 'var(--green)' : 'var(--red)' },
+                    { l: 'Rel Vol 20D', v: fmtRvol(s.relVol20), c: 'var(--blue)' },
+                    { l: 'Rel Vol 50D', v: fmtRvol(s.relVol50), c: 'var(--teal)' },
+                    { l: 'Volume', v: fmtVol(s.volume), c: 'var(--text)' },
+                    { l: '20D Avg Vol', v: fmtVol(s.avgVol20), c: 'var(--text-dim)' },
+                    { l: 'Close Loc', v: fmt((s.closeLocation || 0.5) * 100) + '%', c: 'var(--text-dim)' },
+                    { l: 'Dist vs 50DMA', v: fmtPct(s.distPct), c: s.distPct >= 0 ? 'var(--green)' : 'var(--red)' },
+                  ].map(item => (
+                    <div className="strip-item" key={item.l}>
+                      <div className="strip-label">{item.l}</div>
+                      <div className="strip-val" style={{ color: item.c }}>{item.v}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─────────────── TIER 4 CONFIRM ─────────────── */
+    function Tier4Confirm({ batchSize, onConfirm, onCancel }) {
+      return (
+        <div className="confirm-overlay">
+          <div className="confirm-box">
+            <div className="confirm-title">⚠ TIER 4 FULL UNIVERSE SCAN</div>
+            <div className="confirm-body">
+              This will attempt to scan approximately <strong>3,000–5,000 stocks</strong> across all Nasdaq and NYSE listings after liquidity filtering. This is a long-running operation.
+            </div>
+            <div className="confirm-stats">
+              <span className="confirm-stat-label">Est. universe size:</span>
+              <span className="confirm-stat-val">3,000–5,000 tickers</span>
+              <span className="confirm-stat-label">Est. scan time:</span>
+              <span className="confirm-stat-val">20–35 minutes</span>
+              <span className="confirm-stat-label">Estimated API calls:</span>
+              <span className="confirm-stat-val">3,000–5,000+</span>
+              <span className="confirm-stat-label">Rate limit risk:</span>
+              <span className="confirm-stat-val" style={{ color: 'var(--red)' }}>High</span>
+              <span className="confirm-stat-label">Current batch size:</span>
+              <span className="confirm-stat-val">{batchSize} tickers/batch</span>
+            </div>
+            <ul className="confirm-recs">
+              <li>Run during off-market or low-traffic hours</li>
+              <li>Use batch size 25 for safest rate limit compliance</li>
+              <li>Results stream in real time as each batch completes</li>
+              <li>Partial results are saved if scan is interrupted</li>
+              <li>Use Tier 1–3 for faster, higher-quality signal scans</li>
+            </ul>
+            <div className="confirm-btns">
+              <button className="confirm-btn cancel" onClick={onCancel}>CANCEL</button>
+              <button className="confirm-btn confirm" onClick={onConfirm}>CONFIRM FULL SCAN</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ─────────────── LIVE SCAN DASHBOARD ─────────────── */
+    function ScanDashboard({ state, onPause, onResume, onCancel, onDone, onViewPartial }) {
+      const {
+        isRunning, isPaused, isDone,
+        tier, totalTickers, scannedCount, failedCount, skippedCount,
+        batchIndex, totalBatches, batchSize,
+        currentTicker, lastAlert,
+        loadingStage, pct, resultsCount,
+        resumeAvailable, resumeInfo,
+      } = state;
+
+      const tierInfo = TIERS[tier] || TIERS.T1;
+      const pctDisplay = Math.min(100, Math.round(pct || 0));
+
+      if (resumeAvailable && !isRunning && !isDone) {
+        return (
+          <div className="scan-dashboard">
+            <div className="scan-dash-inner">
+              <div className="scan-dash-title">RESUME PREVIOUS SCAN?</div>
+              <div className="scan-resume-banner">
+                <div className="scan-resume-text">
+                  A previous <strong>{resumeInfo?.tier}</strong> scan was interrupted at batch <strong>{resumeInfo?.batchIndex}</strong> with <strong>{resumeInfo?.resultsCount}</strong> results saved.
+                </div>
+                <div className="scan-resume-btns">
+                  <button className="scan-action-btn resume" onClick={() => onResume(true)}>RESUME</button>
+                  <button className="scan-action-btn cancel" onClick={() => onResume(false)}>START FRESH</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="scan-dashboard">
+          <div className="scan-dash-inner">
+            <div className="scan-dash-title">
+              {isDone ? '✓ SCAN COMPLETE' : isPaused ? '⏸ SCAN PAUSED' : '50-DAY SMA CROSSING ENGINE'}
+            </div>
+            <div className="scan-dash-tier">
+              SCANNING {tierInfo.label.toUpperCase()} · {tierInfo.approx.toLocaleString()} EST. STOCKS
+            </div>
+
+            <div>
+              <div className="scan-progress-track">
+                <div className="scan-progress-fill" style={{ width: `${pctDisplay}%` }} />
+              </div>
+              <div className="scan-progress-label">
+                <span>{loadingStage || 'Initializing…'}</span>
+                <span>{pctDisplay}%</span>
+              </div>
+            </div>
+
+            <div className="scan-stats-grid">
+              <div className="scan-stat-card ok">
+                <div className="s-label">Scanned</div>
+                <div className="s-val">{scannedCount || 0}</div>
+              </div>
+              <div className="scan-stat-card info">
+                <div className="s-label">Alerts</div>
+                <div className="s-val">{resultsCount || 0}</div>
+              </div>
+              <div className="scan-stat-card warn">
+                <div className="s-label">Skipped</div>
+                <div className="s-val">{skippedCount || 0}</div>
+              </div>
+              <div className="scan-stat-card err">
+                <div className="s-label">Failed</div>
+                <div className="s-val">{failedCount || 0}</div>
+              </div>
+            </div>
+
+            <div className="scan-current-box">
+              <div className="scan-current-row">
+                <span className="scan-current-label">BATCH</span>
+                <span className="scan-current-val">{batchIndex || 0} / {totalBatches || '—'} ({batchSize} tickers/batch)</span>
+              </div>
+              <div className="scan-current-row">
+                <span className="scan-current-label">TICKER</span>
+                <span className="scan-current-val">{totalTickers ? `${(scannedCount || 0) + (failedCount || 0) + (skippedCount || 0)} / ${totalTickers}` : '—'}</span>
+              </div>
+              <div className="scan-current-row">
+                <span className="scan-current-label">CURRENTLY SCANNING</span>
+                <span className="scan-current-val" style={{ color: 'var(--blue)' }}>{currentTicker || '—'}</span>
+              </div>
+            </div>
+
+            {lastAlert && (
+              <div className="scan-latest-alert">
+                <span className="scan-latest-label">LAST ALERT:</span>
+                <span style={{ fontWeight: 700, color: lastAlert.direction === 'Bullish' ? 'var(--green)' : 'var(--red)' }}>{lastAlert.ticker}</span>
+                <StatusBadge code={lastAlert.status} />
+                <RvolCell rv={lastAlert.relVol20} />
+                <span style={{ fontSize: 9, color: 'var(--text-muted)', marginLeft: 'auto' }}>Score: {lastAlert.signalScore}</span>
+              </div>
+            )}
+
+            <div className="scan-btn-row">
+              {!isDone && !isPaused && isRunning && (
+                <button className="scan-action-btn pause" onClick={onPause}>⏸ PAUSE</button>
+              )}
+              {!isDone && isPaused && (
+                <button className="scan-action-btn resume" onClick={() => onResume(false)}>▶ RESUME</button>
+              )}
+              {!isDone && (
+                <button className="scan-action-btn cancel" onClick={onCancel}>✕ CANCEL</button>
+              )}
+              {isDone && (
+                <button className="scan-action-btn done" onClick={onDone}>VIEW RESULTS →</button>
+              )}
+            </div>
+
+            {(isDone || isPaused) && (resultsCount || 0) > 0 && (
+              <div className="scan-note">
+                {isDone ? `Scan complete. ${resultsCount} results ready.` : `${resultsCount} results available so far. Resume to continue or cancel to view partial results.`}
+              </div>
+            )}
+
+            {!isDone && isRunning && (
+              <div className="scan-note">
+                Results are streaming into the table below as each batch completes.
+                {tier === 'T3' || tier === 'T4' ? ' Long scan — use PAUSE at any time to view partial results.' : ''}
+              </div>
+            )}
+
+            {isPaused && (
+              <div className="scan-note warn">⚠ Scan paused. Click RESUME to continue from batch {batchIndex}.</div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* ─────────────── MAIN APP ─────────────── */
+    function App() {
+      const [apiKey, setApiKey] = useState(() => localStorage.getItem(SK_APIKEY) || '');
+      const [apiKeyInput, setApiKeyInput] = useState('');
+      const [showKeyForm, setShowKeyForm] = useState(false);
+      const [demoMode, setDemoMode] = useState(false);
+      const [tier, setTier] = useState('T1');
+      const [batchSz, setBatchSz] = useState('50');
+      const [showLiq, setShowLiq] = useState(false);
+      const [liqFilters, setLiqFilters] = useState({ ...LIQ_DEFAULTS });
+      const [results, setResults] = useState([]);
+      const [diff, setDiff] = useState(null);
+      const [regime, setRegime] = useState({ label: 'Unknown', pctAbove: null, aboveCrosses: 0, belowCrosses: 0 });
+      const [scanStats, setScanStats] = useState(null);
+      const [selectedStock, setSelectedStock] = useState(null);
+      const [toasts, setToasts] = useState([]);
+      const [lastScan, setLastScan] = useState(() => localStorage.getItem(SK_LAST_SCAN) || null);
+      const [kpiFilter, setKpiFilter] = useState(null);
+      const [showT4Confirm, setShowT4Confirm] = useState(false);
+
+      // Scan state
+      const [scanState, setScanState] = useState({
+        isRunning: false, isPaused: false, isDone: false,
+        showDash: false,
+        tier: 'T1', totalTickers: 0, scannedCount: 0, failedCount: 0, skippedCount: 0,
+        batchIndex: 0, totalBatches: 0, batchSize: 50,
+        currentTicker: '', lastAlert: null,
+        loadingStage: '', pct: 0, resultsCount: 0,
+        resumeAvailable: false, resumeInfo: null,
+      });
+
+      // Refs for scan control
+      const pauseRef = useRef(false);
+      const cancelRef = useRef(false);
+
+      // Filter state
+      const [fSector, setFSector] = useState('All Sectors');
+      const [fIndustry, setFIndustry] = useState('All Industries');
+      const [fCrossing, setFCrossing] = useState('Any');
+      const [fRvol, setFRvol] = useState('Any');
+      const [fDir, setFDir] = useState('Any Direction');
+      const [fSearch, setFSearch] = useState('');
+      const [sortKey, setSortKey] = useState('default');
+      const [sortDir, setSortDir] = useState('desc');
+
+      const toastRef = useRef(0);
+
+      function showToast(title, msg, type = 'info', duration = 4500) {
+        const id = ++toastRef.current;
+        setToasts(t => [...t, { id, title, msg, type }]);
+        setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), duration);
+      }
+
+      function saveKey() {
+        const k = apiKeyInput.trim();
+        if (!k) { showToast('No Key', 'Enter your Massive Stocks Starter API key.', 'warn'); return; }
+        setApiKey(k); localStorage.setItem(SK_APIKEY, k); setShowKeyForm(false);
+        showToast('API Key Saved', 'Key stored in localStorage.', 'success');
+      }
+      function clearKey() {
+        setApiKey(''); setApiKeyInput('');
+        localStorage.removeItem(SK_APIKEY);
+        showToast('Key Cleared', 'API key removed.', 'info');
+      }
+
+      function updateSS(patch) { setScanState(s => ({ ...s, ...patch })); }
+
+      /* Get universe tickers for selected tier */
+      async function resolveUniverse(tierKey, apiKey, onProgress) {
+        if (tierKey === 'T1') return [...new Set(SP500.slice(0, 503))];
+        if (tierKey === 'T2') return T2_TICKERS;
+
+        // T3/T4: start from large curated lists (guaranteed to work),
+        // then optionally try to enhance with live API reference data
+        const baselist = tierKey === 'T4' ? T4_TICKERS : T3_TICKERS;
+
+        onProgress(`Loading ${tierKey} universe (${baselist.length.toLocaleString()} curated tickers)…`);
+        await sleep(100);
+
+        // Optionally try to fetch live ticker list to supplement curated base
+        // Only attempt if key looks valid; treat any failure as non-fatal
+        try {
+          onProgress('Attempting to fetch live ticker reference from API (optional)…');
+          const liveTickers = await fetchFullUniverse(apiKey, onProgress);
+          if (liveTickers.length > baselist.length) {
+            // Merge: live API list + curated base, deduped
+            const merged = [...new Set([...baselist, ...liveTickers])];
+            onProgress(`Universe ready: ${merged.length.toLocaleString()} tickers (API + curated)`);
+            showToast('Universe Extended', `Live API added ${liveTickers.length - baselist.length} extra tickers to ${tierKey} universe.`, 'info');
+            return merged;
+          }
+        } catch (e) {
+          if (e.code === 'AUTH') throw e;
+          // Non-fatal: just use the curated list — this is the expected path for Starter plan
+          onProgress(`Using curated ${tierKey} universe (${baselist.length.toLocaleString()} tickers)`);
+        }
+
+        return baselist;
+      }
+
+      /* ── MAIN SCAN ── */
+      async function startScan(resumeFrom = null) {
+        if (!apiKey && !demoMode) { setShowKeyForm(true); showToast('API Key Required', 'Enter your Massive Stocks Starter API key.', 'warn'); return; }
+
+        cancelRef.current = false;
+        pauseRef.current = false;
+
+        const bs = parseInt(batchSz) || 50;
+        const today = new Date();
+        const fromDate = dateStr(subtractDays(today, 120));
+        const toDate = dateStr(today);
+
+        /* DEMO MODE */
+        if (demoMode) {
+          updateSS({ isRunning: true, isPaused: false, isDone: false, showDash: true, tier, loadingStage: 'Generating demo data…', pct: 0, scannedCount: 0, failedCount: 0, skippedCount: 0, resultsCount: 0 });
+          await sleep(300);
+          const mockTickers = (tier === 'T1' ? SP500.slice(0, 100) : tier === 'T2' ? T2_TICKERS.slice(0, 150) : tier === 'T3' ? T3_TICKERS.slice(0, 300) : T4_TICKERS.slice(0, 400));
+          const mockResults = mockTickers.map(t => generateMock(t));
+          for (let i = 0; i < mockResults.length; i++) {
+            if (cancelRef.current) break;
+            if (pauseRef.current) { while (pauseRef.current && !cancelRef.current) await sleep(200); }
+            updateSS({ pct: Math.round(i / mockResults.length * 100), loadingStage: `[${i + 1}/${mockResults.length}] ${mockTickers[i]}`, currentTicker: mockTickers[i], scannedCount: i + 1, resultsCount: i + 1, lastAlert: ['CA', 'CB', 'FA', 'FB', 'RC', 'LS', 'RJ'].includes(mockResults[i].status) ? mockResults[i] : null });
+            await sleep(8);
+          }
+          const r = computeRegime(mockResults);
+          setRegime(r);
+          const prevMap = JSON.parse(sessionStorage.getItem(SK_PREV_SCAN) || '{}');
+          const d = compareScans(mockResults, prevMap);
+          setDiff(d);
+          setResults(mockResults);
+          setScanStats({ scanned: mockResults.length, failed: 0, skipped: 0 });
+          const np = {}; mockResults.forEach(r => np[r.ticker] = r.status);
+          sessionStorage.setItem(SK_PREV_SCAN, JSON.stringify(np));
+          const now = new Date().toLocaleTimeString();
+          setLastScan(now); localStorage.setItem(SK_LAST_SCAN, now);
+          updateSS({ isRunning: false, isDone: true, pct: 100, loadingStage: 'Demo scan complete.', resultsCount: mockResults.length });
+          showToast('DEMO SCAN COMPLETE', `${mockResults.length} stocks with mock data. NOT real market data.`, 'warn');
+          return;
+        }
+
+        /* PRODUCTION SCAN */
+        let universe;
+        try {
+          updateSS({ isRunning: true, isPaused: false, isDone: false, showDash: true, tier, loadingStage: 'Validating API key…', pct: 1, scannedCount: 0, failedCount: 0, skippedCount: 0, resultsCount: 0, batchIndex: 0 });
+
+          // Validate key
+          try {
+            await apiFetch(`${API_BASE}/v2/aggs/ticker/AAPL/prev`, apiKey);
+          } catch (e) {
+            if (e.code === 'AUTH') {
+              showToast('Auth Failed', 'Invalid API key.', 'error', 6000);
+              updateSS({ isRunning: false, showDash: false });
+              return;
+            }
+          }
+
+          updateSS({ loadingStage: 'Resolving universe…', pct: 2 });
+          universe = await resolveUniverse(tier, apiKey, (msg) => updateSS({ loadingStage: msg }));
+
+          // Apply ETF filter (best-effort — common ETF tickers)
+          const ETF_PATTERNS = /^(SPY|QQQ|IWM|DIA|GLD|SLV|TLT|HYG|LQD|VTI|VOO|ARKK|XLK|XLF|XLE|XLV|XLU|XLB|XLP|XLY|XLC|XLRE|XLI|VNQ|GDX|GDXJ|USO|UNG|XBI|IBB|SOXX|SMH|HACK|FINX|ROBO|BOTZ|MSOS|BITO|JETS|GBTC|IAU|BAR|SIVR|PSLV)$/;
+          if (liqFilters.excludeETFs) {
+            universe = universe.filter(t => !ETF_PATTERNS.test(t));
+          }
+
+        } catch (e) {
+          if (e.code === 'AUTH') { showToast('Auth Failed', 'Invalid API key.', 'error', 6000); }
+          else showToast('Universe Error', e.message || 'Failed to build universe.', 'error');
+          updateSS({ isRunning: false, showDash: false });
+          return;
+        }
+
+        // Check for resume
+        let startBatch = 0;
+        let accResults = [];
+        let scanned = 0, failed = 0, skipped = 0;
+
+        if (resumeFrom) {
+          try {
+            const saved = JSON.parse(sessionStorage.getItem(SK_PROGRESS) || 'null');
+            if (saved && saved.tier === tier) {
+              startBatch = saved.batchIndex || 0;
+              accResults = saved.results || [];
+              scanned = saved.scanned || 0; failed = saved.failed || 0; skipped = saved.skipped || 0;
+              setResults([...accResults]);
+              showToast('Scan Resumed', `Resuming from batch ${startBatch + 1} with ${accResults.length} results saved.`, 'info');
+            }
+          } catch (e) { }
+        }
+
+        const batches = chunk(universe, bs);
+        const totalBatches = batches.length;
+        updateSS({ totalTickers: universe.length, totalBatches, batchSize: bs });
+
+        for (let bi = startBatch; bi < batches.length; bi++) {
+          if (cancelRef.current) break;
+
+          // Pause handling
+          while (pauseRef.current && !cancelRef.current) {
+            // Save progress while paused
+            sessionStorage.setItem(SK_PROGRESS, JSON.stringify({ tier, batchIndex: bi, results: accResults, scanned, failed, skipped, resultsCount: accResults.length }));
+            await sleep(300);
+          }
+          if (cancelRef.current) break;
+
+          updateSS({ batchIndex: bi + 1, pct: Math.round((bi / batches.length) * 95) + 2 });
+
+          const batch = batches[bi];
+          for (let ti = 0; ti < batch.length; ti++) {
+            if (cancelRef.current) break;
+            while (pauseRef.current && !cancelRef.current) await sleep(200);
+            if (cancelRef.current) break;
+
+            const ticker = batch[ti];
+            updateSS({ currentTicker: ticker, loadingStage: `Batch ${bi + 1}/${totalBatches} · [${scanned + failed + skipped + 1}/${universe.length}] ${ticker}` });
+
+            try {
+              await sleep(100); // rate-limit throttle
+              const result = await scanTicker(ticker, apiKey, liqFilters, fromDate, toDate);
+              if (result) {
+                scanned++;
+                accResults.push(result);
+                const isAlert = ['CA', 'FA', 'RC', 'CB', 'FB', 'LS', 'RJ'].includes(result.status);
+                updateSS({ scannedCount: scanned, failedCount: failed, skippedCount: skipped, resultsCount: accResults.length, lastAlert: isAlert ? result : undefined });
+                // Stream into table every 5 results
+                if (accResults.length % 5 === 0) setResults([...accResults]);
+              } else {
+                skipped++;
+                updateSS({ skippedCount: skipped });
+              }
+            } catch (e) {
+              if (e.code === 'AUTH') { showToast('Auth Error', 'Invalid API key.', 'error', 6000); cancelRef.current = true; break; }
+              if (e.code === 'RATE') { await sleep(15000); }
+              failed++;
+              updateSS({ failedCount: failed });
+            }
+          }
+
+          // Save checkpoint after each batch
+          if (!cancelRef.current) {
+            sessionStorage.setItem(SK_PROGRESS, JSON.stringify({ tier, batchIndex: bi + 1, results: accResults, scanned, failed, skipped, resultsCount: accResults.length }));
+            // Stream batch results
+            setResults([...accResults]);
+          }
+
+          // Pause between batches
+          if (bi < batches.length - 1 && !cancelRef.current) await sleep(300);
+        }
+
+        // Finalize
+        const finalResults = accResults;
+        const r = computeRegime(finalResults);
+        setRegime(r);
+        const prevMap = JSON.parse(sessionStorage.getItem(SK_PREV_SCAN) || '{}');
+        const d = compareScans(finalResults, prevMap);
+        setDiff(d);
+        setResults(sortResults(finalResults, 'default', 'desc'));
+        setScanStats({ scanned, failed, skipped, tier, universe: universe.length });
+        saveAlertHistory(finalResults);
+        const np = {}; finalResults.forEach(r => np[r.ticker] = r.status);
+        sessionStorage.setItem(SK_PREV_SCAN, JSON.stringify(np));
+        // Clear progress on complete
+        if (!cancelRef.current) sessionStorage.removeItem(SK_PROGRESS);
+        const now = new Date().toLocaleTimeString();
+        setLastScan(now); localStorage.setItem(SK_LAST_SCAN, now);
+
+        const abC = finalResults.filter(r => ['CA', 'FA', 'RC'].includes(r.status)).length;
+        const blC = finalResults.filter(r => ['CB', 'FB', 'LS'].includes(r.status)).length;
+        updateSS({ isRunning: false, isPaused: false, isDone: !cancelRef.current, pct: 100, loadingStage: cancelRef.current ? 'Scan cancelled.' : 'Scan complete.', scannedCount: scanned, failedCount: failed, skippedCount: skipped, resultsCount: finalResults.length, currentTicker: '' });
+        showToast(cancelRef.current ? 'Scan Cancelled' : 'Scan Complete', `${scanned} scanned · ${abC} above crosses · ${blC} below crosses`, 'success');
+      }
+
+      function handleScanClick() {
+        if (scanState.isRunning) return;
+        // Check for resume
+        try {
+          const saved = JSON.parse(sessionStorage.getItem(SK_PROGRESS) || 'null');
+          if (saved && saved.tier === tier && (saved.resultsCount || 0) > 0 && !demoMode) {
+            setScanState(s => ({ ...s, showDash: true, resumeAvailable: true, resumeInfo: { tier: saved.tier, batchIndex: saved.batchIndex, resultsCount: saved.resultsCount } }));
+            return;
+          }
+        } catch (e) { }
+
+        if (tier === 'T4' && !demoMode) { setShowT4Confirm(true); return; }
+        setScanState(s => ({ ...s, showDash: true, resumeAvailable: false }));
+        startScan(false);
+      }
+
+      function handleResumeChoice(doResume) {
+        setScanState(s => ({ ...s, resumeAvailable: false, resumeInfo: null }));
+        startScan(doResume);
+      }
+
+      function handlePause() {
+        pauseRef.current = true;
+        updateSS({ isPaused: true, isRunning: true });
+      }
+
+      function handleResume() {
+        pauseRef.current = false;
+        updateSS({ isPaused: false, isRunning: true });
+      }
+
+      function handleCancel() {
+        cancelRef.current = true;
+        pauseRef.current = false;
+        updateSS({ isPaused: false });
+      }
+
+      function handleDone() {
+        updateSS({ showDash: false, isRunning: false, isDone: false });
+      }
+
+      // Filtered + sorted results
+      const displayResults = useMemo(() => {
+        let r = [...results];
+        if (fSector !== 'All Sectors') r = r.filter(x => x.sector === fSector);
+        if (fIndustry !== 'All Industries') r = r.filter(x => x.industry === fIndustry);
+        if (fCrossing !== 'Any') {
+          const entry = Object.entries(STATUS_CODES).find(([, v]) => v === fCrossing);
+          if (entry) r = r.filter(x => x.status === entry[0]);
+        }
+        r = r.filter(x => rvolFilterPass(x.relVol20, fRvol));
+        if (fDir === 'Bullish Only') r = r.filter(x => x.direction === 'Bullish');
+        else if (fDir === 'Bearish Only') r = r.filter(x => x.direction === 'Bearish');
+        else if (fDir === 'Neutral / Testing Only') r = r.filter(x => x.direction === 'Neutral');
+        if (fSearch) { const q = fSearch.toLowerCase(); r = r.filter(x => x.ticker.toLowerCase().includes(q) || x.company.toLowerCase().includes(q)); }
+        if (kpiFilter === 'above') r = r.filter(x => ['CA', 'FA', 'RC'].includes(x.status));
+        else if (kpiFilter === 'below') r = r.filter(x => ['CB', 'FB', 'LS'].includes(x.status));
+        else if (kpiFilter === 'hirvol') r = r.filter(x => (x.relVol20 || 0) > 1.5);
+        else if (kpiFilter === 'extreme') r = r.filter(x => (x.relVol20 || 0) > 3);
+        else if (kpiFilter === 'testing') r = r.filter(x => ['TB', 'TA'].includes(x.status));
+        else if (kpiFilter === 'rejected') r = r.filter(x => x.status === 'RJ');
+        return sortResults(r, sortKey, sortDir);
+      }, [results, fSector, fIndustry, fCrossing, fRvol, fDir, fSearch, sortKey, sortDir, kpiFilter]);
+
+      const kpiAbove = results.filter(r => ['CA', 'FA', 'RC'].includes(r.status)).length;
+      const kpiBelow = results.filter(r => ['CB', 'FB', 'LS'].includes(r.status)).length;
+      const kpiHiRvol = results.filter(r => (r.relVol20 || 0) > 1.5).length;
+      const kpiExtreme = results.filter(r => (r.relVol20 || 0) > 3).length;
+      const kpiTesting = results.filter(r => ['TB', 'TA'].includes(r.status)).length;
+      const kpiRejected = results.filter(r => r.status === 'RJ').length;
+      const kpiScanned = results.length;
+      const kpiTotal = scanState.totalTickers || 0;
+
+      function handleSort(key) { if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortKey(key); setSortDir('desc'); } }
+
+      function clearFilters() { setFSector('All Sectors'); setFIndustry('All Industries'); setFCrossing('Any'); setFRvol('Any'); setFDir('Any Direction'); setFSearch(''); setKpiFilter(null); }
+      const hasFilters = fSector !== 'All Sectors' || fIndustry !== 'All Industries' || fCrossing !== 'Any' || fRvol !== 'Any' || fDir !== 'Any Direction' || fSearch || kpiFilter;
+
+      const regimeCls = regime.label === 'Bullish' ? 'regime-bull' : regime.label === 'Bearish' ? 'regime-bear' : regime.label === 'Neutral' ? 'regime-neutral' : 'regime-unknown';
+      const regimeLabel = regime.label === 'Unknown' ? 'UNKNOWN · No Scan Data' : `${regime.label.toUpperCase()} · ${regime.pctAbove != null ? regime.pctAbove.toFixed(0) + '% Above 50DMA' : '—'}`;
+
+      const tierInfo = TIERS[tier] || TIERS.T1;
+      const tierCls = tier === 'T3' ? 't3' : tier === 'T4' ? 't4' : '';
+
+      const activeLiqFilters = [
+        liqFilters.minPrice !== '2' && `$${liqFilters.minPrice}+ price`,
+        liqFilters.minAvgVol !== '250000' && `${fmtVol(parseInt(liqFilters.minAvgVol))}+ avg vol`,
+        liqFilters.minDollarVol !== '5000000' && `$${fmtVol(parseInt(liqFilters.minDollarVol))}+ $ vol`,
+        liqFilters.minHistory !== '60' && `${liqFilters.minHistory}d+ history`,
+        liqFilters.excludeETFs && 'No ETFs',
+        liqFilters.marketCapTier !== 'All' && `${liqFilters.marketCapTier} cap`,
+      ].filter(Boolean);
+
+      function SortTh({ label, sk }) {
+        const a = sortKey === sk;
+        return <th onClick={() => handleSort(sk)} className={a ? 'sort-active' : ''}>{label}<span className={`sort-icon${a ? ' active' : ''}`}>{a ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span></th>;
+      }
+
+      return (
+        <div className="page">
+
+          {/* ── HEADER ── */}
+          <header className="header">
+            <div className="header-top-row">
+              <div className="header-left">
+                <div className="logo-mark">↕50</div>
+                <div>
+                  <div className="engine-title">50-DAY SMA CROSSING ENGINE v2.0</div>
+                  <div className="engine-sub">Tiered Universe · Liquidity Filters · Batch Scan · Real Massive Data · Last scan: {lastScan || '—'}</div>
+                </div>
+              </div>
+              <div className="header-right">
+                <span className={`regime-badge ${regimeCls}`}>
+                  {regime.label === 'Bullish' && '▲ '}{regime.label === 'Bearish' && '▼ '}{regime.label === 'Neutral' && '→ '}
+                  {regimeLabel}
+                </span>
+                <span className={`freshness-badge${demoMode ? ' demo' : scanState.isRunning ? ' scanning' : !scanStats ? ' await' : ''}`}>
+                  {demoMode ? '⚠ DEMO MODE' : scanState.isRunning ? 'SCANNING…' : scanStats ? '15-MIN DELAYED' : 'AWAITING SCAN'}
+                </span>
+                <button className={`icon-btn purple-btn${demoMode ? ' active' : ''}`} onClick={() => setDemoMode(d => !d)}>
+                  {demoMode ? 'DEMO ON' : 'DEMO'}
+                </button>
+                <button className="icon-btn" onClick={() => { setShowKeyForm(s => !s); setApiKeyInput(apiKey); }}>
+                  {apiKey ? '✓ KEY SET' : 'SET KEY'}
+                </button>
+                <button
+                  className={`scan-btn${scanState.isRunning && !scanState.isPaused ? ' scanning' : scanState.isPaused ? ' paused' : ''}`}
+                  onClick={scanState.isRunning && !scanState.isPaused ? handlePause : scanState.isPaused ? handleResume : handleScanClick}
+                  disabled={!apiKey && !demoMode}
+                >
+                  {scanState.isRunning && !scanState.isPaused ? '⏸ PAUSE' : scanState.isPaused ? '▶ RESUME' : '↕ SCAN NOW'}
+                </button>
+                {scanState.isRunning && <button className="icon-btn danger" onClick={handleCancel}>✕ CANCEL</button>}
+              </div>
+            </div>
+
+            {showKeyForm && (
+              <div className="inline-key-form">
+                <span className="inline-key-label">MASSIVE KEY:</span>
+                <div className="inline-key-row">
+                  <input className="inline-key-input" type="password"
+                    placeholder="Paste your Massive Stocks Starter API key…"
+                    value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && saveKey()}
+                  />
+                  <button className="inline-key-save" onClick={saveKey}>SAVE</button>
+                  <button className="inline-key-clear" onClick={clearKey}>CLEAR</button>
+                </div>
+                <span className={`key-status ${apiKey ? 'ok' : 'missing'}`}>{apiKey ? '✓ Key stored' : 'No key set'}</span>
+              </div>
+            )}
+
+            {/* ── CONTROLS ROW ── */}
+            <div className="controls-row">
+              {/* Universe Tier */}
+              <select
+                className={`ctrl-select tier-select${tier === 'T3' ? ' t3' : tier === 'T4' ? ' t4' : ''}`}
+                value={tier} onChange={e => setTier(e.target.value)}
+              >
+                <option value="T1">T1 · S&P 500 Core (~503)</option>
+                <option value="T2">T2 · S&P 500 + NQ100 + NYSE100 (~650)</option>
+                <option value="T3">T3 · Liquid US Equities (~1,500–2,500) ⚠</option>
+                <option value="T4">T4 · Full Nasdaq + NYSE (~3,000–5,000) ⚠</option>
+              </select>
+
+              {/* Batch size */}
+              <select className="ctrl-select" value={batchSz} onChange={e => setBatchSz(e.target.value)} title="Tickers per batch">
+                {BATCH_SIZES.map(b => <option key={b.v} value={b.v}>{b.label}</option>)}
+              </select>
+
+              <select className={`ctrl-select${fSector !== 'All Sectors' ? ' active' : ''}`} value={fSector} onChange={e => setFSector(e.target.value)}>
+                {SECTORS.map(o => <option key={o}>{o}</option>)}
+              </select>
+              <select className={`ctrl-select${fIndustry !== 'All Industries' ? ' active' : ''}`} value={fIndustry} onChange={e => setFIndustry(e.target.value)}>
+                {INDUSTRIES.map(o => <option key={o}>{o}</option>)}
+              </select>
+              <select className={`ctrl-select${fCrossing !== 'Any' ? ' active' : ''}`} value={fCrossing} onChange={e => setFCrossing(e.target.value)}>
+                {CROSSING_OPTS.map(o => <option key={o}>{o}</option>)}
+              </select>
+              <select className={`ctrl-select${fRvol !== 'Any' ? ' active' : ''}`} value={fRvol} onChange={e => setFRvol(e.target.value)}>
+                {RVOL_OPTS.map(o => <option key={o}>{o}</option>)}
+              </select>
+              <select className={`ctrl-select${fDir !== 'Any Direction' ? ' active' : ''}`} value={fDir} onChange={e => setFDir(e.target.value)}>
+                {DIR_OPTS.map(o => <option key={o}>{o}</option>)}
+              </select>
+              <input className="ctrl-search" placeholder="Search ticker / company…" value={fSearch} onChange={e => setFSearch(e.target.value)} />
+              {hasFilters && <button className="ctrl-clear" onClick={clearFilters}>✕ CLEAR</button>}
+              <button className={`liquidity-toggle-btn${showLiq ? ' active' : ''}`} onClick={() => setShowLiq(s => !s)}>
+                ⚖ LIQUIDITY{activeLiqFilters.length > 0 ? ` (${activeLiqFilters.length})` : ''} {showLiq ? '▲' : '▼'}
+              </button>
+              <span className="ctrl-count">{displayResults.length} stocks</span>
+            </div>
+
+            {/* ── LIQUIDITY PANEL ── */}
+            {showLiq && (
+              <div className="liquidity-panel">
+                <div className="liquidity-panel-inner">
+                  <div className="liq-group">
+                    <span className="liq-label">Min Price</span>
+                    <select className={`liq-select${liqFilters.minPrice !== '2' ? ' active' : ''}`} value={liqFilters.minPrice} onChange={e => setLiqFilters(l => ({ ...l, minPrice: e.target.value }))}>
+                      {[['1', '$1'], ['2', '$2 ✓'], ['5', '$5'], ['10', '$10'], ['20', '$20']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div className="liq-divider" />
+                  <div className="liq-group">
+                    <span className="liq-label">Min Avg Vol</span>
+                    <select className={`liq-select${liqFilters.minAvgVol !== '250000' ? ' active' : ''}`} value={liqFilters.minAvgVol} onChange={e => setLiqFilters(l => ({ ...l, minAvgVol: e.target.value }))}>
+                      {[['100000', '100K'], ['250000', '250K ✓'], ['500000', '500K'], ['1000000', '1M'], ['2000000', '2M']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div className="liq-divider" />
+                  <div className="liq-group">
+                    <span className="liq-label">Min $ Vol</span>
+                    <select className={`liq-select${liqFilters.minDollarVol !== '5000000' ? ' active' : ''}`} value={liqFilters.minDollarVol} onChange={e => setLiqFilters(l => ({ ...l, minDollarVol: e.target.value }))}>
+                      {[['1000000', '$1M'], ['5000000', '$5M ✓'], ['10000000', '$10M'], ['25000000', '$25M'], ['50000000', '$50M']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div className="liq-divider" />
+                  <div className="liq-group">
+                    <span className="liq-label">Min History</span>
+                    <select className={`liq-select${liqFilters.minHistory !== '60' ? ' active' : ''}`} value={liqFilters.minHistory} onChange={e => setLiqFilters(l => ({ ...l, minHistory: e.target.value }))}>
+                      {[['30', '30d'], ['60', '60d ✓'], ['90', '90d'], ['120', '120d']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div className="liq-divider" />
+                  <div className="liq-group">
+                    <span className="liq-label">Mkt Cap Tier</span>
+                    <select className={`liq-select${liqFilters.marketCapTier !== 'All' ? ' active' : ''}`} value={liqFilters.marketCapTier} onChange={e => setLiqFilters(l => ({ ...l, marketCapTier: e.target.value }))}>
+                      {['All', 'Mega', 'Large', 'Mid', 'Small', 'Micro'].map(o => <option key={o}>{o}</option>)}
+                    </select>
+                  </div>
+                  <div className="liq-divider" />
+                  <span className={`liq-toggle ${liqFilters.excludeETFs ? 'on' : 'off'}`} onClick={() => setLiqFilters(l => ({ ...l, excludeETFs: !l.excludeETFs }))}>EXCLUDE ETFs</span>
+                  <span className={`liq-toggle ${liqFilters.excludeSub2 ? 'on' : 'off'}`} onClick={() => setLiqFilters(l => ({ ...l, excludeSub2: !l.excludeSub2 }))}>EXCLUDE SUB-$2</span>
+                  <div className="liq-divider" />
+                  {activeLiqFilters.length > 0 && (
+                    <div className="liq-filter-chips">
+                      <span style={{ fontSize: 9, color: 'var(--text-muted)', marginRight: 4 }}>ACTIVE:</span>
+                      {activeLiqFilters.map((f, i) => <span key={i} className="liq-chip">{f}</span>)}
+                    </div>
+                  )}
+                  <button style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 4, background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 10, fontFamily: 'var(--font-mono)' }} onClick={() => setLiqFilters({ ...LIQ_DEFAULTS })}>RESET</button>
+                </div>
+              </div>
+            )}
+          </header>
+
+          {/* Demo banner */}
+          {demoMode && <div className="demo-banner">⚠ DEMO MODE ACTIVE — All data is randomly generated. NOT real market data. Disable demo mode and enter your Massive Stocks Starter API key for real data.</div>}
+
+          {/* KPI ROW */}
+          <div className="kpi-row">
+            <KpiCard label="CROSSED ABOVE 50DMA" value={kpiAbove} sub="Bullish crossings today" color="green glow-green" onClick={() => setKpiFilter(f => f === 'above' ? null : 'above')} active={kpiFilter === 'above'} />
+            <KpiCard label="CROSSED BELOW 50DMA" value={kpiBelow} sub="Bearish crossings today" color="red glow-red" onClick={() => setKpiFilter(f => f === 'below' ? null : 'below')} active={kpiFilter === 'below'} />
+            <KpiCard label="HIGH REL VOLUME" value={kpiHiRvol} sub="Rel volume over 1.5x" color="blue" onClick={() => setKpiFilter(f => f === 'hirvol' ? null : 'hirvol')} active={kpiFilter === 'hirvol'} />
+            <KpiCard label="EXTREME REL VOL" value={kpiExtreme} sub="Rel volume over 3x" color="blue-green glow-green" onClick={() => setKpiFilter(f => f === 'extreme' ? null : 'extreme')} active={kpiFilter === 'extreme'} />
+            <KpiCard label="TESTING 50DMA" value={kpiTesting} sub="Within 1.5% of 50DMA" color="purple" onClick={() => setKpiFilter(f => f === 'testing' ? null : 'testing')} active={kpiFilter === 'testing'} />
+            <KpiCard label="FAILED / REJECTED" value={kpiRejected} sub="Touched 50DMA, failed" color="orange" onClick={() => setKpiFilter(f => f === 'rejected' ? null : 'rejected')} active={kpiFilter === 'rejected'} />
+            <KpiCard label="SCAN COVERAGE" value={kpiScanned} sub={kpiTotal ? `of ~${kpiTotal.toLocaleString()} in ${tierInfo.short}` : `${tierInfo.short}`} color={`muted${scanState.isRunning ? ' amber' : ''}`} prog={kpiScanned} total={kpiTotal || kpiScanned || 1} />
+            <KpiCard label="UNIVERSE TIER" value={tier} sub={`${tierInfo.short} · ~${tierInfo.estTime}`} color={tier === 'T1' ? 'blue' : tier === 'T2' ? 'blue-green' : tier === 'T3' ? 'purple' : 'red'} />
+          </div>
+
+          {/* Scan stats bar */}
+          {scanStats && (
+            <div className="scan-stats-bar">
+              <div className="stat-chip"><span>Data Source:</span><span className="stat-val ok">Massive Stocks Starter API</span></div>
+              <div className="stat-chip"><span>Type:</span><span className="stat-val">Real Market Data</span></div>
+              <div className="stat-chip"><span>Freshness:</span><span className="stat-val warn">15-MIN DELAYED</span></div>
+              <div className="stat-chip"><span>Tier:</span><span className="stat-val info">{tier}</span></div>
+              <div className="stat-chip"><span>Scanned:</span><span className="stat-val ok">{scanStats.scanned}</span></div>
+              <div className="stat-chip"><span>Failed:</span><span className={`stat-val ${scanStats.failed > 0 ? 'err' : 'ok'}`}>{scanStats.failed}</span></div>
+              <div className="stat-chip"><span>Skipped:</span><span className="stat-val warn">{scanStats.skipped}</span></div>
+              <div className="stat-chip"><span>Universe:</span><span className="stat-val">{(scanStats.universe || 0).toLocaleString()}</span></div>
+              <div className="stat-chip"><span>Last Scan:</span><span className="stat-val">{lastScan}</span></div>
+              {activeLiqFilters.length > 0 && (
+                <div className="stat-chip">
+                  <span>Filters:</span>
+                  {activeLiqFilters.map((f, i) => <span key={i} className="liq-chip" style={{ marginLeft: 4 }}>{f}</span>)}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Diff banner */}
+          {diff && (diff.newAbove.length || diff.newBelow.length || diff.highRvol.length || diff.rejections.length || diff.testing.length) && (
+            <div className="diff-banner">
+              {diff.newAbove.length > 0 && <div className="diff-item"><span className="diff-dot green" /><span className="diff-label">NEW ABOVE:</span><span>{diff.newAbove.slice(0, 10).map(t => <span key={t} className="diff-ticker-chip green">{t}</span>)}</span></div>}
+              {diff.newBelow.length > 0 && <div className="diff-item"><span className="diff-dot red" /><span className="diff-label">NEW BELOW:</span><span>{diff.newBelow.slice(0, 10).map(t => <span key={t} className="diff-ticker-chip red">{t}</span>)}</span></div>}
+              {diff.highRvol.length > 0 && <div className="diff-item"><span className="diff-dot blue" /><span className="diff-label">HIGH RELVOL:</span><span>{diff.highRvol.slice(0, 8).map(t => <span key={t} className="diff-ticker-chip blue">{t}</span>)}</span></div>}
+              {diff.rejections.length > 0 && <div className="diff-item"><span className="diff-dot orange" /><span className="diff-label">REJECTIONS:</span><span>{diff.rejections.slice(0, 6).map(t => <span key={t} className="diff-ticker-chip orange">{t}</span>)}</span></div>}
+              {diff.testing.length > 0 && <div className="diff-item"><span className="diff-dot purple" /><span className="diff-label">TESTING:</span><span>{diff.testing.slice(0, 6).map(t => <span key={t} className="diff-ticker-chip" style={{ borderColor: 'rgba(168,85,247,0.3)', color: 'var(--purple)' }}>{t}</span>)}</span></div>}
+            </div>
+          )}
+
+          {/* TABLE */}
+          {results.length === 0 && !scanState.isRunning ? (
+            <div className="empty-state">
+              <div className="empty-icon">↕</div>
+              <div className="empty-title">No Scan Data</div>
+              <div className="empty-sub">
+                Select a Universe Tier, configure Liquidity Filters, enter your Massive Stocks Starter API key and click SCAN NOW.<br />
+                Results stream in real time as each batch completes.<br /><br />
+                <span style={{ color: 'var(--blue)', fontSize: 10 }}>Tier 1 (S&P 500 Core) is fastest — ~1–2 min with default settings.</span><br />
+                <span style={{ color: 'var(--purple)', fontSize: 10 }}>Enable DEMO MODE to explore the interface without an API key.</span>
+              </div>
+            </div>
+          ) : (
+            <div className="table-wrap">
+              {scanState.isRunning && results.length > 0 && (
+                <div style={{ padding: '6px 0 10px', fontSize: 10, color: 'var(--blue)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div className="scan-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                  Streaming results live — {results.length} so far · Batch {scanState.batchIndex}/{scanState.totalBatches}
+                </div>
+              )}
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <SortTh label="SCORE" sk="signalScore" />
+                    <SortTh label="TICKER" sk="ticker" />
+                    <th>COMPANY</th>
+                    <th>EXCH</th>
+                    <SortTh label="SECTOR" sk="sector" />
+                    <SortTh label="DIR" sk="direction" />
+                    <th>CROSSING STATUS</th>
+                    <SortTh label="PRICE" sk="price" />
+                    <SortTh label="50DMA" sk="sma50" />
+                    <SortTh label="DIST%" sk="distPct" />
+                    <th>PREV vs 50DMA</th>
+                    <th>CUR vs 50DMA</th>
+                    <SortTh label="REL VOL" sk="relVol20" />
+                    <SortTh label="VOLUME" sk="volume" />
+                    <th>20D AVG</th>
+                    <th>50D AVG</th>
+                    <th>CLOSE LOC</th>
+                    <SortTh label="5D RET" sk="ret5d" />
+                    <SortTh label="10D RET" sk="ret10d" />
+                    <th>MCT</th>
+                    <th>TIME</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayResults.map((r, i) => (
+                    <tr key={r.ticker + r.timestamp} className={r.isNew ? 'new-alert streaming' : ''} onClick={() => setSelectedStock(r)}>
+                      <td className="td-num">{i + 1}</td>
+                      <td><ScoreBar score={r.signalScore} /></td>
+                      <td className="td-ticker" style={{ color: r.direction === 'Bullish' ? 'var(--green)' : r.direction === 'Bearish' ? 'var(--red)' : 'var(--text)' }}>{r.ticker}</td>
+                      <td className="td-company">{r.company}</td>
+                      <td><span className="exch-badge">{r.exchange}</span></td>
+                      <td style={{ color: 'var(--text-dim)', fontSize: 10, maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.sector}</td>
+                      <td><DirTag dir={r.direction} /></td>
+                      <td><StatusBadge code={r.status} /></td>
+                      <td style={{ fontWeight: 600 }}>{fmtPrice(r.price)}</td>
+                      <td style={{ color: 'var(--text-dim)' }}>{fmtPrice(r.sma50)}</td>
+                      <td className={r.distPct >= 0 ? 'num-pos' : 'num-neg'}>{fmtPct(r.distPct)}</td>
+                      <td className={r.prevCloseVs50 >= 0 ? 'num-pos' : 'num-neg'}>{fmtPct(r.prevCloseVs50)}</td>
+                      <td className={r.currentCloseVs50 >= 0 ? 'num-pos' : 'num-neg'}>{fmtPct(r.currentCloseVs50)}</td>
+                      <td><RvolCell rv={r.relVol20} /></td>
+                      <td style={{ color: 'var(--text-dim)' }}>{fmtVol(r.volume)}</td>
+                      <td style={{ color: 'var(--text-muted)' }}>{fmtVol(r.avgVol20)}</td>
+                      <td style={{ color: 'var(--text-muted)' }}>{fmtVol(r.avgVol50)}</td>
+                      <td style={{ color: 'var(--text-dim)' }}>{r.closeLocation != null ? fmt(r.closeLocation * 100) + '%' : '—'}</td>
+                      <td className={r.ret5d >= 0 ? 'num-pos' : 'num-neg'}>{fmtPct(r.ret5d)}</td>
+                      <td className={r.ret10d >= 0 ? 'num-pos' : 'num-neg'}>{fmtPct(r.ret10d)}</td>
+                      <td style={{ fontSize: 9, color: 'var(--text-muted)' }}>{r.mcTier || '—'}</td>
+                      <td style={{ color: 'var(--text-muted)', fontSize: 9 }}>
+                        {r.timestamp ? new Date(r.timestamp).toLocaleTimeString() : '—'}
+                        {r.demo && <span style={{ color: 'var(--purple)', marginLeft: 4, fontSize: 8 }}>D</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* SCAN DASHBOARD OVERLAY */}
+          {scanState.showDash && (
+            <ScanDashboard
+              state={scanState}
+              onPause={handlePause}
+              onResume={handleResume}
+              onCancel={handleCancel}
+              onDone={handleDone}
+              onViewPartial={handleDone}
+            />
+          )}
+
+          {/* TIER 4 CONFIRM */}
+          {showT4Confirm && (
+            <Tier4Confirm
+              batchSize={batchSz}
+              onConfirm={() => { setShowT4Confirm(false); setScanState(s => ({ ...s, showDash: true, resumeAvailable: false })); startScan(false); }}
+              onCancel={() => setShowT4Confirm(false)}
+            />
+          )}
+
+          {/* DETAIL MODAL */}
+          {selectedStock && <DetailModal stock={selectedStock} onClose={() => setSelectedStock(null)} />}
+
+          {/* TOASTS */}
+          <ToastContainer toasts={toasts} />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+
+</html>
