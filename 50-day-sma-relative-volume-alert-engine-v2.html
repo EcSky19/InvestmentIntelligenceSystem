@@ -200,3 +200,105 @@
       border: 1px solid rgba(245, 158, 11, 0.3);
       color: var(--amber);
     }
+
+    .freshness-badge.scanning {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: var(--blue);
+    }
+
+    .freshness-badge.demo {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: rgba(168, 85, 247, 0.3);
+      color: var(--purple);
+    }
+
+    .freshness-badge.await {
+      background: rgba(71, 85, 105, 0.1);
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+
+    .scan-btn {
+      padding: 6px 16px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all 0.15s;
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: var(--blue);
+    }
+
+    .scan-btn:hover:not(:disabled) {
+      background: rgba(59, 130, 246, 0.25);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+    }
+
+    .scan-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .scan-btn.scanning {
+      color: var(--amber);
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .scan-btn.paused {
+      color: var(--green);
+      border-color: rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .icon-btn {
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      border: 1px solid var(--border-bright);
+      background: var(--bg-card2);
+      color: var(--text-dim);
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-bright);
+      color: var(--text);
+      background: var(--bg-hover);
+    }
+
+    .icon-btn.danger {
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--red);
+      background: var(--red-glow);
+    }
+
+    .icon-btn.danger:hover {
+      background: rgba(244, 63, 94, 0.2);
+    }
+
+    .icon-btn.success {
+      border-color: rgba(34, 197, 94, 0.3);
+      color: var(--green);
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .icon-btn.purple-btn {
+      border-color: rgba(168, 85, 247, 0.3);
+      color: var(--purple);
+      background: rgba(168, 85, 247, 0.08);
+    }
+
+    .icon-btn.purple-btn.active {
+      background: rgba(168, 85, 247, 0.2);
+      box-shadow: 0 0 8px var(--purple-glow);
+    }
