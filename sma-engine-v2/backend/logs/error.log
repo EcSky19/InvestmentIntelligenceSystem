@@ -1,0 +1,22 @@
+2026-05-08 20:15:19 [ERROR] Scan failed {"tier":"T3","error":"queries.query is not a function"}
+2026-05-08 20:15:19 [ERROR] Manual scan trigger failed {"error":"queries.query is not a function"}
+2026-05-08 20:16:30 [ERROR] Scan failed {"tier":"T2","error":"queries.query is not a function"}
+2026-05-08 20:16:30 [ERROR] Manual scan trigger failed {"error":"queries.query is not a function"}
+2026-05-08 20:17:54 [ERROR] Scan failed {"tier":"T2","error":"queries.query is not a function"}
+2026-05-08 20:17:54 [ERROR] Manual scan trigger failed {"error":"queries.query is not a function"}
+2026-05-08 20:18:23 [ERROR] Scan failed {"tier":"T2","error":"queries.query is not a function"}
+2026-05-08 20:18:23 [ERROR] Manual scan trigger failed {"error":"queries.query is not a function"}
+2026-05-08 20:18:30 [ERROR] Scan failed {"tier":"T2","error":"queries.query is not a function"}
+2026-05-08 20:18:30 [ERROR] Manual scan trigger failed {"error":"queries.query is not a function"}
+2026-05-08 20:18:51 [ERROR] Scan failed {"tier":"T1","error":"queries.query is not a function"}
+2026-05-08 20:18:51 [ERROR] Manual scan trigger failed {"error":"queries.query is not a function"}
+2026-05-08 20:19:25 [ERROR] Scan failed {"tier":"T1","error":"queries.query is not a function"}
+2026-05-08 20:19:25 [ERROR] Manual scan trigger failed {"error":"queries.query is not a function"}
+2026-05-08 20:44:28 [ERROR] Scan failed {"tier":"T3","error":"invalid input syntax for type bigint: \"52711939.05943\""}
+2026-05-08 20:44:28 [ERROR] Manual scan trigger failed {"error":"invalid input syntax for type bigint: \"52711939.05943\""}
+2026-05-08 20:49:56 [ERROR] Scan failed {"tier":"T2","error":"invalid input syntax for type bigint: \"52711939.05943\""}
+2026-05-08 20:49:56 [ERROR] Manual scan trigger failed {"error":"invalid input syntax for type bigint: \"52711939.05943\""}
+2026-05-08 20:53:51 [ERROR] Scan failed {"tier":"T1","error":"invalid input syntax for type bigint: \"52711939.05943\""}
+2026-05-08 20:53:51 [ERROR] Manual scan trigger failed {"error":"invalid input syntax for type bigint: \"52711939.05943\""}
+2026-05-08 20:54:02 [ERROR] Scan failed {"tier":"T2","error":"invalid input syntax for type bigint: \"52711939.05943\""}
+2026-05-08 20:54:02 [ERROR] Manual scan trigger failed {"error":"invalid input syntax for type bigint: \"52711939.05943\""}
